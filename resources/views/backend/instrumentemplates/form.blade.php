@@ -35,6 +35,7 @@
             
             <div class="col-xl-9">
                 <div class="form-check form-switch form-check-custom form-check-solid">
+                    <input type="hidden" name="is_active" value="0">
                     {!! html()->checkbox("is_active", isset($data) ? $data->is_active : true)->class("form-check-input")->id("is_active") !!}
                     {!! html()->label()->class("form-check-label fw-semibold text-gray-500 ms-3")->for("is_active")->text("Aktif") !!}
                 </div>

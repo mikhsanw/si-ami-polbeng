@@ -17,9 +17,9 @@
     <div class="menu-sub menu-sub-accordion">
         @foreach($mn->children as $sub)
             @if($sub->show && $sub->active)
-                @canany([$page->code.' list'])
+                @can($sub->code.' list')
                     @include('layouts.backend.parsial.sidebar-menu.submenu', ['mn'=>$sub])
-                @endcanany
+                @endcan
             @endif
         @endforeach
     </div>

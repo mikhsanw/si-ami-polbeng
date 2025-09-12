@@ -65,6 +65,7 @@
 					<th class="text-center">Deskripsi</th>
 					<th class="text-center">Lembaga Akreditasi</th>
 					<th class="text-center">Status</th>
+					<th class="text-center">Rancangan</th>
                     <th class="text-center max-w-100px">Action</th>
                 </tr>
             </thead>

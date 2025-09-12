@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
 
             'backend' => \App\Http\Middleware\Backend::class,
+            'check.permission' => \App\Http\Middleware\CheckRoutePermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -14,8 +14,10 @@ $(document).ready(function () {
         },
 		columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex',orderable: false, searchable: false, orderable: false, className: 'text-center' },
-				{ data: 'kode' },
-				{ data: 'nama' },
+				{ data: 'indikator.nama' },
+				{ data: 'indikator.tipe' },
+				{ data: 'skor_auditee' },
+				{ data: 'status_terkini' },
 
 			{ data: 'action', orderable: false, searchable: false , className: 'text-center'}
 		],

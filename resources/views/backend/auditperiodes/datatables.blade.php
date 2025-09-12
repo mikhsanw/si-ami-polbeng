@@ -17,7 +17,7 @@ $(document).ready(function () {
 				{ data: 'tahun_akademik' },
 				{ data: 'status' },
 				{ data: 'unit.nama' },
-				{ data: 'instrumentemplate.nama' },
+				{ data: 'instrumen_template.nama' },
 
 			{ data: 'action', orderable: false, searchable: false , className: 'text-center'}
 		],

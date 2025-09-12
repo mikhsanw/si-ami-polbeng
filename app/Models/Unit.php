@@ -22,14 +22,14 @@ class Unit extends Model
 		return $this->belongsTo('App\Models\User');
 	}
 
-    public function parent() : object
+    public function parent()
     {
-        return $this->belongsTo(Menu::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
-    public function children() : object
+    public function children()
     {
-        return $this->hasMany(Menu::class, 'parent_id')->sort();
+        return $this->hasMany(self::class, 'parent_id')->orderBy('nama');
     }
     
 }

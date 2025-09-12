@@ -2,29 +2,40 @@
 <div class="panel">
     <div class="panel-body">
 		<div class="form-group">
-			{!! html()->label()->class("control-label")->for("tahun_akademik")->text("Tahun_akademik") !!}
-			{!! html()->text("tahun_akademik", isset($data) ? $data->tahun_akademik : null)->placeholder("Type Tahun_akademik here")->class("form-control")->id("tahun_akademik") !!}
+			{!! html()->label()->class("control-label")->for("tahun_akademik")->text("Tahun Akademik") !!}
+			{!! html()->text("tahun_akademik", isset($data) ? $data->tahun_akademik : null)->placeholder("e.g., Genap 2025/2026")->class("form-control")->id("tahun_akademik") !!}
 		</div>
 		<div class="form-group">
             {!! html()->label()->class("control-label")->for("unit_id")->text("Unit") !!}
 			{!! html()->select("unit_id", $unit_id, isset($data) ? $data->unit_id : null)->placeholder("Pilih Unit")->class("form-select")->id("unit_id") !!}
 		</div>
 		<div class="form-group">
-            {!! html()->label()->class("control-label")->for("instrument_template_id")->text("Instrumen Template") !!}
-			{!! html()->select("instrumen_template_id", $instrument_template_id, isset($data) ? $data->instrument_template_id : null)->placeholder("Pilih Instrumen")->class("form-select")->id("instrumen_template_id") !!}
+            {!! html()->label()->class("control-label")->for("instrumen_template_id")->text("Instrumen Template") !!}
+			{!! html()->select("instrumen_template_id", $instrumen_template_id, isset($data) ? $data->instrumen_template_id : null)->placeholder("Pilih Instrumen")->class("form-select")->id("instrumen_template_id") !!}
 		</div>
-        <div class="form-group row">
-            <div class="col-xl-3">
-                {!! html()->label()->class("control-label")->for("is_active")->text("Status") !!}
+        <div class="form-group row pt-3">
+            <div class="col-3">
+                {!! html()->label('Status')->for('status')->class('control-label') !!}
             </div>
-            
-            <div class="col-xl-9">
+
+            <div class="col-9">
                 <div class="form-check form-switch form-check-custom form-check-solid">
-                    {!! html()->checkbox("is_active", isset($data) ? $data->is_active : true)->class("form-check-input")->id("is_active") !!}
-                    {!! html()->label()->class("form-check-label fw-semibold text-gray-500 ms-3")->for("is_active")->text("Aktif") !!}
+                    {{-- Hidden input agar checkbox unchecked tetap kirim value --}}
+                    <input type="hidden" name="status" value="0">
+
+                    {{-- Checkbox --}}
+                    {!! html()->checkbox('status', $data->status ?? true)
+                        ->class('form-check-input')
+                        ->id('status') !!}
+
+                    {{-- Label --}}
+                    {!! html()->label('Aktif')
+                        ->for('status')
+                        ->class('form-check-label fw-semibold text-gray-500 ms-3') !!}
                 </div>
             </div>
         </div>
+
         
     </div>
 </div>
@@ -42,7 +53,7 @@
         z-index: 9999 !important;
     }
     .modal-lg {
-        max-width: 1000px !important;
+        max-width: 500px !important;
     }
 
     .control-label {

@@ -12,8 +12,11 @@ class AuditPeriodesController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            $data=$this->model::with('unit','instrumentemplate')->get();
+            $data=$this->model::with('unit','instrumenTemplate')->get();
             return datatables()->of($data)
+                ->addColumn('status', function($data) {
+                    return $data->status ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-danger">Tidak Aktif</span>';
+                })
                 ->addColumn('action', function ($data) use ($user) {
                     $button ='';
                     $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
@@ -33,7 +36,7 @@ class AuditPeriodesController extends Controller
                     return "<div class='btn-group'>".$button."</div>";
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'status'])
                 ->make();
         }
         return view($this->view.'.index');
@@ -41,9 +44,10 @@ class AuditPeriodesController extends Controller
 
     public function create()
     {
+        $units = \App\Models\Unit::with('children')->whereNull('parent_id')->get();
 		$data=[
-			'unit_id'	=> \App\Models\Unit::pluck('nama','id'),
-			'instrument_template_id'	=> \App\Models\InstrumenTemplate::pluck('nama','id'),
+			'unit_id'	=> $this->help->buildUnitOptions($units),
+			'instrumen_template_id'	=> \App\Models\InstrumenTemplate::pluck('nama','id'),
 		];
 
         return view($this->view.'.form' ,$data);
@@ -55,7 +59,7 @@ class AuditPeriodesController extends Controller
 					'tahun_akademik' => 'required|'.config('master.regex.json'),
 					'status' => 'required|'.config('master.regex.json'),
 					'unit_id' => 'required|'.config('master.regex.json'),
-					'instrument_template_id' => 'required|'.config('master.regex.json'),
+					'instrumen_template_id' => 'required|'.config('master.regex.json'),
         ]);
         if ($data = $this->model::create($request->all())) {
             $response=[ 'status'=>TRUE, 'message'=>'Data berhasil disimpan'];
@@ -71,12 +75,14 @@ class AuditPeriodesController extends Controller
 
     public function edit($id)
     {
+        $units = \App\Models\Unit::with('children')->whereNull('parent_id')->get();
         $data=[
             'data'    => $this->model::find($id),
-			'unit_id'	=> \App\Models\Unit::pluck('nama','id'),
-			'instrument_template_id'	=> \App\Models\InstrumenTemplate::pluck('nama','id'),
+			'unit_id'	=> $this->help->buildUnitOptions($units),
+			'instrumen_template_id'	=> \App\Models\InstrumenTemplate::pluck('nama','id'),
 
         ];
+
         return view($this->view.'.form', $data);
     }
 
@@ -86,7 +92,7 @@ class AuditPeriodesController extends Controller
 					'tahun_akademik' => 'required|'.config('master.regex.json'),
 					'status' => 'required|'.config('master.regex.json'),
 					'unit_id' => 'required|'.config('master.regex.json'),
-					'instrument_template_id' => 'required|'.config('master.regex.json'),
+					'instrumen_template_id' => 'required|'.config('master.regex.json'),
         ]);
 
         $data=$this->model::find($id);

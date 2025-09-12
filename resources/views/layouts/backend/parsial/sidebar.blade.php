@@ -3,10 +3,11 @@
     <!--begin::Logo-->
     <div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
         <!--begin::Logo image-->
-        <a href="{{url('/')}}">
-            <img alt="Logo" src="{{url('assets/media/logos/default.svg')}}" class="h-25px app-sidebar-logo-default theme-light-show" />
-            <img alt="Logo" src="{{url('assets/media/logos/default-dark.svg')}}" class="h-25px app-sidebar-logo-default theme-dark-show" />
-            <img alt="Logo" src="{{url('assets/media/logos/default-small.svg')}}" class="h-20px app-sidebar-logo-minimize" />
+        <a href="{{url('/')}}" class="d-flex align-items-center">
+            <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-light-show" />
+            <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-dark-show" />
+            <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-20px app-sidebar-logo-minimize" />
+            <h3> POLBENG</h3>
         </a>
         <!--end::Logo image-->
         <!--begin::Sidebar toggle-->

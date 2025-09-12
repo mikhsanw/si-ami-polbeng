@@ -18,7 +18,7 @@ class CreateAuditPeriodesTable extends Migration
 			$table->string('tahun_akademik',50)->nullable();
 			$table->string('status',20)->nullable();
 			$table->foreignUuid('unit_id')->nullable()->constrained();
-			$table->foreignUuid('instrument_template_id')->nullable()->constrained();
+			$table->foreignUuid('instrumen_template_id')->nullable()->constrained();
             $table->timestamps();
             $table->softDeletes();
         });

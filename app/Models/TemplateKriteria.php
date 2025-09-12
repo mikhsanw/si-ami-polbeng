@@ -17,7 +17,7 @@ class TemplateKriteria extends Model
         'id', 'bobot', 'instrumen_template_id', 'kriteria_id',
     ];
     
-	public function instrumentemplate()
+	public function instrumenTemplate()
 	{
 		return $this->belongsTo('App\Models\InstrumenTemplate');
 	}

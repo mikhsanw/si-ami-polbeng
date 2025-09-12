@@ -26,4 +26,13 @@ class LogAktivitasAudit extends Model
 	{
 		return $this->belongsTo('App\Models\HasilAudit');
 	}
+	public function getTipeAksiAttribute($value)
+	{
+		return config('master.content.log_aktivitas_audit.tipe_aksi')[$value] ?? $value;
+	}
+
+	public function getCreatedAtAttribute($value)
+	{
+		return \Carbon\Carbon::parse($value)->format('d-m-Y H:i:s');
+	}
 }

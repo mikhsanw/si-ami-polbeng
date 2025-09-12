@@ -44,6 +44,11 @@ $(window.document).on('click', '.btn-action', function (e) {
             },
             error: function (xhr) {
                 $.hideLoading();
+                if (xhr.status === 401) {
+                    $.showError('Session Anda telah habis. Silakan login kembali.');
+                    window.location.href = '/login';
+                    return;
+                }
                 $.showError(xhr.status + ' ' + xhr.statusText);
             }
         },
@@ -63,6 +68,8 @@ $(window.document).on('click', '.submit-data', function (e) {
     const formId = formBtn ?? form.attr('id');
     const progress = $('.progress-bar');
     const dismiss = parent.find('[data-bs-dismiss]');
+    console.log('formId:', formId);
+
     clearError();
 
     if (!formValidate([formId])) {
@@ -93,7 +100,7 @@ $(window.document).on('click', '.submit-data', function (e) {
             if (response.status === true) {
                 const _targetTable = $form.find('input[name="table-id"]').val();
                 const _targetFunction = $form.find('input[name="function"]').val();
-                const _redirect = $form.find('input[name="redirect"]').val() || '';
+                const _redirect = response.redirect || $form.find('input[name="redirect"]').val();
 
                 swal.fire({
                     title: response.title || 'Good job!',
@@ -101,35 +108,37 @@ $(window.document).on('click', '.submit-data', function (e) {
                     icon: 'success',
                     timer: 2000,
                     showConfirmButton: false
-                });
-
-                if (_targetTable) {
-                    _targetTable.split(',').forEach((tableId) => {
-                        let tableElement = $(`#${tableId}`);
-                        if (tableElement.length) {
-                            let table = tableElement.DataTable();
-                            if (table && $.fn.DataTable.isDataTable(`#${tableId}`)) {
-                                table.ajax.reload();
+                }).then(() => {
+                    if (_targetTable) {
+                        _targetTable.split(',').forEach((tableId) => {
+                            let tableElement = $(`#${tableId}`);
+                            if (tableElement.length) {
+                                let table = tableElement.DataTable();
+                                if (table && $.fn.DataTable.isDataTable(`#${tableId}`)) {
+                                    table.ajax.reload();
+                                }
                             }
-                        }
-                    });
-                }
-                if (_targetFunction) {
-                    _targetFunction.split(',').forEach((func) => {
-                        if (typeof window[func] === 'function') {
-                            window[func]();
-                        }
-                    });
-                }
-                if (_redirect) {
-                    window.location.href = _redirect;
-                }
+                        });
+                    }
+                    if (_targetFunction) {
+                        _targetFunction.split(',').forEach((func) => {
+                            if (typeof window[func] === 'function') {
+                                window[func]();
+                            }
+                        });
+                    }
+                    if (_redirect) {
+                        window.location.href = _redirect;
+                    }
+                    
+                });
                 const modalId = e.target.closest('.modal').id;
                 if (modalId) {
                     $(`#${modalId}`).modal('hide');
                 }else{
                     $('.modal').modal('hide');
                 }
+                
             } else {
                 if (response.hasOwnProperty('data')) {
                     errorBuilder(response.data);
@@ -173,11 +182,18 @@ const errorBuilder = (error, targetClass = 'modal-message') => {
 
     const errorMessage = (message) => {
         const indexHash = targetClass.indexOf("#");
-        $(indexHash !== -1 ? `${targetClass}` : `.${targetClass}`).html(`<div class="error-msg alert alert-danger text-white form-group m-15"><b>Opps!</b> ${message}</div>`);
+        $(indexHash !== -1 ? `${targetClass}` : `.${targetClass}`).html(`<div class="error-msg alert alert-danger form-group m-15"><b>Opps!</b> ${message}</div>`);
     };
 
     if (error?.responseJSON?.errors) {
         errorValidation(error.responseJSON.errors);
+        swal.fire({
+            title: error.responseJSON.title || 'Oops!',
+            text: error.responseJSON.message,
+            icon: 'error',
+            timer: 2500,
+            showConfirmButton: false
+        });
     } else if (error?.responseJSON?.message) {
         errorMessage(error.responseJSON.message);
     } else if (error?.message) {
@@ -222,22 +238,29 @@ $(window.document).on('click', '.delete-file', function (e) {
         cancelButtonText: "No, Cancel!",
         closeOnConfirm: false,
         closeOnCancel: false
-    }, function (isConfirm) {
-        if (isConfirm) {
+    }).then((result) => {
+        if (result.isConfirmed) {
             $.ajax({
                 url: btn.data('url'),
+                type: 'DELETE', // <- penting jika pakai route delete
                 success: function (data) {
                     if (data.status === true) {
                         $('#' + btn.data('id')).remove();
-                        swal.fire("Deleted!", data.message, "success");
+
+                        Swal.fire("Deleted!", data.message, "success").then(() => {
+                            if (data.redirect) {
+                                console.log("Redirecting to: ", data.redirect);
+                                window.location.href = data.redirect;
+                            }
+                        });
                     }
                 },
                 error: function (e) {
-                    swal.fire("Error!", e.responseJSON.message, "error");
+                    Swal.fire("Error!", e.responseJSON?.message ?? 'Terjadi kesalahan.', "error");
                 }
             });
-        } else {
-            swal.DismissReason.cancel;
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Optional: aksi jika dibatalkan
         }
     });
 });

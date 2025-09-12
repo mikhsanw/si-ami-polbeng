@@ -14,10 +14,10 @@ class Kriteria extends Model
     protected $casts=[];
 
     protected $fillable=[
-        'id', 'kode', 'nama',
+        'id', 'kode', 'nama','parent_id',
     ];
     
-	public function templatekriterias()
+	public function templateKriterias()
 	{
 		return $this->hasMany('App\Models\TemplateKriteria');
 	}
@@ -26,4 +26,36 @@ class Kriteria extends Model
 	{
 		return $this->hasMany('App\Models\Indikator');
 	}
+
+    public function rubrikPenilaians()
+    {
+        return $this->hasMany(RubrikPenilaian::class);
+    }
+
+    public function indikatorInputs()
+    {
+        return $this->hasMany(IndikatorInput::class);
+    }
+
+	public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('nama');
+    }
+
+	public function childrenRecursive()
+    {
+        // Memanggil relasi 'children' dan juga relasi 'childrenRecursive' di dalamnya.
+        return $this->children()->with('childrenRecursive');
+    }
+
+    public function parentRecursive()
+    {
+        // Memanggil relasi parent() dan juga memuat relasi parentRecursive dari induk tersebut
+        return $this->parent()->with('parentRecursive');
+    }
 }

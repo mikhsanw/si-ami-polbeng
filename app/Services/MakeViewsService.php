@@ -104,7 +104,7 @@ class MakeViewsService
             $formCreate .=str_repeat("\t", 2).'<div class="form-group">'."\n";
             if($typeHtml === 'select'){
                 $formCreate .= str_repeat("\t", 3) . '{!! html()->label()->class("control-label")->for("' . trim($column) . '")->text("' . ucfirst(trim($column)) . '") !!}' . "\n";
-                $formCreate .= str_repeat("\t", 3) . '{!! html()->select("' . trim($column) . '", $' . trim($column) . ', isset($data) ? $data->' . trim($column) . ' : null)->placeholder("Pilih")->class("form-control")->id("' . trim($column) . '") !!}' . "\n";
+                $formCreate .= str_repeat("\t", 3) . '{!! html()->select("' . trim($column) . '", $' . trim($column) . ', isset($data) ? $data->' . trim($column) . ' : null)->placeholder("Pilih")->class("form-select")->id("' . trim($column) . '") !!}' . "\n";
             }elseif($typeHtml === 'relasi'){
                 $formCreate .= str_repeat("\t", 3) . '{!! html()->label()->class("control-label")->for("' . trim($column) . '")->text("' . ucfirst(trim($type[2])) . '") !!}' . "\n";
                 $formCreate .= str_repeat("\t", 3) . '{!! html()->select("' . trim($column) . '", $' . trim($column) . ', isset($data) ? $data->' . trim($column) . ' : null)->placeholder("Pilih")->class("form-control select2")->id("' . trim($column) . '") !!}' . "\n";

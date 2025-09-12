@@ -12,11 +12,11 @@
             <div class="d-flex flex-center flex-lg-start flex-column">
                 <!--begin::Logo-->
                 <a href="{{url('/')}}" class="mb-7">
-                    <img alt="Logo" src="{{asset('assets/media/logos/custom-3.svg')}}" />
+                    <img alt="Logo" width="230" src="{{asset('assets/media/logos/AMI_White.png')}}" />
                 </a>
                 <!--end::Logo-->
                 <!--begin::Title-->
-                <h2 class="text-white fw-normal m-0">Welcome to {{ config('master.app.profile.name') }}</h2>
+                <h2 class="text-white fw-normal m-0">Selamat Datang di Aplikasi {{ config('master.app.profile.name') }} </h2>
                 <!--end::Title-->
             </div>
             <!--begin::Aside-->

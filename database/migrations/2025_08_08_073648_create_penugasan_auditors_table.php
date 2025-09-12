@@ -4,7 +4,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 
-class CreateDataLkpsInputsTable extends Migration
+class CreatePenugasanAuditorsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CreateDataLkpsInputsTable extends Migration
      */
     public function up()
     {
-        Schema::create('data_lkps_inputs', function (Blueprint $table) {
+        Schema::create('penugasan_auditors', function (Blueprint $table) {
             $table->uuid('id')->primary();
-			$table->string('nilai_variable')->nullable();
-			$table->foreignUuid('hasil_audit_id')->nullable()->constrained();
-			$table->foreignUuid('indikator_input_id')->nullable()->constrained();
+			$table->foreignUuid('user_id')->nullable()->constrained();
+			$table->foreignUuid('audit_periode_id')->nullable()->constrained();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -30,6 +29,6 @@ class CreateDataLkpsInputsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('data_lkps_inputs');
+        Schema::dropIfExists('penugasan_auditors');
     }
 }

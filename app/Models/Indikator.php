@@ -21,4 +21,24 @@ class Indikator extends Model
 	{
 		return $this->belongsTo('App\Models\Kriteria');
 	}
+
+    public function rubrikPenilaians()
+    {
+        return $this->hasMany('App\Models\RubrikPenilaian');
+    }
+    public function indikatorInputs()
+    {
+        return $this->hasMany('App\Models\IndikatorInput');
+    }
+    public function hasilAudits()
+    {
+        return $this->hasMany('App\Models\HasilAudit');
+    }
+
+    public function hasilAuditForPeriode($auditPeriodeId)
+    {
+        return $this->hasOne('App\Models\HasilAudit')
+                    ->where('audit_periode_id', $auditPeriodeId)
+                    ->first();
+    }
 }

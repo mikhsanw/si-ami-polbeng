@@ -1,6 +1,17 @@
 {{ html()->form(isset($data)?'PUT':'POST', (isset($data) ? route($page->code.'.update',$data->id) : route($page->code.'.store')))->id('form-create-'.$page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
 <div class="panel">
     <div class="panel-body">
+        @if ($parent?? null)
+            {{-- Jika ada parent, tampilkan nama induk kriteria --}}
+            {!! html()->hidden('parent_id')->id('parent_id')->value($parent->id) !!}
+            {!! html()->hidden('redirect', route($page->code.'.index')) !!}
+
+            <div class="form-group">
+                {!! html()->label()->class("control-label")->for("parent_nama")->text("Induk Kriteria") !!}
+                {!! html()->text("parent_nama", null)->class("form-control")->id("parent_nama")->attributes(['readonly' => 'readonly'])->value($parent->nama) !!}
+            </div>
+        @endif
+
 		<div class="form-group">
 			{!! html()->label()->class("control-label")->for("kode")->text("Kode") !!}
 			{!! html()->text("kode", isset($data) ? $data->kode : null)->placeholder("Type Kode here")->class("form-control")->id("kode") !!}
@@ -40,6 +51,9 @@
 
     //tinymce
     $(document).ready(function() {
+        $('.modal-title').html('<i class="fa fa-plus-circle"></i> Tambah Data {!! $page->title !!}');
+        $('.submit-data').html('<i class="fa fa-save"></i> Simpan Data');
+        
         var options = {
             selector: ".tinymce", 
             height : "480",

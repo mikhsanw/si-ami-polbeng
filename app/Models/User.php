@@ -36,4 +36,9 @@ class User extends Authenticatable
 
     protected $primaryKey = 'id';
 
+    public function penugasanAuditors()
+    {
+        return $this->hasMany(\App\Models\PenugasanAuditor::class);
+    }
+
 }

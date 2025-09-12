@@ -16,8 +16,9 @@ $(document).ready(function () {
             { data: 'DT_RowIndex', name: 'DT_RowIndex',orderable: false, searchable: false, orderable: false, className: 'text-center' },
 				{ data: 'nama' },
 				{ data: 'deskripsi' },
-				{ data: 'lembagaakreditasi.nama' },
-				{ data: 'is_active' },
+				{ data: 'lembagaAkreditasi' },
+				{ data: 'is_active', orderable: false, searchable: false, className: 'text-center' },
+				{ data: 'rancangan', orderable: false, searchable: false, className: 'text-center' },
 
 			{ data: 'action', orderable: false, searchable: false , className: 'text-center'}
 		],

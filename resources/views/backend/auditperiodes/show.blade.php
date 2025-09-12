@@ -21,8 +21,8 @@
 		</div>
 		<div class="col-md-6">
 			<div class="form-group">
-				{!! html()->span()->text("Instrument_template_id")->class("control-label fw-bold") !!}
-				{!! html()->p("instrument_template_id") !!}
+				{!! html()->span()->text("instrumen_template_id")->class("control-label fw-bold") !!}
+				{!! html()->p("instrumen_template_id") !!}
 			</div>
 		</div>
 

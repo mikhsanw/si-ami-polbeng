@@ -17,13 +17,25 @@ class InstrumenTemplate extends Model
         'id', 'nama', 'deskripsi', 'is_active', 'lembaga_akreditasi_id',
     ];
     
-	public function lembagaakreditasi()
+	public function lembagaAkreditasi()
 	{
 		return $this->belongsTo('App\Models\LembagaAkreditasi');
 	}
 
-	public function templatekriterias()
+	public function templateKriterias()
 	{
 		return $this->hasMany('App\Models\TemplateKriteria');
 	}
+
+	public function kriterias()
+	{
+		return $this->belongsToMany('App\Models\Kriteria', 'template_kriterias', 'instrumen_template_id', 'kriteria_id')
+					->withPivot('bobot'); // Penting untuk bisa mengambil data bobot
+	}
+
+	public function auditPeriodes()
+	{
+		return $this->hasMany('App\Models\AuditPeriode');
+	}
+	
 }

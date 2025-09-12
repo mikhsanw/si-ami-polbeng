@@ -1,33 +1,112 @@
 {{ html()->form(isset($data)?'PUT':'POST', (isset($data) ? route($page->code.'.update',$data->id) : route($page->code.'.store')))->id('form-create-'.$page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
 <div class="panel">
     <div class="panel-body">
-		<div class="form-group">
-			{!! html()->label()->class("control-label")->for("skor_auditee")->text("Skor_auditee") !!}
-			{!! html()->text("skor_auditee", isset($data) ? $data->skor_auditee : null)->placeholder("Type Skor_auditee here")->class("form-control")->id("skor_auditee") !!}
-		</div>
-		<div class="form-group">
-			{!! html()->label()->class("control-label")->for("skor_final")->text("Skor_final") !!}
-			{!! html()->text("skor_final", isset($data) ? $data->skor_final : null)->placeholder("Type Skor_final here")->class("form-control")->id("skor_final") !!}
-		</div>
-		<div class="form-group">
-			{!! html()->label()->class("control-label")->for("catatan_final")->text("Catatan_final") !!}
-			{!! html()->textarea("catatan_final", isset($data) ? $data->catatan_final : null)->placeholder("Type Catatan_final here")->class("form-control")->id("catatan_final") !!}
-		</div>
-		<div class="form-group">
-			{!! html()->label()->class("control-label")->for("status_terkini")->text("Status_terkini") !!}
-			{!! html()->text("status_terkini", isset($data) ? $data->status_terkini : null)->placeholder("Type Status_terkini here")->class("form-control")->id("status_terkini") !!}
-		</div>
-		<div class="form-group">
-			{!! html()->label()->class("control-label")->for("audit_periode_id")->text("AuditPeriode") !!}
-			{!! html()->select("audit_periode_id", $audit_periode_id, isset($data) ? $data->audit_periode_id : null)->placeholder("Pilih")->class("form-control select2")->id("audit_periode_id") !!}
-		</div>
-		<div class="form-group">
-			{!! html()->label()->class("control-label")->for("indikator_id")->text("Indikator") !!}
-			{!! html()->select("indikator_id", $indikator_id, isset($data) ? $data->indikator_id : null)->placeholder("Pilih")->class("form-control select2")->id("indikator_id") !!}
-		</div>
+        <div class="mb-4 p-3 bg-body-tertiary rounded">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Unit:</strong> {{ $auditPeriode->unit->nama }}<br>
+                    <strong>Periode:</strong> {{ $auditPeriode->tahun_akademik }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Standar:</strong> {{ $auditPeriode->instrumenTemplate->nama }}<br>
+                    <strong>Lembaga:</strong> {{ $auditPeriode->instrumenTemplate->lembagaAkreditasi->singkatan }}
+                </div>
+            </div>
+        </div>
+        @if (optional($data->hasilAuditForPeriode($auditPeriode->id))->status_terkini === 'Revisi')
+            <div class="alert alert-danger d-flex align-items-center p-4 mb-4">
+                <i class="fas fa-exclamation-triangle fa-2x me-4"></i>
+                <div class="d-flex flex-column">
+                    <h5 class="mb-1">Perlu Revisi</h5>
+                    <span>Auditor memberikan catatan berikut untuk perbaikan:</span>
+                    <span class="mt-2 fst-italic">"{{ optional($data->hasilAuditForPeriode($auditPeriode->id))->logAktivitasAudit()->latest()->first()->catatan_aksi ?? '-' }}"</span>
+                </div>
+            </div>
+        @endif
+        <div class="mb-3">
+            <label class="form-label fw-bold fs-5">Indikator Penilaian:</label>
+            <p class="fs-6">{{ $data->nama }}</p>
+        </div>
+        @if($data->tipe === 'LED')
+            {{-- TAMPILAN UNTUK LED (LED) --}}
+            <div id="form-led">
+                <label class="form-label fw-bold fs-5">Pilih Tingkat Capaian (Skor):</label>
+                @forelse ($data->rubrikPenilaians->sortByDesc('skor') as $rubrik)
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" 
+                            name="skor_auditee" 
+                            value="{{ $rubrik->skor }}" 
+                            id="skor_{{ $rubrik->skor }}"
+                            {{ (int)optional($data->hasilAuditForPeriode($auditPeriode->id))->skor_auditee === (int)$rubrik->skor ? 'checked' : '' }}>
 
+                        <label class="form-check-label" for="skor_{{ $rubrik->skor }}">
+                            <strong class="text-primary">Skor {{ $rubrik->skor }}:</strong> {{ $rubrik->deskripsi }}
+                        </label>
+                    </div>
+                @empty
+                    <p class="text-muted">Rubrik penilaian untuk indikator ini belum didefinisikan.</p>
+                @endforelse
+
+                {{-- <div class="form-group mt-4">
+                    <label class="form-label fw-bold fs-5" for="deskripsi_pemenuhan">Deskripsi Pemenuhan / Analisis Diri</label>
+                    <textarea class="form-control tinymce" name="deskripsi_pemenuhan" id="deskripsi_pemenuhan" rows="5"></textarea>
+                </div> --}}
+            </div>
+
+        @elseif($data->tipe === 'LKPS')
+
+            {{-- TAMPILAN UNTUK LKPS (OTOMATIS) --}}
+            <div id="form-lkps">
+                <label class="form-label fw-bold fs-5">Input Data Kinerja (LKPS):</label>
+                @forelse ($data->indikatorInputs as $field)
+                    <div class="col-4 mb-3">
+                        <label for="field_{{ $field->id }}">{{ $field->label_input }} dalam {{$field->tipe_data}}</label>
+                        <input type="text" class="form-control pb-2" name="lkps_data[{{ $field->id }}]" id="field_{{ $field->id }}" value="{{ ($data->hasilAuditForPeriode($auditPeriode->id)?->dataAuditInput?->where('indikator_input_id', $field->id)->first()->nilai_variable ?? '') }}" required>
+                        <small class="form-text text-muted">Variabel: <code>{{ $field->nama_variable }}</code></small>
+                    </div>
+                @empty
+                    <p class="text-muted">Tidak ada input data kinerja yang tersedia.</p>
+                @endforelse
+                 {{-- <div class="form-group mt-4">
+                    <label class="form-label fw-bold fs-5" for="analisis_tambahan">Analisis / Catatan Tambahan</label>
+                    <textarea class="form-control" name="analisis_tambahan" id="analisis_tambahan" rows="3"></textarea>
+                </div> --}}
+            </div>
+
+        @endif
+
+        <div class="mt-4">
+            <label class="form-label fw-bold fs-5">Unggah Dokumen Bukti</label>
+            @if($data->hasilAuditForPeriode($auditPeriode->id)->files ?? false)
+            <div class="mb-3 border p-3">
+                <small class="form-text">Dokumen pendukung yang telah dilampirkan sebelumnya</small>
+                <div>
+                    @foreach ($data->hasilAuditForPeriode($auditPeriode->id)->files as $key => $file)
+                        <a href="{{ asset($file->link_public_stream) }}" class="list-group-item list-group-item-action text-primary d-flex align-items-center" target="_blank">
+                            <i class="fas fa-file-alt fa-fw me-3 text-primary"></i>
+                            Bukti Penilaian {{ $key + 1 }}
+                            <i class="fas fa-external-link-alt ms-auto"></i>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+            <div id="uploadContainer">
+                {{-- Baris upload file pertama --}}
+                <div class="input-group mb-3 upload-row">
+                    <input class="form-control" type="file" name="upload_file[]">
+                    {{-- Tombol hapus tidak ada untuk baris pertama --}}
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center" id="add-file-btn">
+                <i class="fas fa-plus me-2"></i>Tambah File
+            </button>
+        </div>
     </div>
 </div>
+{!! html()->hidden('indikator_id')->id('indikator_id')->value($data->id) !!}
+{!! html()->hidden('audit_periode_id')->id('audit_periode_id')->value($auditPeriode->id) !!}
+
 {!! html()->hidden('table-id','datatable')->id('table-id') !!}
 {{--{!! html()->hidden('function','loadMenu,sidebarMenu')->id('function') !!}--}}
 {{--{!! html()->hidden('redirect',url('/dashboard'))->id('redirect') !!}--}}
@@ -50,15 +129,40 @@
 </style>
 
 <script>
-    $('.select2').select2();
-    $('.modal-title').html('<i class="fa fa-plus-circle"></i> Tambah Data {!! $page->title !!}');
+    $('.form-select').select2();
     $('.submit-data').html('<i class="fa fa-save"></i> Simpan Data');
 
     //tinymce
     $(document).ready(function() {
+        // Fungsi untuk menambah baris upload file
+        $('#add-file-btn').click(function() {
+            let newRow = `
+                <div class="input-group mb-3 upload-row">
+                    <input class="form-control" type="file" name="upload_file[]">
+                    <button class="btn btn-outline-danger btn-remove-file" type="button">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            $('#uploadContainer').append(newRow);
+        });
+
+        // Fungsi untuk menghapus baris upload file
+        $('#uploadContainer').on('click', '.btn-remove-file', function() {
+            $(this).closest('.upload-row').remove();
+        });
+
+        // Membersihkan TinyMCE saat modal ditutup (jika form ini ada di dalam modal)
+        $('body').on('hidden.bs.modal', '.modal', function () {
+            if (tinymce.get('deskripsi_pemenuhan')) {
+                tinymce.get('deskripsi_pemenuhan').setContent('');
+            }
+        });
+        
+        // Inisialisasi TinyMCE
         var options = {
             selector: ".tinymce", 
-            height : "480",
+            height : "300",
             menubar: false,
             toolbar: ["styleselect fontselect fontsizeselect",
                 "undo redo | cut copy paste | bold italic | link image | alignleft aligncenter alignright alignjustify",

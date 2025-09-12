@@ -20,7 +20,7 @@ class RoleController extends Controller
     public function index(): View
     {
         return view($this->view.'.index', [
-            'roles' => Role::orderBy('id','DESC')->paginate(3)
+            'roles' => Role::orderBy('id','DESC')->get()
         ]);
     }
 

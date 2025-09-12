@@ -29,6 +29,14 @@ class Helper
         return $model;
     }
 
+    public static function formatNumber($number, $decimals = 0)
+    {
+        if (is_numeric($number)) {
+            return number_format($number, $decimals, ',', '.');
+        }
+        return $number;
+    }
+
     public static function displayDateTime($updatedAt)
     {
         // Parse kolom updated_at menjadi instance Carbon
@@ -96,5 +104,21 @@ class Helper
         $string = strtolower($string); 
      
         return trim(trim($string, $separator)); 
+    }
+
+    public static function buildUnitOptions($units, $prefix = '')
+    {
+        $options = [];
+
+        foreach ($units as $unit) {
+            $options[$unit->id] = $prefix . $unit->nama;
+
+            if ($unit->children->isNotEmpty()) {
+                $childOptions = self::buildUnitOptions($unit->children, $prefix . '— ');
+                $options += $childOptions;
+            }
+        }
+
+        return $options;
     }
 }

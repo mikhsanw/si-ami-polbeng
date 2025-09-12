@@ -14,12 +14,12 @@ class AuditPeriode extends Model
     protected $casts=[];
 
     protected $fillable=[
-        'id', 'tahun_akademik', 'status', 'unit_id', 'instrument_template_id',
+        'id', 'tahun_akademik', 'status', 'unit_id', 'instrumen_template_id',
     ];
     
-	public function instrumenttemplate()
+	public function instrumenTemplate()
 	{
-		return $this->belongsTo('App\Models\InstrumentTemplate');
+		return $this->belongsTo('\App\Models\InstrumenTemplate');
 	}
 
 	public function unit()
