@@ -42,7 +42,7 @@
                 </div>
                 <div class="card-toolbar">
                     <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                        @can('create '.$page->code)
+                        @can($page->code.' create')
                             <a href="{{ route(request()->segment(2).'.create') }}" class="btn btn-primary"><i class="ki-duotone ki-plus fs-2"></i> Tambah</a>
                         @endcan
                     </div>

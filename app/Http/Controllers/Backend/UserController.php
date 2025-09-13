@@ -21,7 +21,12 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = $this->model::all();
+            $user = $request->user();
+            $data = $this->model::whereHas('roles', function ($query) use ($user) {
+                if (!in_array('Super Admin', $user->getRoleNames()->toArray() ?? [])){
+                    $query->where('name', '!=', 'Super Admin');
+                }
+            })->get();
             $user = $request->user();
             return datatables()->of($data)
                 ->addColumn('action', function ($data) use ($user) {
