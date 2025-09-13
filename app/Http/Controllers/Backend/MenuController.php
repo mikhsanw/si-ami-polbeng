@@ -145,7 +145,7 @@ class MenuController extends Controller
         if ($request->isMethod('post')) {
             $this->loopUpdateMenu(json_decode($request->input('sort')));
         }
-        return response()->json(['status'=>TRUE, 'message'=>'Menu berhasil diurutkan']);
+        return response()->json(['status'=>TRUE, 'message'=>'Menu berhasil diurutkan', 'redirect' => $request->input('redirect') ?? route('menu.index')]);
     }
 
     function loopUpdateMenu($menu, $parentMenu=NULL)
