@@ -35,6 +35,7 @@ class UserController extends Controller
                     if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? []) ){
                         if (auth()->user()->hasRole('Super Admin')){
                         $button.='<a class="btn btn-sm btn-light-warning" href="'.route('users.edit', $data->id).'"> <i class="fa fa-edit text-warning"></i> </a> ';
+                        $button.='<button class="btn-delete btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
                         }
                     }else{
                         if($user->hasPermissionTo('users edit')){

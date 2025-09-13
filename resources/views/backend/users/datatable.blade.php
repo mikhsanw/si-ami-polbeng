@@ -57,7 +57,7 @@ $(document).ready(function () {
             if (result.value) {
                 $.ajax({
                     type: "POST",
-                    url: "{{config('master.app.url.backend')}}/"+url+"/"+id,
+                    url: url+"/"+id,
                     data: {
                         '_method': 'DELETE',
                         '_token': '{{ csrf_token() }}',
