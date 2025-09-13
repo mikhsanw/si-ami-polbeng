@@ -7,7 +7,7 @@ $(document).ready(function () {
         serverSide: true,
         stateSave: true,
         lengthMenu: [[10, 25, 50, 100 ,200 , 500, -1], [10, 25, 50, 100 ,200 , 500, "All"]],
-		ajax: "{{ url(config('master.app.url.backend').'/'.$url.'/data') }}",
+		ajax: dynamicUrl,
 		language: {
             {{-- Uncomment this line to use Indonesian language --}}
             {{--url: "{{ asset(config('master.app.web.assets').'/assets/vendor_components/datatable/indonesian.json') }}"--}}

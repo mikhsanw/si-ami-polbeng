@@ -18,45 +18,43 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request)
     {
+        if ($request->ajax()) {
+            $data = $this->model::all();
+            $user = $request->user();
+            return datatables()->of($data)
+                ->addColumn('action', function ($data) use ($user) {
+                    $button ='';
+                    $button .= '<a class="btn btn-sm btn-light-primary" href="'.route('users.show', $data->id).'"><i class="fa fa-eye text-info"></i></button>';
+                    if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? []) ){
+                        if (auth()->user()->hasRole('Super Admin')){
+                        $button.='<a class="btn btn-sm btn-light-warning" href="'.route('users.edit', $data->id).'"> <i class="fa fa-edit text-warning"></i> </a> ';
+                        }
+                    }else{
+                        if($user->hasPermissionTo('users edit')){
+                            $button.='<a class="btn btn-sm btn-light-warning" href="'.route('users.edit', $data->id).'"> <i class="fa fa-edit text-warning"></i> </a> ';
+                        }
+                        if($user->hasPermissionTo('users delete')){
+                            $button.='<button class="btn-delete btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
+                        }
+                    }
+                    return "<div class='btn-group'>".$button."</div>";
+                })
+                ->editColumn('role', function (User $user) {
+                    return ucwords($user->roles->first()?->name);
+                })
+                ->editColumn('last_login_at', function (User $user) {
+                    return sprintf('<div class="badge badge-light fw-bold">%s</div>', $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() : 
+                        ($user->updated_at ? \Carbon\Carbon::parse($user->updated_at)->diffForHumans() : 'N/A'));
+                })
+                ->addIndexColumn()
+                ->rawColumns(['action','last_login_at'])
+                ->make();
+        }
         return view($this->view.'.index', [
             'users' => $this->model::latest('id')->paginate(3)
         ]);
-    }
-
-    public function data(Request $request)
-    {
-        $data = $this->model::all();
-        $user = $request->user();
-        return datatables()->of($data)
-            ->addColumn('action', function ($data) use ($user) {
-                $button ='';
-                $button .= '<a class="btn btn-sm btn-light-primary" href="'.route('users.show', $data->id).'"><i class="fa fa-eye text-info"></i></button>';
-                if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? []) ){
-                    if (auth()->user()->hasRole('Super Admin')){
-                    $button.='<a class="btn btn-sm btn-light-warning" href="'.route('users.edit', $data->id).'"> <i class="fa fa-edit text-warning"></i> </a> ';
-                    }
-                }else{
-                    if($user->hasPermissionTo('users edit')){
-                        $button.='<a class="btn btn-sm btn-light-warning" href="'.route('users.edit', $data->id).'"> <i class="fa fa-edit text-warning"></i> </a> ';
-                    }
-                    if($user->hasPermissionTo('users delete')){
-                        $button.='<button class="btn-delete btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
-                    }
-                }
-                return "<div class='btn-group'>".$button."</div>";
-            })
-            ->editColumn('role', function (User $user) {
-                return ucwords($user->roles->first()?->name);
-            })
-            ->editColumn('last_login_at', function (User $user) {
-                return sprintf('<div class="badge badge-light fw-bold">%s</div>', $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() : 
-                    ($user->updated_at ? \Carbon\Carbon::parse($user->updated_at)->diffForHumans() : 'N/A'));
-            })
-            ->addIndexColumn()
-            ->rawColumns(['action','last_login_at'])
-            ->make();
     }
 
     /**

@@ -20,7 +20,6 @@ Route::group(['middleware'=>['auth','check.permission']], function () {
     Route::resource('menu', "MenuController");
     //users
     Route::prefix('users')->as('users')->group(function () {
-        Route::get('/data', "UserController@data");
         Route::get('delete/{id}', "UserController@delete");
     });
     Route::resource('users', "UserController");

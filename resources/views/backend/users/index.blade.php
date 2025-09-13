@@ -79,5 +79,9 @@
             <script src="{{ url('js/'.$backend.'/'.$page->code.'/datatable.js') }}"></script>
             <script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
             <script src="js/jquery-crud.js"></script>
+            <script>
+    var dynamicUrl = "{{ request()->url() }}";
+    var isChildPage = {{ isset($id) ? 'true' : 'false' }};
+</script>
         @endprepend
 </x-app-layout>
