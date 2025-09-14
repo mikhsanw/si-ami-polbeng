@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Solid Template</title>
+    <title>AMI Polbeng</title>
+    <meta name="description" content="Aplikasi Audit Mutu Internal (AMI) Polbeng">
+    <meta name="author" content="Politeknik Negeri Bengkalis">
+    <link rel="icon" type="image/png" href="{{asset('front/dist/images/logo.png')}}">
     <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:400,600" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('front/dist/css/style.css')}}">
 	<script src="https://unpkg.com/animejs@3.0.1/lib/anime.min.js"></script>
