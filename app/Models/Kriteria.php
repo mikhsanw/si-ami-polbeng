@@ -44,7 +44,7 @@ class Kriteria extends Model
 
     public function children()
     {
-        return $this->hasMany(self::class, 'parent_id')->orderBy('nama');
+        return $this->hasMany(self::class, 'parent_id');
     }
 
 	public function childrenRecursive()
