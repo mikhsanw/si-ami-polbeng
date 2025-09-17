@@ -220,7 +220,7 @@ class KriteriasController extends Controller
     {
         // Validasi awal (langsung tampil error jika gagal)
         $request->validate([
-            'nama' => 'required|string|max:255',
+            'nama' => 'required|string',
             'tipe' => ['required', Rule::in(config('master.content.kriteria.tipe'))],
             'parent_id' => 'nullable|exists:kriterias,id',
             'rubrik_manual_deskripsi' => 'required_if:tipe,LED|array',
