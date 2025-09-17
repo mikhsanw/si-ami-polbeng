@@ -54,16 +54,21 @@ class CheckRoutePermission
     protected function mapRouteToPermission($routeName)
     {
         $map = [
-            'index'   => 'list',
-            'create'  => 'create',
-            'store'   => 'create',
-            'edit'    => 'edit',
-            'update'  => 'edit',
-            'destroy' => 'delete',
-            'show'    => 'list',
+        'index'   => 'list',
+        'create'  => 'create',
+        'store'   => 'create',
+        'edit'    => 'edit',
+        'update'  => 'edit',
+        'destroy' => 'delete',
+        'show'    => 'list',
         ];
 
-        [$resource, $action] = explode('.', $routeName);
+        $parts = explode('.', $routeName);
+
+        // Jika routeName tidak punya titik, anggap action = index
+        $resource = $parts[0];
+        $action   = $parts[1] ?? 'index';  
+
         $permissionAction = $map[$action] ?? $action;
 
         return $resource.' '.$permissionAction;
