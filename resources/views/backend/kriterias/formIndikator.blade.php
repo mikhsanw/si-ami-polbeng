@@ -32,7 +32,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for ($i = 4; $i >= 1; $i--)
+                    @for ($i = 4; $i >= 0; $i--)
                         <tr>
                             <td class="text-center fw-bold fs-5 align-middle">{{ $i }}</td>
                             <td>
@@ -123,7 +123,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for ($i = 4; $i >= 1; $i--)
+                    @for ($i = 4; $i >= 0; $i--)
                         <tr>
                             <td class="text-center fw-bold fs-5 align-middle">{{ $i }}</td>
                             <td>
