@@ -26,7 +26,7 @@
                 <!--begin::Navbar-->
                 <div class="app-navbar flex-shrink-0">
                     <!--begin::Search-->
-                    <div class="app-navbar-item align-items-stretch ms-1 ms-md-4">
+                    {{-- <div class="app-navbar-item align-items-stretch ms-1 ms-md-4">
                         <!--begin::Search-->
                         <div id="kt_header_search" class="header-search d-flex align-items-stretch" data-kt-search-keypress="true" data-kt-search-min-length="2" data-kt-search-enter="enter" data-kt-search-layout="menu" data-kt-menu-trigger="auto" data-kt-menu-overflow="false" data-kt-menu-permanent="true" data-kt-menu-placement="bottom-end">
                             <!--begin::Search toggle-->
@@ -278,10 +278,10 @@
                             <!--end::Menu-->
                         </div>
                         <!--end::Search-->
-                    </div>
+                    </div> --}}
                     <!--end::Search-->
                     <!--begin::Notifications-->
-                    <div class="app-navbar-item ms-1 ms-md-4">
+                    {{-- <div class="app-navbar-item ms-1 ms-md-4">
                         <!--begin::Menu- wrapper-->
                         <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" id="kt_menu_item_wow">
                             <i class="ki-outline ki-notification-status fs-2"></i>
@@ -739,7 +739,7 @@
                         </div>
                         <!--end::Menu-->
                         <!--end::Menu wrapper-->
-                    </div>
+                    </div> --}}
                     <!--end::Notifications-->
                     <!--begin::Chat-->
                     <!-- <div class="app-navbar-item ms-1 ms-md-4">
@@ -824,9 +824,9 @@
                             <div class="separator my-2"></div>
                             <!--end::Menu separator-->
                             <!--begin::Menu item-->
-                            <div class="menu-item px-5">
+                            {{-- <div class="menu-item px-5">
                                 <a href="account/overview.html" class="menu-link px-5">My Profile</a>
-                            </div>
+                            </div> --}}
                             <!--end::Menu item-->
                             <!--begin::Menu item-->
                             <div class="menu-item px-5">
