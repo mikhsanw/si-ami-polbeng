@@ -363,12 +363,12 @@ class KriteriasController extends Controller
             ]);
         }
 
-        if ($data->rubrikPenilaians()->count() > 0 || $data->indikatorInputs()->count() > 0) {
-           return response()->json([
-               'status'  => FALSE,
-               'message' => 'Data indikator tidak dapat dihapus karena memiliki relasi'
-           ]);
-        }
+        // if ($data->rubrikPenilaians()->count() > 0 || $data->indikatorInputs()->count() > 0) {
+        //    return response()->json([
+        //        'status'  => FALSE,
+        //        'message' => 'Data indikator tidak dapat dihapus karena memiliki relasi'
+        //    ]);
+        // }
 
         if ($data->delete()) {
             return response()->json([
