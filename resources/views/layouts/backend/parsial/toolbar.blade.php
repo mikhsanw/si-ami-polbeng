@@ -5,7 +5,7 @@
             <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
                 <i class="{{$page->icon??''}}"></i> 
                 <li class="breadcrumb-item text-muted">
-                    <a href="{{url('/')}}" class="text-muted text-hover-primary">Home</a>
+                    <a href="{{url('/admin/home')}}" class="text-muted text-hover-primary">Home</a>
                 </li>
                 @include('layouts.backend.parsial.extra.breadcrumb', ['menus'=>$menus])
             </ul>

@@ -3,7 +3,7 @@
     <!--begin::Logo-->
     <div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
         <!--begin::Logo image-->
-        <a href="{{url('/')}}" class="d-flex align-items-center">
+        <a href="{{url('/admin/home')}}" class="d-flex align-items-center">
             <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-light-show" />
             <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-dark-show" />
             <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-20px app-sidebar-logo-minimize" />
@@ -30,7 +30,7 @@
     
     <!--begin::Footer-->
     <div class="app-sidebar-footer flex-column-auto pt-2 pb-6 px-6" id="kt_app_sidebar_footer">
-        <a href="{{url('/')}}" class="btn btn-flex flex-center btn-custom btn-primary overflow-hidden text-nowrap px-0 h-40px w-100" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss-="click">
+        <a href="{{url('/admin/home')}}" class="btn btn-flex flex-center btn-custom btn-primary overflow-hidden text-nowrap px-0 h-40px w-100" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss-="click">
             <span class="btn-label">Home</span>
             <i class="ki-outline ki-document btn-icon fs-2 m-0"></i>
         </a>
