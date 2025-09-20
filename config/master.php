@@ -121,6 +121,7 @@ return [
         ],
         'hasil_audit'=>[
             'status_terkini'=>[
+                'Draft'=>'Draft',
                 'Diajukan'=>'Diajukan',
                 'Revisi'=>'Revisi',
                 'Selesai'=>'Selesai'

@@ -4,9 +4,9 @@
     <div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
         <!--begin::Logo image-->
         <a href="{{url('/admin/home')}}" class="d-flex align-items-center">
-            <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-light-show" />
-            <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-dark-show" />
-            <img alt="Logo" src="{{url('assets/media/logos/AMI.png')}}" class="h-20px app-sidebar-logo-minimize" />
+            <img alt="Logo" src="{{asset('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-light-show" />
+            <img alt="Logo" src="{{asset('assets/media/logos/AMI.png')}}" class="h-25px app-sidebar-logo-default theme-dark-show" />
+            <img alt="Logo" src="{{asset('assets/media/logos/AMI.png')}}" class="h-20px app-sidebar-logo-minimize" />
             <h3> POLBENG</h3>
         </a>
         <!--end::Logo image-->

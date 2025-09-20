@@ -7,28 +7,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class AuditPeriode extends Model
+class TemplateIndikator extends Model
 {
     use HasFactory, SoftDeletes, HasUuids;
 
     protected $casts=[];
 
     protected $fillable=[
-        'id', 'tahun_akademik', 'status', 'unit_id', 'instrumen_template_id',
+        'id', 'bobot', 'instrumen_template_id', 'indikator_id',
     ];
     
 	public function instrumenTemplate()
 	{
-		return $this->belongsTo('\App\Models\InstrumenTemplate');
+		return $this->belongsTo('App\Models\InstrumenTemplate');
 	}
 
-	public function unit()
+	public function indikator()
 	{
-		return $this->belongsTo('App\Models\Unit');
-	}
-
-	public function hasilaudits()
-	{
-		return $this->hasMany('App\Models\Hasilaudit');
+		return $this->belongsTo('App\Models\Indikator');
 	}
 }

@@ -26,6 +26,10 @@ class InstrumenTemplate extends Model
 	{
 		return $this->hasMany('App\Models\TemplateKriteria');
 	}
+	public function templateIndikators()
+	{
+		return $this->hasMany('App\Models\TemplateIndikator');
+	}
 
 	public function kriterias()
 	{

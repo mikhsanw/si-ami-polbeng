@@ -73,5 +73,4 @@ class CheckRoutePermission
 
         return $resource.' '.$permissionAction;
     }
-
 }

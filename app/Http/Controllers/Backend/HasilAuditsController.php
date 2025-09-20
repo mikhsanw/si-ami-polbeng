@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Models\AuditPeriode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -11,48 +12,111 @@ class HasilAuditsController extends Controller
 {
     public function index(Request $request)
     {
-        // Eager load relasi yang dibutuhkan untuk performa
-        $auditperiodes = \App\Models\AuditPeriode::with('unit', 'instrumenTemplate.kriterias')
+        $userUnitId = optional(auth()->user()->unit)->id;
+        if (!$userUnitId || !auth()->user()->hasPermissionTo($this->code.' list')) {
+            $auditperiodes = collect();
+            return view($this->view.'.index', compact('auditperiodes'));
+        }
+
+        $auditperiodes = AuditPeriode::with([
+                'unit',
+                'instrumenTemplate.templateIndikators',
+                'hasilAudits'
+            ])
             ->where('status', true)
+            ->where('unit_id', $userUnitId)
             ->get();
 
-        // Loop melalui setiap periode audit untuk menghitung progresnya
         foreach ($auditperiodes as $periode) {
             $template = $periode->instrumenTemplate;
-            if (!$template) {
-                $periode->progress = 0;
+            
+            // Inisialisasi default
+            $periode->total_indikator = 0;
+            
+            // Inisialisasi status_counts sebagai array lokal
+            $statusCounts = [ // <--- DEKLARASIKAN SEBAGAI VARIABEL LOKAL
+                'belum_dikerjakan' => 0,
+                'draft_dikerjakan' => 0,
+                'diajukan'         => 0,
+                'revisi'           => 0, // Asumsi ada status revisi
+                'selesai'          => 0, // Ini yang benar-benar final/diterima
+                'total_terisi'     => 0,
+            ];
+
+            $periode->overall_progress = 0;
+            $periode->statusText = 'Belum Dikerjakan';
+            $periode->statusClass = 'text-white bg-danger';
+
+            if (!$template || $template->templateIndikators->isEmpty()) {
                 $periode->statusText = 'Instrumen Tidak Ditemukan';
                 $periode->statusClass = 'text-bg-secondary';
+                // SET KEMBALI status_counts KE DEFAULT PADA OBJEK PERIODE JUGA
+                $periode->status_counts = $statusCounts; 
                 continue;
             }
 
-            // 1. Hitung Total Indikator secara akurat
-            // Ambil semua ID kriteria yang terhubung dengan template ini
-            $kriteriaIds = $template->kriterias->pluck('id');
-            // Hitung semua indikator yang terkait dengan kriteria-kriteria tersebut
-            $totalIndikator = \App\Models\Indikator::whereIn('kriteria_id', $kriteriaIds)->count();
+            $totalIndikatorDalamTemplate = $template->templateIndikators->count();
+            $periode->total_indikator = $totalIndikatorDalamTemplate;
 
-            // 2. Hitung Indikator yang Selesai
-            $indikatorSelesai = $this->model::where('audit_periode_id', $periode->id)
-                ->where('status_terkini', 'SELESAI') // Sesuaikan dengan nama status Anda
-                ->count();
+            $allHasilAudits = $periode->hasilAudits;
 
-            // 3. Kalkulasi Persentase
-            $progress = ($totalIndikator > 0) ? round(($indikatorSelesai / $totalIndikator) * 100) : 0;
+            // Hitung status untuk setiap indikator yang sudah ada hasil auditnya
+            foreach ($allHasilAudits as $hasilAudit) {
+                switch ($hasilAudit->status_terkini) {
+                    case 'Draft':
+                        $statusCounts['draft_dikerjakan']++; // <--- MODIFIKASI VARIABEL LOKAL
+                        break;
+                    case 'Diajukan':
+                        $statusCounts['diajukan']++;       // <--- MODIFIKASI VARIABEL LOKAL
+                        break;
+                    case 'Revisi':
+                        $statusCounts['revisi']++;         // <--- MODIFIKASI VARIABEL LOKAL
+                        break;
+                    case 'Selesai':
+                        $statusCounts['selesai']++;        // <--- MODIFIKASI VARIABEL LOKAL
+                        break;
+                    default:
+                        $statusCounts['draft_dikerjakan']++; // Default untuk status yang tidak dikenal
+                        break;
+                }
+            }
 
-            // 4. Tambahkan properti dinamis ke objek periode audit
-            $periode->progress = $progress;
+            // Hitung total indikator yang sudah diisi (apapun statusnya)
+            $statusCounts['total_terisi'] = 
+                $statusCounts['draft_dikerjakan'] +
+                $statusCounts['diajukan'] +
+                $statusCounts['revisi'] +
+                $statusCounts['selesai'];
+
+            // Indikator yang belum dikerjakan adalah total dikurangi yang sudah terisi
+            $statusCounts['belum_dikerjakan'] = 
+                $totalIndikatorDalamTemplate - $statusCounts['total_terisi'];
+
+            // Setelah semua perhitungan selesai, tetapkan array lokal ini ke properti objek
+            $periode->status_counts = $statusCounts; // <--- TETAPKAN KEMBALI KE PROPERTI OBJEK
+
+
+            // Kalkulasi Overall Progress (berdasarkan yang sudah terisi)
+            $periode->overall_progress = ($totalIndikatorDalamTemplate > 0) 
+                                        ? round(($periode->status_counts['total_terisi'] / $totalIndikatorDalamTemplate) * 100) 
+                                        : 0;
             
-            // Tentukan status dinamis berdasarkan progres
-            if ($progress == 100) {
-                $periode->statusText = 'Selesai';
-                $periode->statusClass = 'text-bg-success';
-            } elseif ($progress > 0) {
-                $periode->statusText = 'Sedang Berlangsung';
-                $periode->statusClass = 'text-bg-warning';
-            } else {
+            // --- Logika Penentuan Status Utama (untuk teks di kartu) ---
+            if ($periode->overall_progress == 0) {
                 $periode->statusText = 'Belum Dikerjakan';
-                $periode->statusClass = 'text-bg-light';
+                $periode->statusClass = 'text-white bg-danger';
+            } elseif ($periode->status_counts['selesai'] == $totalIndikatorDalamTemplate) {
+                $periode->statusText = 'Selesai & Diterima';
+                $periode->statusClass = 'text-white bg-success';
+            } elseif ($periode->status_counts['diajukan'] == $totalIndikatorDalamTemplate) { // Semua diajukan
+                 $periode->statusText = 'Menunggu Verifikasi (100% Diajukan)';
+                 $periode->statusClass = 'text-white bg-info';
+            } elseif ($periode->status_counts['total_terisi'] > 0) { // Ada yang sudah terisi tapi belum 100% selesai/diajukan
+                $periode->statusText = 'Sedang Berlangsung';
+                $periode->statusClass = 'text-white bg-warning';
+            } else {
+                $periode->statusText = 'Tidak Diketahui';
+                $periode->statusClass = 'text-bg-secondary';
             }
         }
         return view($this->view.'.index', compact('auditperiodes'));
@@ -61,27 +125,50 @@ class HasilAuditsController extends Controller
     public function auditKriteriaIndex(Request $request, $id)
     {
         $auditPeriode = \App\Models\AuditPeriode::with('unit', 'instrumenTemplate')->findOrFail($id);
-
         $template = $auditPeriode->instrumenTemplate;
 
         if (!$template) {
             return back()->with('error', 'Instrumen audit tidak dapat ditemukan untuk periode ini.');
         }
 
-        $kriterias = $template->kriterias()
-            ->whereNull('parent_id') // Mulai dari kriteria level tertinggi (induk).
-            ->with([
-                'childrenRecursive',
-                'indikators',
-                'indikators.hasilAudit' => function ($query) use ($auditPeriode) {
-                    $query->where('id_audit', $auditPeriode->id);
-                },
-                'childrenRecursive.indikators.hasilAudit' => function ($query) use ($auditPeriode) {
-                    $query->where('id_audit', $auditPeriode->id);
-                }
-            ])
-            ->get();
-        return view($this->view.'.auditkriteria', compact('kriterias', 'auditPeriode', 'template'));
+        // Ambil semua Kriteria ID yang termasuk dalam template ini dari tabel template_kriteria
+        $kriteriaIdsInTemplate = $template->templateKriterias->pluck('kriteria_id')->toArray();
+
+        // Ambil semua Indikator ID yang termasuk dalam template ini dari tabel template_indikator
+        // Beserta bobotnya, dan kuncikan berdasarkan id_indikator untuk akses mudah di view
+        $templateIndikators = $template->templateIndikators()->with('indikator')->get()->keyBy('indikator_id');
+        $indikatorIdsInTemplate = $templateIndikators->pluck('indikator_id')->toArray();
+
+        // --- DEFINISIKAN CLOSURE REKURSIF UNTUK EAGER LOADING KRITERIA & INDIKATOR ---
+        $withRecursiveChildrenAndIndikators = function ($query) use (&$withRecursiveChildrenAndIndikators, $kriteriaIdsInTemplate, $indikatorIdsInTemplate, $auditPeriode) {
+            $query->whereIn('id', $kriteriaIdsInTemplate) // Filter anak kriteria yang ada di template
+                  ->with([
+                      'children' => $withRecursiveChildrenAndIndikators, // Rekursif ke level bawah
+                      'indikators' => function($q) use ($indikatorIdsInTemplate, $auditPeriode) {
+                          $q->whereIn('id', $indikatorIdsInTemplate) // Filter indikator yang ada di template
+                            ->with(['hasilAudits' => function($haQuery) use ($auditPeriode) {
+                                $haQuery->where('audit_periode_id', $auditPeriode->id);
+                            }]);
+                      }
+                  ]);
+        };
+        // --- AKHIR DEFINISI CLOSURE REKURSIF ---
+
+        // Ambil kriteria level teratas yang ada di template
+        $kriterias = \App\Models\Kriteria::whereNull('parent_id') // Mulai dari kriteria level tertinggi
+                             ->whereIn('id', $kriteriaIdsInTemplate) // Filter kriteria level tertinggi yang ada di template
+                             ->with([
+                                 'children' => $withRecursiveChildrenAndIndikators, // Muat anak kriteria secara rekursif
+                                 'indikators' => function($query) use ($indikatorIdsInTemplate, $auditPeriode) {
+                                     $query->whereIn('id', $indikatorIdsInTemplate) // Muat indikator level atas yang ada di template
+                                           ->with(['hasilAudits' => function($haQuery) use ($auditPeriode) {
+                                               $haQuery->where('audit_periode_id', $auditPeriode->id);
+                                           }]);
+                                 }
+                             ])
+                             ->get();
+
+        return view($this->view.'.auditkriteria', compact('kriterias', 'auditPeriode', 'template', 'templateIndikators'));
     }
 
     public function create()
@@ -167,7 +254,8 @@ class HasilAuditsController extends Controller
         // 2. Aturan Validasi Dinamis
         $rules = [
             'audit_periode_id' => 'required|exists:audit_periodes,id',
-            'upload_file.*'    => 'nullable|file|max:2048',
+            'upload_file'   => 'required|array|min:1',
+            'upload_file.*' => 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt|max:20480',
         ];
 
         if ($indikator->tipe === 'LED') {
@@ -205,7 +293,7 @@ class HasilAuditsController extends Controller
                 ],
                 [
                     'skor_auditee'   => $skorAuditee,
-                    'status_terkini' => config('master.content.hasil_audit.status_terkini.Diajukan'),
+                    'status_terkini' => config('master.content.hasil_audit.status_terkini.Draft'),
                 ]
             );
 
@@ -258,6 +346,36 @@ class HasilAuditsController extends Controller
         }
     }
 
+    // Dalam App\Http\Controllers\Backend\AuditeeProgressController
+    public function updateStatusIndikator(Request $request)
+    {
+        $request->validate([
+            'indikator_id'     => 'required|exists:indikators,id',
+            'audit_periode_id' => 'required|exists:audit_periodes,id',
+            'status'           => 'required|in:Draft,Diajukan,Revisi,Selesai', // Sesuaikan dengan status yang Anda izinkan
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $hasilAudit = $this->model::where('indikator_id', $request->indikator_id)
+                ->where('audit_periode_id', $request->audit_periode_id)
+                ->update(['status_terkini' => $request->status]);
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Status indikator evaluasi berhasil diperbarui menjadi ' . $request->status . '.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'  => false,
+                'message' => config('app.debug') ? $e->getMessage() : 'Terjadi kesalahan saat memperbarui status.'
+            ], 500);
+        }
+    }
 
     public function delete($id)
     {

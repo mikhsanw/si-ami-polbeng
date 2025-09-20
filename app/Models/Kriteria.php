@@ -14,7 +14,7 @@ class Kriteria extends Model
     protected $casts=[];
 
     protected $fillable=[
-        'id', 'kode', 'nama','parent_id',
+        'id', 'kode', 'nama','parent_id', 'lembaga_akreditasi_id'
     ];
     
 	public function templateKriterias()

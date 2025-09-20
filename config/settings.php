@@ -37,7 +37,7 @@ return [
     # Theme Assets
 
     'KT_THEME_ASSETS' => [
-        'favicon' => asset('front/dist/images/logo.png'),
+        'favicon' => 'front/dist/images/logo.png',
         'fonts' => [
             'https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700',
         ],

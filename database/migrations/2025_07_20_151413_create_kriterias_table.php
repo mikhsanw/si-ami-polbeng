@@ -18,6 +18,7 @@ class CreateKriteriasTable extends Migration
 			$table->string('kode')->nullable();
 			$table->text('nama')->nullable();
             $table->uuid('parent_id')->nullable();
+			$table->foreignUuid('lembaga_akreditasi_id')->nullable()->constrained();
             $table->timestamps();
             $table->softDeletes();
         });

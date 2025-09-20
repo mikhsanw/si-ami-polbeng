@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Models\Indikator;
 use Illuminate\Http\Request;
 use App\Models\TemplateKriteria;
+use App\Models\TemplateIndikator;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
@@ -48,6 +50,38 @@ class InstrumenTemplatesController extends Controller
                 ->make();
         }
         return view($this->view.'.index');
+    }
+
+    public function getIndikatorTree(Request $request)
+    {
+        $lembagaId = $request->input('lembaga_id');
+        $templateId = $request->input('template_id'); // ID template saat edit
+
+        // Ambil kriteria level teratas yang terhubung dengan lembaga ini
+        $kriterias = \App\Models\Kriteria::with([
+                'children' => function($query) {
+                    $query->with('indikators'); // Eager load indikator untuk semua anak kriteria
+                },
+                'indikators' // Eager load indikator untuk kriteria level atas itu sendiri
+            ])
+            ->whereNull('parent_id') // Ambil kriteria level atas
+            ->where('lembaga_akreditasi_id', $lembagaId) // Filter berdasarkan lembaga yang terkait dengan template
+            ->get();
+
+        $selectedIndikatorIds = [];
+        if ($templateId !== 'null' && $templateId) {
+            // Jika dalam mode edit, ambil ID indikator yang sudah terpilih untuk template ini
+            $template = $this->model::with('templateIndikators.indikator')->find($templateId);
+            if ($template) {
+                $selectedIndikatorIds = $template->templateIndikators->pluck('indikator_id')->toArray();
+            }
+        }
+        
+        // Pastikan variabel $backend dan $page tersedia jika partial membutuhkannya
+        $backend = 'backend'; // Ganti dengan path folder backend Anda
+        $page = (object)['code' => 'instrumen_template']; // Sesuaikan dengan code page Anda
+
+        return view($this->view.'._kriteria_item', compact('kriterias', 'selectedIndikatorIds', 'backend', 'page'));
     }
 
     public function create()
@@ -99,81 +133,74 @@ class InstrumenTemplatesController extends Controller
         return view($this->view.'.form-rancangan', $data);
     }
 
-    public function updateRancangan(Request $request,$id)
+   public function updateRancangan(Request $request, $id)
     {
         $validated = $request->validate([
-            'kriteria'   => 'required|array',
-            'kriteria.*' => 'exists:kriterias,id',
-            'bobot'      => 'required|array',
-            'bobot.*'    => 'nullable|numeric|min:0',
+            'selected_indikators' => 'nullable|json', // Hidden input dari JS
+            'bobot'               => 'nullable|array', // Semua bobot yang diinput
+            'bobot.*'             => 'nullable|numeric|min:0|max:999.99', // Sesuaikan max dengan presisi DB
         ], [
-            'kriteria.required' => 'Kriteria harus dipilih.',
-            'bobot.required'    => 'Bobot harus diisi untuk setiap kriteria yang dipilih.',
             'bobot.*.numeric'   => 'Bobot harus berupa angka.',
             'bobot.*.min'       => 'Bobot tidak boleh kurang dari 0.',
+            'bobot.*.max'       => 'Bobot melebihi batas maksimum.',
         ]);
 
         DB::beginTransaction();
         try {
-            // Ambil model template instrumen berdasarkan ID
-            $instrumenTemplate = $this->model::findOrFail($id);
-            
-            $kriteriaToSync = [];
-            
-            if (!empty($validated['kriteria'])) {
-                // Loop pada kriteria yang dicentang oleh pengguna
-                foreach ($validated['kriteria'] as $kriteriaId) {
-                    $kriteria = \App\Models\Kriteria::with('parentRecursive')->find($kriteriaId);
-                    if (!$kriteria) continue;
+            $instrumenTemplate = $this->model::findOrFail($id); // Gunakan nama model yang benar
 
-                    // Simpan kriteria yang dipilih beserta bobotnya
-                    $bobot = $validated['bobot'][$kriteriaId] ?? 0;
-                    $kriteriaToSync[$kriteria->id] = ['bobot' => $bobot];
+            $selectedIndikatorIds = json_decode($request->input('selected_indikators', '[]'), true);
+            if (!is_array($selectedIndikatorIds)) {
+                $selectedIndikatorIds = [];
+            }
+            $inputBobots = $request->input('bobot', []);
 
-                    // Telusuri semua induknya ke atas dan tambahkan ke daftar sinkronisasi
-                    $parent = $kriteria->parentRecursive;
-                    while ($parent) {
-                        if (!array_key_exists($parent->id, $kriteriaToSync)) {
-                            $kriteriaToSync[$parent->id] = ['bobot' => null];
-                        }
-                        $parent = $parent->parentRecursive;
-                    }
+            // --- 1. Hapus semua relasi template_indikator dan template_kriteria yang lama ---
+            $instrumenTemplate->templateIndikators()->delete();
+            $instrumenTemplate->templateKriterias()->delete();
+
+            $kriteriaIdsToSync = []; // Untuk menyimpan Kriteria ID yang unik untuk templateKriterias
+
+            // --- 2. Proses dan Buat Relasi template_indikator baru ---
+            foreach ($selectedIndikatorIds as $indikatorId) {
+                $indikator = Indikator::with('kriteria.parentRecursive')->find($indikatorId); // Load relasi kriteria dan parent rekursifnya
+                if (!$indikator || !$indikator->kriteria) {
+                    // Log error atau lewati jika indikator atau kriteria induk tidak ditemukan
+                    continue;
+                }
+
+                $bobot = $inputBobots[$indikatorId] ?? 0; // Default bobot 0 jika tidak diinput
+                
+                // Buat entri di template_indikator
+                TemplateIndikator::create([
+                    'instrumen_template_id' => $instrumenTemplate->id,
+                    'indikator_id' => $indikator->id,
+                    'bobot' => (float) $bobot, // Pastikan di-cast ke float/decimal
+                ]);
+
+                // --- 3. Kumpulkan Kriteria ID untuk template_kriteria (Otomatis membangun hirarki) ---
+                $currentKriteria = $indikator->kriteria;
+                while ($currentKriteria) {
+                    // Tambahkan Kriteria ID ke daftar yang akan di-sync, pastikan unik
+                    $kriteriaIdsToSync[$currentKriteria->id] = true;
+                    $currentKriteria = $currentKriteria->parentRecursive;
                 }
             }
-            
-            // --- SINKRONISASI MANUAL (Alternatif untuk sync()) ---
 
-            $existingIds = $instrumenTemplate->kriterias()->pluck('kriteria_id')->toArray();
-            $newIds = array_keys($kriteriaToSync);
-
-            // Hapus relasi yang tidak lagi dicentang
-            $idsToDelete = array_diff($existingIds, $newIds);
-            if (!empty($idsToDelete)) {
-                TemplateKriteria::where('instrumen_template_id', $instrumenTemplate->id)
-                    ->whereIn('kriteria_id', $idsToDelete)
-                    ->delete();
-            }
-
-            // Update atau buat relasi yang baru/sudah ada
-            foreach ($kriteriaToSync as $kriteriaId => $pivotData) {
-                TemplateKriteria::updateOrCreate(
-                    [
-                        'instrumen_template_id' => $instrumenTemplate->id,
-                        'kriteria_id' => $kriteriaId,
-                    ],
-                    [
-                        'bobot' => $pivotData['bobot'] ?? null,
-                    ]
-                );
+            // --- 4. Buat Relasi template_kriteria baru berdasarkan indikator yang dipilih ---
+            foreach (array_keys($kriteriaIdsToSync) as $kriteriaId) {
+                TemplateKriteria::create([
+                    'instrumen_template_id' => $instrumenTemplate->id,
+                    'kriteria_id' => $kriteriaId,
+                    'bobot' => null, // Bobot di level kriteria diabaikan, hanya untuk struktur
+                ]);
             }
 
             DB::commit(); // Jika semua berhasil, simpan perubahan
 
             $response = [
                 'status'  => TRUE,
-                'message' => 'Rancangan instrumen berhasil diperbarui.',
-                // Sesuaikan nama route ini dengan route index Anda
-                'redirect' => route($this->code.'.index') 
+                'message' => 'Rancangan instrumen berhasil diperbarui.'
             ];
             return response()->json($response);
 
@@ -182,7 +209,6 @@ class InstrumenTemplatesController extends Controller
             
             $response = [
                 'status'  => FALSE,
-                // Tampilkan pesan error yang lebih informatif saat mode debug aktif
                 'message' => config('app.debug') ? $e->getMessage() : 'Terjadi kesalahan pada server.'
             ];
             return response()->json($response, 500);

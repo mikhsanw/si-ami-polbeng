@@ -45,21 +45,23 @@ Route::group(['middleware'=>['auth','check.permission']], function () {
 		Route::get('/delete/{id}', 'InstrumenTemplatesController@delete');
 		Route::get('/edit-rancangan/{id}', 'InstrumenTemplatesController@editRancangan');
 		Route::put('/update-rancangan/{id}', 'InstrumenTemplatesController@updateRancangan')->name('update-rancangan');
+		Route::get('/get-indikator-tree', 'InstrumenTemplatesController@getIndikatorTree')->name('get-indikator-tree');
 	});
 	Route::resource('instrumentemplates', 'InstrumenTemplatesController');
 
 	Route::prefix('kriterias')->as('kriterias.')->group(function () {
 		Route::get('/delete/{id}', 'KriteriasController@delete');
-		Route::get('/create-child/{id}', 'KriteriasController@createChild');
-		Route::get('/create-indikator/{id}', 'KriteriasController@createIndikator');
-		Route::get('/delete-indikator/{id}', 'KriteriasController@deleteIndikator');
+		Route::get('/create-child/{id}', 'KriteriasController@createChild')->name('create-child');
+		Route::get('/create-indikator/{id}', 'KriteriasController@createIndikator')->name('create-indikator');
+		Route::get('/delete-indikator/{id}', 'KriteriasController@deleteIndikator')->name('delete-indikator');
 		Route::delete('/destroy-indikator/{id}', 'KriteriasController@destroyIndikator')->name('destroy-indikator');
-		Route::get('/edit-indikator/{id}', 'KriteriasController@editIndikator');
+		Route::get('/edit-indikator/{id}', 'KriteriasController@editIndikator')->name('edit-indikator');
 		Route::post('/store-indikator', 'KriteriasController@storeIndikator')->name('store-indikator');
 		Route::put('/update-indikator/{id}', 'KriteriasController@updateIndikator')->name('update-indikator');
 		Route::get('/{id}/indikators', 'KriteriasController@indikators')->name('indikators');
+		Route::get('/{id?}', 'KriteriasController@index')->name('index')->where('id', '[a-f0-9\-]+');
 	});
-	Route::resource('kriterias', 'KriteriasController');
+	Route::resource('kriterias', 'KriteriasController')->except(['index', 'show']);
 
 	Route::prefix('templatekriterias')->as('templatekriterias')->group(function () {
 		Route::get('/delete/{id}', 'TemplateKriteriasController@delete');
@@ -104,6 +106,7 @@ Route::group(['middleware'=>['auth','check.permission']], function () {
 	Route::prefix('hasilaudits')->as('hasilaudits.')->group(function () {
 		Route::get('/delete/{id}', 'HasilAuditsController@delete');
 		Route::get('/audit-kriteria/{id}', 'HasilAuditsController@auditKriteriaIndex')->name('audit-kriteria');
+		Route::post('/update-status-indikator', 'HasilAuditsController@updateStatusIndikator')->name('update-status-indikator');
 		Route::get('/{id}/edit', 'HasilAuditsController@edit')->name('edit');
 		Route::get('/{id}/show', 'HasilAuditsController@show')->name('show');
 	});

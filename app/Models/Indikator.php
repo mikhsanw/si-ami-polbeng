@@ -34,6 +34,10 @@ class Indikator extends Model
     {
         return $this->hasMany('App\Models\HasilAudit');
     }
+    public function templateIndikators()
+    {
+        return $this->hasMany('App\Models\TemplateIndikator');
+    }
 
     public function hasilAuditForPeriode($auditPeriodeId)
     {

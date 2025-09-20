@@ -59,7 +59,7 @@ Ayo manfaatkan aplikasi ini dengan optimal!<br>
                 </div>
             </section>
 
-            <section class="features section">
+            {{-- <section class="features section">
                 <div class="container">
 					<div class="features-inner section-inner has-bottom-divider">
                         <div class="features-wrap">
@@ -171,7 +171,7 @@ Ayo manfaatkan aplikasi ini dengan optimal!<br>
 						</div>
 					</div>
 				</div>
-			</section>
+			</section> --}}
         </main>
 
         <footer class="site-footer">
@@ -179,7 +179,7 @@ Ayo manfaatkan aplikasi ini dengan optimal!<br>
                 <div class="site-footer-inner">
                     <div class="brand footer-brand">
 						<a href="#">
-							<img class="header-logo-image" src="{{asset('front/dist/images/logo.svg')}}" alt="Logo">
+							<img class="header-logo-image" src="{{asset('front/dist/images/logo.png')}}" alt="Logo">
 						</a>
                     </div>
                     <ul class="footer-links list-reset">
@@ -222,7 +222,7 @@ Ayo manfaatkan aplikasi ini dengan optimal!<br>
                             </a>
                         </li>
                     </ul>
-                    <div class="footer-copyright">&copy; 2019 Solid, all rights reserved</div>
+                    <div class="footer-copyright">&copy; 2025 Politeknik Negeri Bengkalis, all rights reserved</div>
                 </div>
             </div>
         </footer>

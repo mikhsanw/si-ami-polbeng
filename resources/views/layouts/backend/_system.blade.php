@@ -103,9 +103,9 @@ License: For each use you must have a valid license purchased only from above li
 		<!--end::Custom Javascript-->
 
 		@stack('js')
-		<script src="{{ url('/js/jquery.loadmodal.js') }}"></script>
-		<script src="{{ url('/js/jquery.blockUI.js') }}"></script>
-		<script src="{{ url('/js/jquery-layouts.js') }}"></script>
+		<script src="{{ asset('/js/jquery.loadmodal.js') }}"></script>
+		<script src="{{ asset('/js/jquery.blockUI.js') }}"></script>
+		<script src="{{ asset('/js/jquery-layouts.js') }}"></script>
 		<!--end::Javascript-->
 	</body>
 	<!--end::Body-->

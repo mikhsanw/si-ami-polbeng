@@ -40,5 +40,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\PenugasanAuditor::class);
     }
+    public function unit()
+    {
+        return $this->hasOne(\App\Models\Unit::class);
+    }
 
 }

@@ -6,11 +6,19 @@
     <div class="card">
         <div class="card-header border-0 pt-6">
             <div class="card-title">
-                <h1 class="text-muted">Data {{ $page->title }}</h1>
+                <div class="d-flex align-items-center position-relative my-1">
+                    <i class="ki-duotone ki-setting-4 fs-1 position-absolute ms-6"><span class="path1"></span>
+                        <span class="path2"></span></i>
+                        <select id="filter_kriteria" class="form-control form-control-solid w-250px ps-15">
+                            @foreach($filterOptions as $key => $label)
+                                <option {{ $key == $id ? 'selected' : '' }} value="{{ $key }}">{{$label }}</option>
+                            @endforeach
+                        </select>
+                </div>
                 <div id="kt_datatable_example_1_export" class="d-none"></div>
             </div>
             <div class="card-toolbar flex-row-fluid justify-content-end gap-5 me-3">
-                <div id="kt_datatable_example_buttons" class="d-none"></div>
+                
             </div>
             <div class="card-toolbar">
                 <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
@@ -31,7 +39,11 @@
                         'parent_id' => '#accordion_kriteria_utama'
                     ])
                 @empty
-                    <p class="text-muted">Belum ada data kriteria.</p>
+                    @if(!$id)
+                        <p class="text-muted">Lembaga Akreditasi belum dipilih.</p>
+                    @else
+                        <p class="text-muted">Belum ada data kriteria.</p>
+                    @endif
                 @endforelse
             </div>
         </div>
@@ -41,6 +53,15 @@
             <script src="{{ asset('js/jquery-validation-1.19.5/lib/jquery.form.js') }}"></script>
             <script src="{{ asset('js/jquery-crud.js') }}"></script>
             <script src="{{ asset('assets/plugins/custom/tinymce/tinymce.bundle.js') }}"></script>
+            <script>
+                $(document).ready(function () {
+                    $('#filter_kriteria').on('change', function () {
+                        let filterValue = $(this).val();
+                        console.log('{{ url($page->url) }}' + '/' + filterValue);
+                        window.location.href = "{{ url(config('master.app.url.backend') . '/' . $page->url) }}" + '/' + filterValue; // reload dengan query string
+                    });
+                });
+            </script>
         @endprepend
 
 </x-app-layout>

@@ -12,6 +12,10 @@
             </div>
         @endif
 
+        <div class="form-group">
+            {!! html()->label()->class("control-label")->for("lembaga_akreditasi_id")->text("Lembaga Akreditasi") !!}
+            {!! html()->select('lembaga_akreditasi_id', $lembagaAkreditasiOptions, isset($data) ? $data->lembaga_akreditasi_id : (isset($parent) ? $parent->lembaga_akreditasi_id : null))->class("form-select")->id("lembaga_akreditasi_id")->placeholder('Pilih Lembaga Akreditasi') !!}
+        </div>
 		<div class="form-group">
 			{!! html()->label()->class("control-label")->for("kode")->text("Kode") !!}
 			{!! html()->text("kode", isset($data) ? $data->kode : null)->placeholder("Type Kode here")->class("form-control")->id("kode") !!}

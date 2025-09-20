@@ -59,27 +59,53 @@
                             <span class="badge bg-success rounded-pill text-white">{{ $indikator->tipe }}</span>
                         </div>
                         <div class="d-flex align-items-center">
+
                             @if ($status === 'Selesai')
                                 <span class="badge badge-light-success me-3">Selesai</span>
                                 <a href="#" class="btn btn-sm btn-light-info btn-action"
                                     data-id="{{ $indikator->id }}" data-action="show-audit"
                                     data-url="{{ route($page->code . '.show', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
                                     data-title="Lihat Hasil Final">Lihat Hasil</a>
+
                             @elseif ($status === 'Revisi')
                                 <span class="badge badge-light-danger me-3">Revisi Diperlukan</span>
-                                <a href="#" class="btn btn-sm btn-danger btn-action"
+                                <a href="#" class="btn btn-sm btn-danger btn-action me-2"
                                     data-action="edit-audit"
                                     data-id="{{ $indikator->id }}"
                                     data-url="{{ route($page->code . '.edit', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
                                     data-title="Perbaiki Evaluasi">Perbaiki</a>
+                                {{-- Setelah perbaikan, auditee bisa mengajukan lagi --}}
+                                <button type="button" class="btn btn-sm btn-primary btn-submit-indikator"
+                                    data-id="{{ $indikator->id }}"
+                                    data-audit-periode-id="{{ $auditPeriode->id }}"
+                                    data-status="Diajukan" {{-- Status yang akan di-set saat submit --}}
+                                    data-message="Apakah Anda yakin ingin mengajukan indikator ini? Setelah diajukan, Anda tidak dapat mengeditnya sampai diverifikasi.">
+                                    Ajukan
+                                </button>
+
                             @elseif ($status === 'Diajukan')
-                                <span class="badge badge-light-warning me-3">Diajukan</span>
-                                <a href="#" class="btn btn-sm btn-light-warning btn-action"
+                                <span class="badge badge-light-info me-3">Diajukan</span> {{-- Mengubah warna ke info untuk diajukan --}}
+                                <a href="#" class="btn btn-sm btn-light-info btn-action"
                                     data-id="{{ $indikator->id }}" data-action="show-audit"
                                     data-url="{{ route($page->code . '.show', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
                                     data-title="Lihat Isian Anda">Lihat</a>
-                            @else
-                                {{-- Status 'BELUM_DIKERJAKAN' --}}
+                                {{-- Mungkin tambahkan tombol "Batalkan Pengajuan" jika diperlukan --}}
+
+                            @elseif ($status === 'Draft')
+                                <span class="badge badge-light-warning me-3">Draft</span>
+                                <a href="#" class="btn btn-sm btn-warning btn-action me-2"
+                                    data-title="Formulir Evaluasi Diri" data-action="edit-audit"
+                                    data-id="{{ $indikator->id }}"
+                                    data-url="{{ route($page->code . '.edit', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}">Lanjutkan</a>
+                                <button type="button" class="btn btn-sm btn-primary btn-submit-indikator"
+                                    data-id="{{ $indikator->id }}"
+                                    data-audit-periode-id="{{ $auditPeriode->id }}"
+                                    data-status="Diajukan"
+                                    data-message="Apakah Anda yakin ingin mengajukan indikator ini? Setelah diajukan, Anda tidak dapat mengeditnya sampai diverifikasi.">
+                                    Ajukan
+                                </button>
+
+                            @else {{-- Status 'BELUM_DIKERJAKAN' (atau NULL) --}}
                                 <span class="badge badge-light me-3">Belum Dikerjakan</span>
                                 <a href="#" class="btn btn-sm btn-primary btn-action"
                                     data-title="Formulir Evaluasi Diri" data-action="edit-audit"
@@ -98,3 +124,80 @@
         @endif
     @endif
 </div>
+
+@prepend('js')
+    <script>
+        $(document).ready(function() {
+            $(document).on('click', '.btn-submit-indikator', function() {
+                const indikatorId = $(this).data('id');
+                const auditPeriodeId = $(this).data('audit-periode-id');
+                const targetStatus = $(this).data('status');
+                const confirmMessage = $(this).data('message');
+
+                Swal.fire({
+                    title: 'Konfirmasi Pengajuan',
+                    text: confirmMessage,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Ajukan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Tampilkan loader SweetAlert2 saat AJAX diproses
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Lakukan AJAX call untuk mengubah status indikator
+                        $.ajax({
+                            url: '{{ route($page->code . '.update-status-indikator') }}',
+                            method: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                indikator_id: indikatorId,
+                                audit_periode_id: auditPeriodeId,
+                                status: targetStatus
+                            },
+                            success: function(response) {
+                                Swal.close(); // Tutup loader
+
+                                if (response.status) {
+                                    Swal.fire(
+                                        'Berhasil!',
+                                        response.message,
+                                        'success'
+                                    ).then(() => {
+                                        location.reload(); // Refresh halaman setelah sukses
+                                    });
+                                } else {
+                                    Swal.fire(
+                                        'Gagal!',
+                                        response.message,
+                                        'error'
+                                    );
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.close(); // Tutup loader
+
+                                Swal.fire(
+                                    'Terjadi Kesalahan!',
+                                    'Gagal mengajukan indikator. Silakan coba lagi.',
+                                    'error'
+                                );
+                                console.error(xhr.responseText);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+@endprepend

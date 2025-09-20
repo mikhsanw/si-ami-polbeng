@@ -11,23 +11,27 @@ use Illuminate\Support\Facades\Validator;
 
 class KriteriasController extends Controller
 {
-    public function index()
+    public function index($id = NULL)
     {
-        $kriterias = $this->model::whereNull('parent_id')
-                              ->with(['childrenRecursive', 'indikators', 'children'])
-                              ->get();
         
-        return view($this->view.'.index',compact('kriterias'));
+        $kriterias = $id != NULL ? $this->model::with(['childrenRecursive', 'indikators', 'children'])->whereNull('parent_id')->whereLembagaAkreditasiId($id)->get() : [];
+        $data = \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray();
+        $filterOptions = ['' => 'Pilih Lembaga Akreditasi'] + $data;
+        return view($this->view.'.index',compact('kriterias', 'filterOptions', 'id'));
     }
 
     public function create()
     {
-        return view($this->view.'.form' );
+            $data = [
+                'lembagaAkreditasiOptions' => \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray(),
+            ];
+        return view($this->view.'.form', $data);
     }
     public function createChild($id)
     {
         $data = [
             'parent' => $this->model::find($id),
+            'lembagaAkreditasiOptions' => \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray(),
         ];
         return view($this->view.'.form', $data);
     }
@@ -198,6 +202,7 @@ class KriteriasController extends Controller
     {
         $data=[
             'data'    => $this->model::find($id),
+            'lembagaAkreditasiOptions' => \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray(),
         ];
         return view($this->view.'.form', $data);
     }
