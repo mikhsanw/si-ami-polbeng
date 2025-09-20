@@ -62,7 +62,7 @@
         {{-- TAMPILAN LIHAT UNTUK LED --}}
         <div>
             <h5 class="fw-bold mb-3">Hasil Evaluasi Diri (Skor Auditee):</h5>
-            @forelse ($data->rubrikPenilaians->sortByDesc('skor') as $rubrik)
+            @forelse ($data->rubrikPenilaians->sortByDesc('skor')->whereNotNull('deskripsi') as $rubrik)
                 <div class="form-check mb-3">
                     <input class="form-check-input" disabled type="radio" 
                         name="skor_auditee" 

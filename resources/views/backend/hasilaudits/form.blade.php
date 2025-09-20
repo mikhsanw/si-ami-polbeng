@@ -31,7 +31,7 @@
             {{-- TAMPILAN UNTUK LED (LED) --}}
             <div id="form-led">
                 <label class="form-label fw-bold fs-5">Pilih Tingkat Capaian (Skor):</label>
-                @forelse ($data->rubrikPenilaians->sortByDesc('skor') as $rubrik)
+                @forelse ($data->rubrikPenilaians->sortByDesc('skor')->whereNotNull('deskripsi') as $rubrik)
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="radio" 
                             name="skor_auditee" 
