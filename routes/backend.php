@@ -50,7 +50,7 @@ Route::group(['middleware'=>['auth','check.permission']], function () {
 	Route::resource('instrumentemplates', 'InstrumenTemplatesController');
 
 	Route::prefix('kriterias')->as('kriterias.')->group(function () {
-		Route::get('/delete/{id}', 'KriteriasController@delete');
+		Route::get('/delete/{id}', 'KriteriasController@delete')->name('delete');
 		Route::get('/create-child/{id}', 'KriteriasController@createChild')->name('create-child');
 		Route::get('/create-indikator/{id}', 'KriteriasController@createIndikator')->name('create-indikator');
 		Route::get('/delete-indikator/{id}', 'KriteriasController@deleteIndikator')->name('delete-indikator');
