@@ -65,7 +65,7 @@
                         </ul>
                         <button class="btn btn-action btn-sm btn-light-success mt-3" data-title="Isi Indikator"
                             data-action="create-indikator" data-id="{{ $item->id }}"
-                            data-url="{{ route($page->code . '.create-indikator/' . $item->id }}">
+                            data-url="{{ route($page->code . '.create-indikator' . $item->id }}">
                             <i class="ki-outline ki-plus-square fs-3"></i>
                             Tambah Indikator
                         </button>
