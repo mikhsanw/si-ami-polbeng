@@ -77,21 +77,20 @@
             <div class="mt-4 pt-4 border-top">
                 @can($page->code . ' create')
                     <button class="btn btn-action btn-sm btn-light-primary" data-title="Tambah" data-action="create-child"
-                        data-id="{{ $item->id }}"
-                        data-url="{{ route($page->code . '.create-child', $item->id) }}">
+                        data-id="{{ $item->id }}" data-url="{{ route($page->code . '.create-child', $item->id) }}">
                         <i class="ki-outline ki-plus-square fs-3"></i>
                         Tambah Sub-Kriteria
                     </button>
                 @endcan
 
                 <button class="btn btn-sm btn-light-danger btn-action" data-id="{{ $item->id }}"
-                    data-url="{{ route($page->code . '.delete', $item->id) }}" data-title="Hapus Kriteria"
+                    data-url="{{ config('master.app.url.backend') . '/' . $page->url }}" data-title="Hapus Kriteria"
                     data-action="delete">
                     <i class="ki-outline ki-trash fs-3"></i>
                     Hapus Kriteria
                 </button>
                 <button class="btn btn-sm btn-light-warning btn-action" data-id="{{ $item->id }}"
-                    data-url="{{ route($page->code . '.edit', $item->id) }}" data-title="Edit Kriteria"
+                    data-url="{{ config('master.app.url.backend') . '/' . $page->url }}" data-title="Edit Kriteria"
                     data-action="edit">
 
                     <i class="ki-outline ki-pencil fs-3"></i>

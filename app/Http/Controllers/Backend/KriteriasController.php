@@ -2,47 +2,52 @@
 
 namespace App\Http\Controllers\Backend;
 
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class KriteriasController extends Controller
 {
-    public function index($id = NULL)
+    public function index($id = null)
     {
-        
-        $kriterias = $id != NULL ? $this->model::with(['childrenRecursive', 'indikators', 'children'])->whereNull('parent_id')->whereLembagaAkreditasiId($id)->get() : [];
+
+        $kriterias = $id != null ? $this->model::with(['childrenRecursive', 'indikators', 'children'])->whereNull('parent_id')->whereLembagaAkreditasiId($id)->get() : [];
         $data = \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray();
         $filterOptions = ['' => 'Pilih Lembaga Akreditasi'] + $data;
-        return view($this->view.'.index',compact('kriterias', 'filterOptions', 'id'));
+
+        return view($this->view.'.index', compact('kriterias', 'filterOptions', 'id'));
     }
 
     public function create()
     {
-            $data = [
-                'lembagaAkreditasiOptions' => \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray(),
-            ];
+        $data = [
+            'lembagaAkreditasiOptions' => \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray(),
+        ];
+
         return view($this->view.'.form', $data);
     }
+
     public function createChild($id)
     {
         $data = [
             'parent' => $this->model::find($id),
             'lembagaAkreditasiOptions' => \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray(),
         ];
+
         return view($this->view.'.form', $data);
     }
+
     public function createIndikator($id)
     {
         $data = [
             'parent' => $this->model::find($id),
             'existingRubrikDeskripsi' => [],
             'existingRubrikFormula' => [],
-            'inputFields' => []
+            'inputFields' => [],
         ];
+
         return view($this->view.'.formIndikator', $data);
     }
 
@@ -67,31 +72,33 @@ class KriteriasController extends Controller
             'parent' => $data->kriteria,
             'existingRubrikDeskripsi' => $existingRubrikDeskripsi ?? [],
             'existingRubrikFormula' => $existingRubrikFormula ?? [],
-            'inputFields' => $indikatorInputs ?? []
+            'inputFields' => $indikatorInputs ?? [],
         ];
+
         return view($this->view.'.formIndikator', $data);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-					'kode' => 'required|'.config('master.regex.json'),
-					'nama' => 'required|'.config('master.regex.json'),
+            'kode' => 'required|'.config('master.regex.json'),
+            'nama' => 'required|'.config('master.regex.json'),
         ]);
         if ($data = $this->model::create($request->all())) {
             $response = [
-                'status' => TRUE,
+                'status' => true,
                 'message' => 'Data berhasil disimpan',
-                'redirect' => $request->input('redirect') ?? route('kriterias.index')
+                'redirect' => $request->input('redirect') ?? route('kriterias.index'),
             ];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal disimpan']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal disimpan']);
     }
 
     public function storeIndikator(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
+            'nama' => 'required|string',
             'tipe' => ['required', Rule::in(config('master.content.kriteria.tipe'))],
             'parent_id' => 'nullable|exists:kriterias,id',
             'rubrik_manual_deskripsi' => 'required_if:tipe,LED|array',
@@ -112,12 +119,12 @@ class KriteriasController extends Controller
                     }
                     if (empty($field['variable'])) {
                         $validator->errors()->add("input_fields.$index.variable", 'Nama variabel wajib diisi.');
-                    } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $field['variable'])) {
+                    } elseif (! preg_match('/^[a-zA-Z0-9_-]+$/', $field['variable'])) {
                         $validator->errors()->add("input_fields.$index.variable", 'Nama variabel hanya boleh mengandung huruf, angka, strip, dan underscore.');
                     }
                     if (empty($field['tipe_data'])) {
                         $validator->errors()->add("input_fields.$index.tipe_data", 'Tipe data wajib dipilih.');
-                    } elseif (!in_array($field['tipe_data'], ['ANGKA', 'PERSENTASE', 'TEKS'])) {
+                    } elseif (! in_array($field['tipe_data'], ['ANGKA', 'PERSENTASE', 'TEKS'])) {
                         $validator->errors()->add("input_fields.$index.tipe_data", 'Tipe data tidak valid.');
                     }
                 }
@@ -176,6 +183,7 @@ class KriteriasController extends Controller
             }
 
             DB::commit();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Data berhasil disimpan.',
@@ -183,42 +191,44 @@ class KriteriasController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => false,
-                'message' => 'Gagal menyimpan data: ' . $e->getMessage(),
+                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
             ]);
         }
     }
 
-
-
     public function show($id)
     {
         $data = $this->model::find($id);
+
         return view($this->view.'.show', compact('data'));
     }
 
     public function edit($id)
     {
-        $data=[
-            'data'    => $this->model::find($id),
+        $data = [
+            'data' => $this->model::find($id),
             'lembagaAkreditasiOptions' => \App\Models\LembagaAkreditasi::pluck('nama', 'id')->toArray(),
         ];
+
         return view($this->view.'.form', $data);
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-					'kode' => 'required|'.config('master.regex.json'),
-					'nama' => 'required|'.config('master.regex.json'),
+            'kode' => 'required|'.config('master.regex.json'),
+            'nama' => 'required|'.config('master.regex.json'),
         ]);
 
-        $data=$this->model::find($id);
-        if($data->update($request->all())){
-            $response=[ 'status'=>TRUE, 'message'=>'Data berhasil disimpan','redirect' => $request->input('redirect') ?? route('kriterias.index')];
+        $data = $this->model::find($id);
+        if ($data->update($request->all())) {
+            $response = ['status' => true, 'message' => 'Data berhasil disimpan', 'redirect' => $request->input('redirect') ?? route('kriterias.index')];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal disimpan']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal disimpan']);
     }
 
     public function updateIndikator(Request $request, $id)
@@ -239,7 +249,7 @@ class KriteriasController extends Controller
         // Validasi lanjutan untuk input_fields jika tipe LKPS
         $validator = Validator::make($request->all(), []);
         $validator->after(function ($validator) use ($request) {
-            if ($request->input('tipe') === "LKPS" ) {
+            if ($request->input('tipe') === 'LKPS') {
                 $fields = $request->input('input_fields', []);
                 foreach ($fields as $index => $field) {
                     if (empty($field['label'])) {
@@ -247,12 +257,12 @@ class KriteriasController extends Controller
                     }
                     if (empty($field['variable'])) {
                         $validator->errors()->add("input_fields.$index.variable", 'Nama variabel wajib diisi.');
-                    } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $field['variable'])) {
+                    } elseif (! preg_match('/^[a-zA-Z0-9_-]+$/', $field['variable'])) {
                         $validator->errors()->add("input_fields.$index.variable", 'Nama variabel hanya boleh mengandung huruf, angka, strip, dan underscore.');
                     }
                     if (empty($field['tipe_data'])) {
                         $validator->errors()->add("input_fields.$index.tipe_data", 'Tipe data wajib dipilih.');
-                    } elseif (!in_array($field['tipe_data'], ['ANGKA', 'PERSENTASE', 'TEKS'])) {
+                    } elseif (! in_array($field['tipe_data'], ['ANGKA', 'PERSENTASE', 'TEKS'])) {
                         $validator->errors()->add("input_fields.$index.tipe_data", 'Tipe data tidak valid.');
                     }
                 }
@@ -317,6 +327,7 @@ class KriteriasController extends Controller
             }
 
             DB::commit();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Data berhasil diperbaharui.',
@@ -324,47 +335,51 @@ class KriteriasController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => false,
-                'message' => 'Gagal memperbaharui data: ' . $e->getMessage(),
+                'message' => 'Gagal memperbaharui data: '.$e->getMessage(),
             ]);
         }
     }
 
     public function delete($id)
     {
-        $data=$this->model::find($id);
+        $data = $this->model::find($id);
+
         return view($this->view.'.delete', compact('data'));
     }
 
     public function deleteIndikator($id)
     {
-        $data=\App\Models\Indikator::find($id);
+        $data = \App\Models\Indikator::find($id);
+
         return view($this->view.'.deleteIndikator', compact('data'));
     }
 
     public function destroy($id)
     {
-        $data=$this->model::find($id);
+        $data = $this->model::find($id);
         if ($data->indikators()->count() > 0 || $data->children()->count() > 0) {
             return response()->json([
-                'status'  => FALSE,
-                'message' => 'Data indikator tidak dapat dihapus karena memiliki relasi'
+                'status' => false,
+                'message' => 'Data indikator tidak dapat dihapus karena memiliki relasi',
             ]);
         }
-        if($data->delete()){
-            $response=[ 'status'=>TRUE, 'message'=>'Data berhasil dihapus', 'redirect' => route('kriterias.index')];
+        if ($data->delete()) {
+            $response = ['status' => true, 'message' => 'Data berhasil dihapus', 'redirect' => route('kriterias.index').'/'.$data->lembaga_akreditasi_id];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal dihapus']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal dihapus']);
     }
 
     public function destroyIndikator($id)
     {
         $data = \App\Models\Indikator::find($id);
-        if (!$data) {
+        if (! $data) {
             return response()->json([
-                'status'  => FALSE,
-                'message' => 'Data indikator tidak ditemukan'
+                'status' => false,
+                'message' => 'Data indikator tidak ditemukan',
             ]);
         }
 
@@ -377,15 +392,15 @@ class KriteriasController extends Controller
 
         if ($data->delete()) {
             return response()->json([
-                'status'   => TRUE,
-                'message'  => 'Data berhasil dihapus',
-                'redirect' => route('kriterias.index')
+                'status' => true,
+                'message' => 'Data berhasil dihapus',
+                'redirect' => route('kriterias.index').'/'.$data->kriteria->lembaga_akreditasi_id,
             ]);
         }
 
         return response()->json([
-            'status'  => FALSE,
-            'message' => 'Data gagal dihapus'
+            'status' => false,
+            'message' => 'Data gagal dihapus',
         ]);
     }
 }

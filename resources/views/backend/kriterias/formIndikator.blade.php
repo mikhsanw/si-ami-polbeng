@@ -1,25 +1,29 @@
-{{ html()->form(isset($data)?'PUT':'POST', (isset($data) ? route($page->code.'.update-indikator',$data->id) : route($page->code.'.store-indikator')))->id('form2-create-'.$page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
+{{ html()->form(isset($data) ? 'PUT' : 'POST', isset($data) ? route($page->code . '.update-indikator', $data->id) : route($page->code . '.store-indikator'))->id('form2-create-' . $page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
 <div class="panel">
     <div class="panel-body">
-        @if ($parent?? null)
+        @if ($parent ?? null)
             {{-- Jika ada parent, tampilkan nama kriteria --}}
             {!! html()->hidden('parent_id')->id('parent_id')->value($parent->id) !!}
-            {!! html()->hidden('redirect', route($page->code.'.index')) !!}
+            {!! html()->hidden('redirect', route($page->code . '.index') . '/' . $parent->lembaga_akreditasi_id) !!}
 
             <div class="form-group">
-                {!! html()->label()->class("control-label")->for("parent_nama")->text("Kriteria") !!}
-                {!! html()->text("parent_nama", null)->class("form-control")->id("parent_nama")->attributes(['readonly' => 'readonly'])->value($parent->nama) !!}
+                {!! html()->label()->class('control-label')->for('parent_nama')->text('Kriteria') !!}
+                {!! html()->text('parent_nama', null)->class('form-control')->id('parent_nama')->attributes(['readonly' => 'readonly'])->value($parent->nama) !!}
             </div>
         @endif
 
-		<div class="form-group">
-            {!! html()->label()->class("control-label")->for("nama")->text("Nama Indikator") !!}
-			{!! html()->textarea("nama", isset($data) ? $data->nama : null)->placeholder("Ketik Nama di sini")->class("form-control")->id("nama") !!}
-		</div>
-        
         <div class="form-group">
-            {!! html()->label()->class("control-label")->for("tipe")->text("Tipe Penilaian") !!}
-            {!! html()->select("tipe", config('master.content.kriteria.tipe'), isset($data) ? config('master.content.kriteria.tipe.'.$data->tipe) : null)->placeholder("Pilih Tipe Penilaian")->class("form-select")->id("tipe") !!}
+            {!! html()->label()->class('control-label')->for('nama')->text('Nama Indikator') !!}
+            {!! html()->textarea('nama', isset($data) ? $data->nama : null)->placeholder('Ketik Nama di sini')->class('form-control')->id('nama') !!}
+        </div>
+
+        <div class="form-group">
+            {!! html()->label()->class('control-label')->for('tipe')->text('Tipe Penilaian') !!}
+            {!! html()->select(
+                    'tipe',
+                    config('master.content.kriteria.tipe'),
+                    isset($data) ? config('master.content.kriteria.tipe.' . $data->tipe) : null,
+                )->placeholder('Pilih Tipe Penilaian')->class('form-select')->id('tipe') !!}
         </div>
         {{-- Manual input: Rubrik Penilaian --}}
         <div class="form-group mt-3" id="manual_rubrik" style="display: none;">
@@ -36,7 +40,8 @@
                         <tr>
                             <td class="text-center fw-bold fs-5 align-middle">{{ $i }}</td>
                             <td>
-                                <textarea name="rubrik_manual_deskripsi[{{ $i }}]" class="form-control" rows="2" placeholder="Deskripsi untuk skor {{ $i }}" disabled>{{ old("rubrik_manual_deskripsi.$i", $existingRubrikDeskripsi[$i] ?? '') }}</textarea>
+                                <textarea name="rubrik_manual_deskripsi[{{ $i }}]" class="form-control" rows="2"
+                                    placeholder="Deskripsi untuk skor {{ $i }}" disabled>{{ old("rubrik_manual_deskripsi.$i", $existingRubrikDeskripsi[$i] ?? '') }}</textarea>
                             </td>
                         </tr>
                     @endfor
@@ -48,8 +53,9 @@
         <div id="otomatis_input">
             <hr>
             <h5 class="mt-4">Definisi Input Field</h5>
-            <p class="text-muted">Tentukan data apa saja yang perlu diisi oleh auditee untuk indikator ini. Variabel akan digunakan dalam formula di bawah.</p>
-            
+            <p class="text-muted">Tentukan data apa saja yang perlu diisi oleh auditee untuk indikator ini. Variabel
+                akan digunakan dalam formula di bawah.</p>
+
             <table class="table table-bordered">
                 <thead class="table-light">
                     <tr>
@@ -62,45 +68,54 @@
                 <tbody id="dynamicFieldsContainer">
                     {{-- Baris pertama sebagai contoh --}}
                     @forelse ($inputFields as $idx => $field)
-                    <tr>
-                        <td>
-                            <input type="text" name="input_fields[{{ $idx }}][label]" value="{{ old("input_fields.$idx.label", $field['label']) }}" placeholder="Ketik Deskripsi Input di sini" class="form-control">
-                        </td>
-                        <td>
-                            <input type="text" name="input_fields[{{ $idx }}][variable]" value="{{ old("input_fields.$idx.variable", $field['variable']) }}" placeholder="e.g., jumlah_dosen" class="form-control">
-                        </td>
-                        <td>
-                            <select name="input_fields[{{ $idx }}][tipe_data]" class="form-select">
-                                <option value="ANGKA" {{ $field['tipe_data'] == 'ANGKA' ? 'selected' : '' }}>Angka</option>
-                                <option value="PERSENTASE" {{ $field['tipe_data'] == 'PERSENTASE' ? 'selected' : '' }}>Persentase</option>
-                                <option value="TEKS" {{ $field['tipe_data'] == 'TEKS' ? 'selected' : '' }}>Teks</option>
-                            </select>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm remove-field">
-                                <i class="fas fa-trash"></i> Hapus
-                            </button>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>
+                                <input type="text" name="input_fields[{{ $idx }}][label]"
+                                    value="{{ old("input_fields.$idx.label", $field['label']) }}"
+                                    placeholder="Ketik Deskripsi Input di sini" class="form-control">
+                            </td>
+                            <td>
+                                <input type="text" name="input_fields[{{ $idx }}][variable]"
+                                    value="{{ old("input_fields.$idx.variable", $field['variable']) }}"
+                                    placeholder="e.g., jumlah_dosen" class="form-control">
+                            </td>
+                            <td>
+                                <select name="input_fields[{{ $idx }}][tipe_data]" class="form-select">
+                                    <option value="ANGKA" {{ $field['tipe_data'] == 'ANGKA' ? 'selected' : '' }}>Angka
+                                    </option>
+                                    <option value="PERSENTASE"
+                                        {{ $field['tipe_data'] == 'PERSENTASE' ? 'selected' : '' }}>Persentase</option>
+                                    <option value="TEKS" {{ $field['tipe_data'] == 'TEKS' ? 'selected' : '' }}>Teks
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove-field">
+                                    <i class="fas fa-trash"></i> Hapus
+                                </button>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td>
-                            <input type="text" name="input_fields[0][label]" placeholder="e.g., Masukkan Jumlah Dosen" class="form-control">
-                        </td>
-                        <td>
-                            <input type="text" name="input_fields[0][variable]" placeholder="e.g., jumlah_dosen" class="form-control">
-                        </td>
-                        <td>
-                            <select name="input_fields[0][tipe_data]" class="form-select">
-                                <option value="ANGKA">Angka</option>
-                                <option value="PERSENTASE">Persentase</option>
-                                <option value="TEKS">Teks</option>
-                            </select>
-                        </td>
-                        <td>
-                            {{-- Tombol hapus tidak ada untuk baris pertama --}}
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>
+                                <input type="text" name="input_fields[0][label]"
+                                    placeholder="e.g., Masukkan Jumlah Dosen" class="form-control">
+                            </td>
+                            <td>
+                                <input type="text" name="input_fields[0][variable]" placeholder="e.g., jumlah_dosen"
+                                    class="form-control">
+                            </td>
+                            <td>
+                                <select name="input_fields[0][tipe_data]" class="form-select">
+                                    <option value="ANGKA">Angka</option>
+                                    <option value="PERSENTASE">Persentase</option>
+                                    <option value="TEKS">Teks</option>
+                                </select>
+                            </td>
+                            <td>
+                                {{-- Tombol hapus tidak ada untuk baris pertama --}}
+                            </td>
+                        </tr>
                     @endforelse
 
                 </tbody>
@@ -112,8 +127,9 @@
 
             {{-- BAGIAN 2: RUBRIK & FORMULA PENILAIAN --}}
             <h5 class="mt-4">Definisi Rubrik & Formula Penilaian</h5>
-            <p class="text-muted">Isi deskripsi dan formula untuk setiap skor. Gunakan "Nama Variabel" yang telah Anda definisikan di atas dalam formula.</p>
-            
+            <p class="text-muted">Isi deskripsi dan formula untuk setiap skor. Gunakan "Nama Variabel" yang telah Anda
+                definisikan di atas dalam formula.</p>
+
             <table class="table table-bordered">
                 <thead class="table-light">
                     <tr>
@@ -127,10 +143,12 @@
                         <tr>
                             <td class="text-center fw-bold fs-5 align-middle">{{ $i }}</td>
                             <td>
-                                <textarea name="rubrik_otomatis_deskripsi[{{ $i }}]" class="form-control" rows="2" placeholder="Deskripsi skor {{ $i }}" disabled>{{ old("rubrik_otomatis_deskripsi.$i", $existingRubrikDeskripsi[$i] ?? '') }}</textarea>
+                                <textarea name="rubrik_otomatis_deskripsi[{{ $i }}]" class="form-control" rows="2"
+                                    placeholder="Deskripsi skor {{ $i }}" disabled>{{ old("rubrik_otomatis_deskripsi.$i", $existingRubrikDeskripsi[$i] ?? '') }}</textarea>
                             </td>
                             <td>
-                                <textarea name="rubrik_formula[{{ $i }}]" class="form-control" placeholder="Contoh: (jumlah_dosen / jumlah_maba) <= 25">{{ old("rubrik_formula.$i", $existingRubrikFormula[$i] ?? '') }}</textarea>
+                                <textarea name="rubrik_formula[{{ $i }}]" class="form-control"
+                                    placeholder="Contoh: (jumlah_dosen / jumlah_maba) <= 25">{{ old("rubrik_formula.$i", $existingRubrikFormula[$i] ?? '') }}</textarea>
                             </td>
                         </tr>
                     @endfor
@@ -139,9 +157,9 @@
         </div>
     </div>
 </div>
-{!! html()->hidden('table-id','datatable')->id('table-id') !!}
-{{--{!! html()->hidden('function','loadMenu,sidebarMenu')->id('function') !!}--}}
-{{--{!! html()->hidden('redirect',url('/dashboard'))->id('redirect') !!}--}}
+{!! html()->hidden('table-id', 'datatable')->id('table-id') !!}
+{{-- {!! html()->hidden('function','loadMenu,sidebarMenu')->id('function') !!} --}}
+{{-- {!! html()->hidden('redirect',url('/dashboard'))->id('redirect') !!} --}}
 {!! html()->form()->close() !!}
 <style>
     .select2-container {
@@ -171,7 +189,7 @@
     $(document).ready(function() {
         $('.modal-title').html('<i class="fa fa-plus-circle"></i> Tambah Data {!! $page->title !!}');
         $('.submit-data').html('<i class="fa fa-save"></i> Simpan Data');
-        
+
         // Tampilkan input sesuai tipe penilaian
         const tipePenilaian = document.getElementById('tipe');
 
@@ -192,7 +210,7 @@
         toggleInputForm($(tipePenilaian).val());
 
         // Saat select berubah
-        $(tipePenilaian).on('change', function () {
+        $(tipePenilaian).on('change', function() {
             toggleInputForm($(this).val());
         });
 
@@ -234,13 +252,14 @@
 
 
         var options = {
-            selector: ".tinymce", 
-            height : "480",
+            selector: ".tinymce",
+            height: "480",
             menubar: false,
             toolbar: ["styleselect fontselect fontsizeselect",
                 "undo redo | cut copy paste | bold italic | link image | alignleft aligncenter alignright alignjustify",
-                "bullist numlist | outdent indent | blockquote subscript superscript | advlist | autolink | lists charmap | print preview |  code"],
-            plugins : "advlist autolink link image lists charmap print preview code",
+                "bullist numlist | outdent indent | blockquote subscript superscript | advlist | autolink | lists charmap | print preview |  code"
+            ],
+            plugins: "advlist autolink link image lists charmap print preview code",
             setup: function(editor) {
                 editor.on('init', function() {
                     $('form').on('submit', function() {
@@ -249,15 +268,13 @@
                 });
             }
         };
-        if ( KTThemeMode.getMode() === "dark" ) {
+        if (KTThemeMode.getMode() === "dark") {
             options["skin"] = "oxide-dark";
             options["content_css"] = "dark";
         }
         tinymce.init(options);
     });
-    $('#modal-master').on('hidden.bs.modal', function () {
+    $('#modal-master').on('hidden.bs.modal', function() {
         tinymce.remove('.tinymce'); // Destroy all TinyMCE instances
     });
-
-        
 </script>
