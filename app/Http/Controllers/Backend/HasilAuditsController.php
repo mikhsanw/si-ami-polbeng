@@ -274,7 +274,7 @@ class HasilAuditsController extends Controller
             $skorAuditee = $this->calculateScore($indikator, $validated['lkps_data']);
             if ($skorAuditee === null) {
                 // Jika data tidak cocok dengan rubrik manapun, lempar error validasi
-                throw \Illuminate\Validation\ValidationException::withMessages(['lkps_data' => 'Data yang diinput tidak cocok dengan rubrik penilaian manapun.']);
+                throw \Illuminate\Validation\ValidationException::withMessages(['lkps_data' => 'Data yang diinput tidak cocok dengan rubrik penilaian manapun, coba periksa kembali atau hubungi administrator.']);
             }
         }
 

@@ -128,6 +128,26 @@ class KriteriasController extends Controller
                         $validator->errors()->add("input_fields.$index.tipe_data", 'Tipe data tidak valid.');
                     }
                 }
+
+                $formulas = $request->input('rubrik_formula', []);
+                foreach ($formulas as $skor => $formula) {
+                    if (empty($formula)) {
+                        continue;
+                    }
+
+                    // Cegah pakai "x" untuk kali
+                    if (strpos($formula, 'x') !== false) {
+                        $validator->errors()->add("rubrik_formula.$skor", 'Gunakan * untuk perkalian, bukan x.');
+                    }
+
+                    // Hanya izinkan huruf, angka, spasi, kurung, dan operator standar
+                    if (! preg_match('/^[0-9A-Za-z\s\+\-\*\/\<\>\=\!\&\|\(\)]+$/', $formula)) {
+                        $validator->errors()->add(
+                            "rubrik_formula.$skor",
+                            "Formula skor $skor: Mengandung karakter/operator yang tidak valid. Hanya boleh gunakan + - * / < > = ! && || dan ()."
+                        );
+                    }
+                }
             }
         });
 
