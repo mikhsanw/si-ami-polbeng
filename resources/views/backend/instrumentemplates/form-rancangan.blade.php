@@ -41,7 +41,8 @@
                     @if (isset($data) && $data->templateIndikators->isNotEmpty())
                         @foreach ($data->templateIndikators as $templateIndikator)
                             <div class="mb-3 input-bobot" id="bobot-{{ $templateIndikator->indikator_id }}">
-                                <label class="form-label fw-medium">{{ $templateIndikator->indikator->nama }}</label>
+                                <label
+                                    class="form-label fw-medium">{{ $helper->shortDescription($templateIndikator->indikator->nama, 10) }}</label>
                                 <input type="number" step="0.01"
                                     name="bobot[{{ $templateIndikator->indikator_id }}]" class="form-control"
                                     placeholder="Contoh: 1,02 (gunakan koma)"
