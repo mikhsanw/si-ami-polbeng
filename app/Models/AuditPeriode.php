@@ -2,33 +2,33 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AuditPeriode extends Model
 {
-    use HasFactory, SoftDeletes, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
-    protected $casts=[];
+    protected $casts = [];
 
-    protected $fillable=[
+    protected $fillable = [
         'id', 'tahun_akademik', 'status', 'unit_id', 'instrumen_template_id',
     ];
-    
-	public function instrumenTemplate()
-	{
-		return $this->belongsTo('\App\Models\InstrumenTemplate');
-	}
 
-	public function unit()
-	{
-		return $this->belongsTo('App\Models\Unit');
-	}
+    public function instrumenTemplate()
+    {
+        return $this->belongsTo('\App\Models\InstrumenTemplate');
+    }
 
-	public function hasilaudits()
-	{
-		return $this->hasMany('App\Models\Hasilaudit');
-	}
+    public function unit()
+    {
+        return $this->belongsTo('App\Models\Unit');
+    }
+
+    public function hasilaudits()
+    {
+        return $this->hasMany('App\Models\HasilAudit');
+    }
 }
