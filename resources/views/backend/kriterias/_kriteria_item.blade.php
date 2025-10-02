@@ -42,17 +42,17 @@
                             @foreach ($item->indikators as $indikator)
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div class="d-flex align-items-center gap-2">
-                                        <a href="#" class="btn-action" data-title="Edit Indikator"
+                                        <a href="#" class="btn-action text-justify" data-title="Edit Indikator"
                                             data-action="edit-child" data-id="{{ $item->id }}"
                                             data-url="{{ route($page->code . '.edit-indikator', $indikator->id) }}">
-                                            <span class="badge bg-success rounded-pill text-white">
-                                                {{ $indikator->tipe }}
-                                            </span>
                                             {{ $indikator->nama }}
                                             <i class="ki-outline ki-pencil rounded-pill"></i>
                                         </a>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-success rounded-pill text-white">
+                                            {{ $indikator->tipe }}
+                                        </span>
                                         <span class="badge bg-primary rounded-pill text-white">
                                             {{ $indikator->rubrikPenilaians->count() }}
                                         </span>
