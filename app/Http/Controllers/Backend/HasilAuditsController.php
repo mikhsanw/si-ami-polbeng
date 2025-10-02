@@ -260,7 +260,7 @@ class HasilAuditsController extends Controller
             'audit_periode_id' => 'required|exists:audit_periodes,id',
             'upload_file' => 'required|array|min:1',
             'upload_file.*' => [
-                'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg',
+                'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png',
                 'max:20480',
                 new \App\Rules\SafeFile,
             ],
