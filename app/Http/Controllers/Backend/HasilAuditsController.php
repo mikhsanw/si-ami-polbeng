@@ -278,7 +278,7 @@ class HasilAuditsController extends Controller
         $validated = $request->validate($rules,
             [
                 'upload_file.required' => 'File bukti penilaian minimal 1 file harus diunggah.',
-                'upload_file.*.mimes' => 'File bukti penilaian harus berupa file berformat: pdf, doc, docx, xls, xlsx, ppt, pptx, txt, jpg',
+                'upload_file.*.mimes' => 'File bukti penilaian harus berupa file berformat: pdf, doc, docx, xls, xlsx, ppt, pptx, txt, jpg, jpeg, png.',
                 'upload_file.*.max' => 'Ukuran maksimal file bukti penilaian adalah 20MB per file.',
             ]
         );
