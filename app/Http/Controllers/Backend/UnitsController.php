@@ -67,7 +67,7 @@ class UnitsController extends Controller
             'nama' => 'required|string|max:255',
             'tipe' => 'required|string',
             'parent_id' => 'nullable|exists:units,id',
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'nullable|exists:users,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -125,7 +125,7 @@ class UnitsController extends Controller
             'nama' => 'required|string|max:255',
             'tipe' => 'required|string',
             'parent_id' => 'nullable|exists:units,id',
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'nullable|exists:users,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
