@@ -45,6 +45,9 @@
                                         <a href="#" class="btn-action" data-title="Edit Indikator"
                                             data-action="edit-child" data-id="{{ $item->id }}"
                                             data-url="{{ route($page->code . '.edit-indikator', $indikator->id) }}">
+                                            <span class="badge bg-success rounded-pill text-white">
+                                                {{ $indikator->tipe }}
+                                            </span>
                                             {{ $indikator->nama }}
                                             <i class="ki-outline ki-pencil rounded-pill"></i>
                                         </a>
