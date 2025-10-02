@@ -11,6 +11,7 @@
         "laravolt/avatar": "^6.0",
         "spatie/laravel-html": "^3.9",
         "spatie/laravel-permission": "^6.7",
+        "symfony/expression-language": "^7.3",
         "yajra/laravel-datatables": "11.0",
         "yajra/laravel-datatables-oracle": "^11.1"
     },

@@ -7,6 +7,7 @@ use App\Models\AuditPeriode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class HasilAuditsController extends Controller
 {
@@ -185,46 +186,28 @@ class HasilAuditsController extends Controller
 
     private function calculateScore(\App\Models\Indikator $indikator, array $inputData): ?int
     {
-        // 1. Buat map dari nama variabel ke nilainya
         $variableValues = [];
         foreach ($indikator->indikatorInputs as $field) {
-            // $inputData memiliki key berupa ID, jadi kita perlu mencocokkannya
             if (isset($inputData[$field->id])) {
                 $variableValues[$field->nama_variable] = (float) $inputData[$field->id];
             }
         }
 
-        // 2. Loop melalui setiap rubrik (dari skor tertinggi ke terendah)
+        $language = new ExpressionLanguage();
+
         foreach ($indikator->rubrikPenilaians->sortByDesc('skor') as $rubrik) {
-            $formula = $rubrik->formula_kondisi;
-
-            // 3. Ganti nama variabel di formula dengan nilainya
-            foreach ($variableValues as $variable => $value) {
-                $formula = str_replace($variable, $value, $formula);
-            }
-
-            // 4. Evaluasi formula yang sudah diganti (gunakan parser yang aman)
-            // Catatan: Ini adalah evaluator sederhana. Untuk formula kompleks, gunakan library seperti "symfony/expression-language".
-            if ($this->evaluateFormula($formula)) {
-                return $rubrik->skor; // Kembalikan skor jika kondisi terpenuhi
+            try {
+                $result = $language->evaluate($rubrik->formula_kondisi, $variableValues);
+                if ($result) {
+                    return $rubrik->skor;
+                }
+            } catch (\Exception $e) {
+                // formula salah → skip
+                continue;
             }
         }
 
-        return null; // Kembalikan null jika tidak ada rubrik yang cocok
-    }
-
-    private function evaluateFormula(string $formula): bool
-    {
-        // Hapus karakter yang tidak diizinkan untuk keamanan
-        $safeFormula = preg_replace('/[^0-9\.\+\-\*\/\(\)\s\<\>\=\!]/', '', $formula);
-
-        // Gunakan @eval untuk menekan error jika formula tidak valid, dan kembalikan false
-        // PERINGATAN: Ini masih berisiko. Gunakan library parser di lingkungan produksi.
-        try {
-            return (bool) @eval("return ($safeFormula);");
-        } catch (\ParseError $e) {
-            return false;
-        }
+        return null;
     }
 
     public function show(Request $request, $id)
