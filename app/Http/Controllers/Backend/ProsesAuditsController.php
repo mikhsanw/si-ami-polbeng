@@ -14,33 +14,36 @@ class ProsesAuditsController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            $data=$this->model::with(['indikator','logAktivitasAudit'])->get();
+            $data = $this->model::with(['indikator', 'logAktivitasAudit'])->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->whereHas('auditPeriode', fn ($query) => $query->where('status', 1))->get();
+
             return datatables()->of($data)
                 ->addColumn('action', function ($data) use ($user) {
-                    $button ='';
+                    $button = '';
                     $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
-                    if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? []) ){
-                        if (auth()->user()->hasRole('Super Admin')){
-                        $button.='<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
-                        $button.='<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
+                    if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? [])) {
+                        if (auth()->user()->hasRole('Super Admin')) {
+                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
+                            $button .= '<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
                         }
-                    }else{
-                        if($user->hasPermissionTo($this->code.' edit')){
-                            $button.='<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
+                    } else {
+                        if ($user->hasPermissionTo($this->code.' edit')) {
+                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
                         }
-                        if($user->hasPermissionTo($this->code.' delete')){
-                            $button.='<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
+                        if ($user->hasPermissionTo($this->code.' delete')) {
+                            $button .= '<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
                         }
                     }
-                    return "<div class='btn-group'>".$button."</div>";
+
+                    return "<div class='btn-group'>".$button.'</div>';
                 })
                 ->editColumn('status_terkini', function ($data) {
                     return $data->status_terkini === 'Selesai' ? '<span class="badge badge-light-success">Selesai</span>' : ($data->status_terkini === 'Revisi' ? '<span class="badge badge-light-danger">Revisi Diperlukan</span>' : ($data->status_terkini === 'Diajukan' ? '<span class="badge badge-light-warning">Menunggu Validasi</span>' : '<span class="badge badge-light">Belum Dikerjakan</span>'));
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action','status_terkini'])
+                ->rawColumns(['action', 'status_terkini'])
                 ->make();
         }
+
         return view($this->view.'.index');
     }
 
@@ -66,8 +69,9 @@ class ProsesAuditsController extends Controller
     public function show(string $id)
     {
         $data = [
-            'data'          => $this->model::find($id),
+            'data' => $this->model::find($id),
         ];
+
         return view($this->view.'.show', $data);
     }
 

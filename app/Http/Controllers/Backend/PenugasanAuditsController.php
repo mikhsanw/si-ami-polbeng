@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Controller;
 use App\Models\AuditPeriode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 
 class PenugasanAuditsController extends Controller
 {
     public function index(Request $request)
     {
         // Pengecekan izin untuk auditor
-        if (!auth()->user()->hasPermissionTo($this->code.' list')) {
+        if (! auth()->user()->hasPermissionTo($this->code.' list')) {
             $auditperiodes = collect();
+
             return view($this->view.'.index', compact('auditperiodes'));
         }
 
@@ -25,39 +26,45 @@ class PenugasanAuditsController extends Controller
         // $query = AuditPeriode::whereIn('unit_id', $auditedUnitIds);
 
         // Untuk contoh ini, kita asumsikan auditor melihat semua periode audit aktif
-        $query = AuditPeriode::where('status', true);
+        $query = AuditPeriode::where('status', true)->where(function ($q) {
+            // Hanya tampilkan periode audit yang memiliki penugasan auditor
+            $q->whereHas('penugasanAuditors', function ($subQ) {
+                $subQ->where('user_id', auth()->id());
+            });
+        });
 
         // Ambil periode audit dengan eager load yang sama
         $auditperiodes = $query->with([
-                'unit',
-                'instrumenTemplate.templateIndikators',
-                'hasilAudits'
-            ])
+            'unit',
+            'instrumenTemplate.templateIndikators',
+            'hasilAudits',
+        ])
             ->get();
 
         foreach ($auditperiodes as $periode) {
             $template = $periode->instrumenTemplate;
-            
+
             // Inisialisasi default
             $periode->total_indikator = 0;
             $statusCounts = [
                 'belum_dikerjakan' => 0,
                 'draft_dikerjakan' => 0,
-                'diajukan'         => 0,
-                'revisi'           => 0,
-                'selesai'          => 0,
-                'total_terisi'     => 0,
+                'diajukan' => 0,
+                'revisi' => 0,
+                'selesai' => 0,
+                'total_terisi' => 0,
             ];
             $periode->overall_progress = 0;
-            
+
             // Default status untuk auditor, mungkin lebih fokus ke 'Menunggu Aksi'
             $periode->statusText = 'Belum Ada Pengajuan';
             $periode->statusClass = 'text-bg-secondary'; // Warna abu-abu
 
-            if (!$template || $template->templateIndikators->isEmpty()) {
+            if (! $template || $template->templateIndikators->isEmpty()) {
                 $periode->statusText = 'Instrumen Tidak Ditemukan';
                 $periode->statusClass = 'text-bg-secondary';
-                $periode->status_counts = $statusCounts; 
+                $periode->status_counts = $statusCounts;
+
                 continue;
             }
 
@@ -87,21 +94,21 @@ class PenugasanAuditsController extends Controller
                 }
             }
 
-            $statusCounts['total_terisi'] = 
+            $statusCounts['total_terisi'] =
                 $statusCounts['draft_dikerjakan'] +
                 $statusCounts['diajukan'] +
                 $statusCounts['revisi'] +
                 $statusCounts['selesai'];
 
-            $statusCounts['belum_dikerjakan'] = 
+            $statusCounts['belum_dikerjakan'] =
                 $totalIndikatorDalamTemplate - $statusCounts['total_terisi'];
 
             $periode->status_counts = $statusCounts;
 
-            $periode->overall_progress = ($totalIndikatorDalamTemplate > 0) 
-                                        ? round(($periode->status_counts['total_terisi'] / $totalIndikatorDalamTemplate) * 100) 
+            $periode->overall_progress = ($totalIndikatorDalamTemplate > 0)
+                                        ? round(($periode->status_counts['total_terisi'] / $totalIndikatorDalamTemplate) * 100)
                                         : 0;
-            
+
             // --- Logika Penentuan Status UTAMA untuk AUDITOR ---
             if ($periode->status_counts['revisi'] > 0) {
                 // Prioritas tertinggi: ada yang harus direvisi oleh auditee
@@ -125,6 +132,7 @@ class PenugasanAuditsController extends Controller
                 $periode->statusClass = 'text-bg-secondary'; // Abu-abu
             }
         }
+
         return view($this->view.'.index', compact('auditperiodes'));
     }
 
@@ -133,7 +141,7 @@ class PenugasanAuditsController extends Controller
         $auditPeriode = \App\Models\AuditPeriode::with('unit', 'instrumenTemplate')->findOrFail($id);
         $template = $auditPeriode->instrumenTemplate;
 
-        if (!$template) {
+        if (! $template) {
             return back()->with('error', 'Instrumen audit tidak dapat ditemukan untuk periode ini.');
         }
 
@@ -148,43 +156,43 @@ class PenugasanAuditsController extends Controller
         // --- DEFINISIKAN CLOSURE REKURSIF UNTUK EAGER LOADING KRITERIA & INDIKATOR ---
         $withRecursiveChildrenAndIndikators = function ($query) use (&$withRecursiveChildrenAndIndikators, $kriteriaIdsInTemplate, $indikatorIdsInTemplate, $auditPeriode) {
             $query->whereIn('id', $kriteriaIdsInTemplate) // Filter anak kriteria yang ada di template
-                  ->with([
-                      'children' => $withRecursiveChildrenAndIndikators, // Rekursif ke level bawah
-                      'indikators' => function($q) use ($indikatorIdsInTemplate, $auditPeriode) {
-                          $q->whereIn('id', $indikatorIdsInTemplate) // Filter indikator yang ada di template
-                            ->with(['hasilAudits' => function($haQuery) use ($auditPeriode) {
+                ->with([
+                    'children' => $withRecursiveChildrenAndIndikators, // Rekursif ke level bawah
+                    'indikators' => function ($q) use ($indikatorIdsInTemplate, $auditPeriode) {
+                        $q->whereIn('id', $indikatorIdsInTemplate) // Filter indikator yang ada di template
+                            ->with(['hasilAudits' => function ($haQuery) use ($auditPeriode) {
                                 $haQuery->where('audit_periode_id', $auditPeriode->id);
                             }]);
-                      }
-                  ]);
+                    },
+                ]);
         };
         // --- AKHIR DEFINISI CLOSURE REKURSIF ---
 
         // Ambil kriteria level teratas yang ada di template
         $kriterias = \App\Models\Kriteria::whereNull('parent_id') // Mulai dari kriteria level tertinggi
-                             ->whereIn('id', $kriteriaIdsInTemplate) // Filter kriteria level tertinggi yang ada di template
-                             ->with([
-                                 'children' => $withRecursiveChildrenAndIndikators, // Muat anak kriteria secara rekursif
-                                 'indikators' => function($query) use ($indikatorIdsInTemplate, $auditPeriode) {
-                                     $query->whereIn('id', $indikatorIdsInTemplate) // Muat indikator level atas yang ada di template
-                                           ->with(['hasilAudits' => function($haQuery) use ($auditPeriode) {
-                                               $haQuery->where('audit_periode_id', $auditPeriode->id);
-                                           }]);
-                                 }
-                             ])
-                             ->get();
+            ->whereIn('id', $kriteriaIdsInTemplate) // Filter kriteria level tertinggi yang ada di template
+            ->with([
+                'children' => $withRecursiveChildrenAndIndikators, // Muat anak kriteria secara rekursif
+                'indikators' => function ($query) use ($indikatorIdsInTemplate, $auditPeriode) {
+                    $query->whereIn('id', $indikatorIdsInTemplate) // Muat indikator level atas yang ada di template
+                        ->with(['hasilAudits' => function ($haQuery) use ($auditPeriode) {
+                            $haQuery->where('audit_periode_id', $auditPeriode->id);
+                        }]);
+                },
+            ])
+            ->get();
 
         return view($this->view.'.auditkriteria', compact('kriterias', 'auditPeriode', 'template', 'templateIndikators'));
     }
 
     public function create()
     {
-		$data=[
-			'audit_periode_id'	=> \App\Models\AuditPeriode::pluck('nama','id'),
-			'indikator_id'	=> \App\Models\Indikator::pluck('nama','id'),
-		];
+        $data = [
+            'audit_periode_id' => \App\Models\AuditPeriode::pluck('nama', 'id'),
+            'indikator_id' => \App\Models\Indikator::pluck('nama', 'id'),
+        ];
 
-        return view($this->view.'.form' ,$data);
+        return view($this->view.'.form', $data);
     }
 
     public function store(Request $request)
@@ -205,22 +213,22 @@ class PenugasanAuditsController extends Controller
         $validated = $request->validate($rules);
 
         if ($data = $this->model::create([
-                'skor_auditee' => $request->input('skor_auditee'),
-                'audit_periode_id' => $request->input('audit_periode_id'),
-                'indikator_id' => $request->input('indikator_id'),
-                'status_terkini' => config('master.hasil_audit.status_terkini.Diajukan'),
-            ])
+            'skor_auditee' => $request->input('skor_auditee'),
+            'audit_periode_id' => $request->input('audit_periode_id'),
+            'indikator_id' => $request->input('indikator_id'),
+            'status_terkini' => config('master.hasil_audit.status_terkini.Diajukan'),
+        ])
         ) {
             if ($request->hasFile('upload_file')) {
                 foreach ($request->file('upload_file') as $file) {
                     if ($file) {
                         $data->file()->create([
                             'alias' => 'bukti_penilaian', // bisa disesuaikan
-                            'data'  => [
-                                'name'   => $file->hashName(),
-                                'disk'   => config('filesystems.default'),
+                            'data' => [
+                                'name' => $file->hashName(),
+                                'disk' => config('filesystems.default'),
                                 'target' => Storage::disk(config('filesystems.default'))->putFile(
-                                    $this->code . '/' . date('Y') . '/' . date('m') . '/' . date('d'),
+                                    $this->code.'/'.date('Y').'/'.date('m').'/'.date('d'),
                                     $file
                                 ),
                             ],
@@ -236,9 +244,10 @@ class PenugasanAuditsController extends Controller
                     ]);
                 }
             }
-            $response=[ 'status'=>TRUE, 'message'=>'Data berhasil disimpan'];
+            $response = ['status' => true, 'message' => 'Data berhasil disimpan'];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal disimpan']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal disimpan']);
     }
 
     public function show(Request $request, $id)
@@ -246,9 +255,10 @@ class PenugasanAuditsController extends Controller
         $auditPeriodeId = $request->get('audit_periode_id');
 
         $data = [
-            'data'          => \App\Models\Indikator::findOrFail($id),
-            'auditPeriode'  => \App\Models\AuditPeriode::findOrFail($auditPeriodeId),
+            'data' => \App\Models\Indikator::findOrFail($id),
+            'auditPeriode' => \App\Models\AuditPeriode::findOrFail($auditPeriodeId),
         ];
+
         return view($this->view.'.show', $data);
     }
 
@@ -257,9 +267,10 @@ class PenugasanAuditsController extends Controller
         $auditPeriodeId = $request->get('audit_periode_id');
 
         $data = [
-            'data'          => \App\Models\Indikator::findOrFail($id),
-            'auditPeriode'  => \App\Models\AuditPeriode::findOrFail($auditPeriodeId),
+            'data' => \App\Models\Indikator::findOrFail($id),
+            'auditPeriode' => \App\Models\AuditPeriode::findOrFail($auditPeriodeId),
         ];
+
         return view($this->view.'.form', $data);
     }
 
@@ -281,7 +292,7 @@ class PenugasanAuditsController extends Controller
 
         // Gunakan $request->validate() yang akan otomatis handle response error AJAX
         $validated = $request->validate($rules, [
-            'catatan_auditor.required' => 'Catatan wajib diisi saat meminta revisi.'
+            'catatan_auditor.required' => 'Catatan wajib diisi saat meminta revisi.',
         ]);
 
         // 2. Gunakan Transaction untuk memastikan integritas data
@@ -289,19 +300,18 @@ class PenugasanAuditsController extends Controller
         try {
             // 3. Ambil record HasilAudit yang akan divalidasi
             $hasilAudit = $this->model::where('audit_periode_id', $request->input('audit_periode_id'))
-                                    ->where('indikator_id', $request->input('indikator_id'))
-                                    ->firstOrFail(); // Gagal jika auditee belum mengisi
+                ->where('indikator_id', $request->input('indikator_id'))
+                ->firstOrFail(); // Gagal jika auditee belum mengisi
 
             $catatan = $validated['catatan_auditor'] ?? null;
-            
+
             // 4. Proses data berdasarkan Aksi yang Dipilih
             if ($validated['action'] === 'finalisasi') {
                 $hasilAudit->skor_final = $validated['skor_final'];
                 $hasilAudit->catatan_final = $catatan; // Catatan akhir
                 $hasilAudit->status_terkini = 'Selesai';
                 $tipeAksiLog = 'FINALISASI_SKOR';
-            } 
-            else { // Aksi adalah 'minta_revisi'
+            } else { // Aksi adalah 'minta_revisi'
                 $hasilAudit->status_terkini = 'Revisi';
                 $tipeAksiLog = 'MINTA_REVISI';
             }
@@ -311,44 +321,47 @@ class PenugasanAuditsController extends Controller
 
             // 5. Buat entri baru di log aktivitas
             $hasilAudit->logAktivitasAudit()->create([
-                'user_id'  => \Illuminate\Support\Facades\Auth::id(), // ID Auditor yang sedang login
-                'tipe_aksi'     => $tipeAksiLog,
-                'catatan_aksi'  => $catatan,
+                'user_id' => \Illuminate\Support\Facades\Auth::id(), // ID Auditor yang sedang login
+                'tipe_aksi' => $tipeAksiLog,
+                'catatan_aksi' => $catatan,
             ]);
 
             DB::commit(); // Konfirmasi semua perubahan jika berhasil
 
             $response = [
-                'status'  => true,
+                'status' => true,
                 'message' => 'Keputusan validasi berhasil disimpan.',
-                'redirect' => route($this->code.'.audit-kriteria', $request->input('audit_periode_id')) // Redirect kembali ke dasbor proses
+                'redirect' => route($this->code.'.audit-kriteria', $request->input('audit_periode_id')), // Redirect kembali ke dasbor proses
             ];
+
             return response()->json($response);
 
         } catch (\Exception $e) {
             DB::rollBack(); // Batalkan semua jika terjadi error
-            
+
             $response = [
-                'status'  => false,
-                'message' => config('app.debug') ? $e->getMessage() : 'Terjadi kesalahan pada server.'
+                'status' => false,
+                'message' => config('app.debug') ? $e->getMessage() : 'Terjadi kesalahan pada server.',
             ];
+
             return response()->json($response, 500);
         }
     }
 
-
     public function delete($id)
     {
-        $data=$this->model::find($id);
+        $data = $this->model::find($id);
+
         return view($this->view.'.delete', compact('data'));
     }
 
     public function destroy($id)
     {
-        $data=$this->model::find($id);
-        if($data->delete()){
-            $response=[ 'status'=>TRUE, 'message'=>'Data berhasil dihapus'];
+        $data = $this->model::find($id);
+        if ($data->delete()) {
+            $response = ['status' => true, 'message' => 'Data berhasil dihapus'];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal dihapus']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal dihapus']);
     }
 }

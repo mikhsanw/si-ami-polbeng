@@ -45,7 +45,7 @@
                                     class="form-label fw-medium">{{ $helper->shortDescription($templateIndikator->indikator->nama, 10) }}</label>
                                 <input type="number" step="0.01"
                                     name="bobot[{{ $templateIndikator->indikator_id }}]" class="form-control"
-                                    placeholder="Contoh: 1,02 (gunakan koma)"
+                                    placeholder="Contoh: 1.02 (gunakan titik)"
                                     value="{{ $templateIndikator->bobot ?? '' }}">
                             </div>
                         @endforeach
@@ -136,7 +136,7 @@
             const html = `
                 <div class="mb-3 input-bobot" id="bobot-${id}">
                     <label class="form-label fw-medium">${label}</label>
-                    <input type="number" step="0.01" name="bobot[${id}]" class="form-control" placeholder="Contoh: 1,02 (gunakan koma)" value="${initialValue}">
+                    <input type="number" step="0.01" name="bobot[${id}]" class="form-control" placeholder="Contoh: 1.02 (gunakan titik)" value="${initialValue}">
                 </div>`;
             selectedIndikatorsContainer.append(html);
             selectedIndikatorIds.add(id);
