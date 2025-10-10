@@ -75,16 +75,16 @@ class PenugasanAuditsController extends Controller
 
             foreach ($allHasilAudits as $hasilAudit) {
                 switch ($hasilAudit->status_terkini) {
-                    case 'DRAFT':
+                    case 'Draft':
                         $statusCounts['draft_dikerjakan']++;
                         break;
-                    case 'DIAJUKAN':
+                    case 'Diajukan':
                         $statusCounts['diajukan']++;
                         break;
-                    case 'REVISI':
+                    case 'Revisi':
                         $statusCounts['revisi']++;
                         break;
-                    case 'SELESAI':
+                    case 'Selesai':
                         $statusCounts['selesai']++;
                         break;
                     default:
