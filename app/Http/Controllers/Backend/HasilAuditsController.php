@@ -237,16 +237,17 @@ class HasilAuditsController extends Controller
     public function update(Request $request, $id)
     {
         $indikator = \App\Models\Indikator::with('indikatorInputs', 'rubrikPenilaians')->findOrFail($id);
-
         // 2. Aturan Validasi Dinamis
         $rules = [
             'audit_periode_id' => 'required|exists:audit_periodes,id',
             'upload_file' => 'required|array|min:1',
             'upload_file.*' => [
-                'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png',
+                'file',
+                new \App\Rules\FileAllowed(),
                 'max:20480',
                 new \App\Rules\SafeFile,
             ],
+
         ];
 
         if ($indikator->tipe === 'LED') {
@@ -261,7 +262,6 @@ class HasilAuditsController extends Controller
         $validated = $request->validate($rules,
             [
                 'upload_file.required' => 'File bukti penilaian minimal 1 file harus diunggah.',
-                'upload_file.*.mimes' => 'File bukti penilaian harus berupa file berformat: pdf, doc, docx, xls, xlsx, ppt, pptx, txt, jpg, jpeg, png.',
                 'upload_file.*.max' => 'Ukuran maksimal file bukti penilaian adalah 20MB per file.',
             ]
         );
@@ -306,8 +306,16 @@ class HasilAuditsController extends Controller
             if ($request->hasFile('upload_file')) {
                 foreach ($request->file('upload_file') as $file) {
                     if ($file) {
+                        // Pastikan ekstensi tidak kosong
+                        $ext = $file->getClientOriginalExtension() ?: pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION) ?: 'dat';
+
+                        // Tambahkan ekstensi ke nama hasil hash
                         $path = Storage::disk(config('filesystems.default'))
-                            ->putFile($this->code.'/'.date('Y').'/'.date('m').'/'.date('d'), $file);
+                            ->putFileAs(
+                                $this->code.'/'.date('Y').'/'.date('m').'/'.date('d'),
+                                $file,
+                                $file->hashName().'.'.$ext
+                            );
 
                         $data->file()->create([
                             'alias' => 'bukti_penilaian',
@@ -342,7 +350,40 @@ class HasilAuditsController extends Controller
         }
     }
 
-    // Dalam App\Http\Controllers\Backend\AuditeeProgressController
+    public function deleteFile(Request $request)
+    {
+        // Pastikan request adalah AJAX dan user memiliki izin
+        if (! $request->ajax() || ! auth()->user()->hasRole('Auditee')) { // Sesuaikan role atau permission
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
+        $fileId = $request->input('file_id');
+        $file = \App\Models\File::find($fileId); // Asumsi Anda punya model File untuk menyimpan detail file
+
+        if (! $file) {
+            return response()->json(['success' => false, 'message' => 'File tidak ditemukan.'], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            if (Storage::disk($file->disk)->exists($file->path)) {
+                Storage::disk($file->disk)->delete($file->path);
+            }
+
+            $file->delete();
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'File berhasil dihapus.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Gagal menghapus file: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menghapus file.'], 500);
+        }
+    }
+
     public function updateStatusIndikator(Request $request)
     {
         $request->validate([
