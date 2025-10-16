@@ -13,21 +13,30 @@ class HasilAuditsController extends Controller
 {
     public function index(Request $request)
     {
-        $userUnitId = optional(auth()->user()->unit)->id;
-        if (! $userUnitId || ! auth()->user()->hasPermissionTo($this->code.' list')) {
+        $userUnitId = optional(auth()->user()->unit)->nama;
+        if (! in_array('Super Admin', auth()->user()->getRoleNames()->toArray() ?? []) && ! auth()->user()->hasPermissionTo($this->code.' list')) {
             $auditperiodes = collect();
 
             return view($this->view.'.index', compact('auditperiodes'));
         }
-
-        $auditperiodes = AuditPeriode::with([
-            'unit',
-            'instrumenTemplate.templateIndikators',
-            'hasilAudits',
-        ])
-            ->where('status', true)
-            ->where('unit_id', $userUnitId)
-            ->get();
+        if ($userUnitId) {
+            $auditperiodes = AuditPeriode::with([
+                'unit',
+                'instrumenTemplate.templateIndikators',
+                'hasilAudits',
+            ])
+                ->where('status', true)
+                ->where('unit_id', $userUnitId)
+                ->get();
+        } else {
+            $auditperiodes = AuditPeriode::with([
+                'unit',
+                'instrumenTemplate.templateIndikators',
+                'hasilAudits',
+            ])
+                ->where('status', true)
+                ->get();
+        }
 
         foreach ($auditperiodes as $periode) {
             $template = $periode->instrumenTemplate;

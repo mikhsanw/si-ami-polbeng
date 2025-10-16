@@ -29,8 +29,12 @@ class DashboardController extends Controller
 
     private function auditor()
     {
-
-        $query = AuditPeriode::where('status', true);
+        $query = AuditPeriode::where('status', true)->where(function ($q) {
+            // Hanya tampilkan periode audit yang memiliki penugasan auditor
+            $q->whereHas('penugasanAuditors', function ($subQ) {
+                $subQ->where('user_id', auth()->id());
+            });
+        });
 
         $auditperiodes = $query->with([
             'unit',
