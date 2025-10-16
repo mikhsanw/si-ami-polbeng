@@ -92,10 +92,13 @@
                                     <i class="fas fa-external-link-alt ms-auto"></i>
                                 </a>
                                 {{-- Tombol Hapus --}}
-                                <button type="button" class="btn btn-sm btn-danger ms-3 delete-existing-file-btn"
-                                    data-file-id="{{ $file->id }}" data-file-name="{{ basename($file->alias) }}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
+                                @if (in_array(optional($data->hasilAuditForPeriode($auditPeriode->id))->status_terkini, ['Revisi', 'Draft']))
+                                    <button type="button" class="btn btn-sm btn-danger ms-3 delete-existing-file-btn"
+                                        data-file-id="{{ $file->id }}"
+                                        data-file-name="{{ basename($file->alias) }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                @endif
                             </div>
                         @endforeach
                     </div>
