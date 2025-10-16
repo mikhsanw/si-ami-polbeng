@@ -13,7 +13,6 @@
         <div class="card-body py-4">
             <div class="row">
                 @forelse($auditperiodes as $periode)
-                    {{-- Ubah $auditperiode menjadi $periode untuk konsistensi --}}
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="card h-100 shadow-sm border-0 rounded-3">
                             <div class="card-body p-4 d-flex flex-column">
@@ -36,6 +35,19 @@
                                     <strong>{{ $periode->unit->nama ?? 'N/A' }}</strong>
                                 </p>
 
+                                {{-- START: Tambahan Kode untuk Nama Auditor --}}
+                                @if ($periode->penugasanAuditors && $periode->penugasanAuditors->count() > 0)
+                                    {{-- Jika ada lebih dari satu auditor, tampilkan semuanya --}}
+                                    <p class="text-muted fs-6 mb-3">Auditor:
+                                        <strong>{{ $periode->penugasanAuditors->pluck('user.name')->implode(', ') }}</strong>
+                                    </p>
+                                @else
+                                    <p class="text-muted fs-6 mb-3 text-danger">Auditor:
+                                        <strong>Belum Ditunjuk</strong>
+                                    </p>
+                                @endif
+                                {{-- END: Tambahan Kode --}}
+
                                 {{-- Status Badge Dinamis --}}
                                 <span
                                     class="badge rounded-pill fw-medium mb-4 align-self-start {{ $periode->statusClass }}">
@@ -47,10 +59,9 @@
                                     <small class="text-muted">Progres Audit: {{ $periode->overall_progress }}% dari
                                         {{ $periode->total_indikator }} Indikator</small>
                                 </div>
-                                <div class="progress" style="height: 25px;"> {{-- Tinggikan sedikit agar teks di dalam terlihat --}}
+                                <div class="progress" style="height: 25px;">
                                     @php
                                         $total = $periode->total_indikator;
-                                        // Hitung persentase untuk setiap status
                                         $p_selesai =
                                             $total > 0 ? round(($periode->status_counts['selesai'] / $total) * 100) : 0;
                                         $p_diajukan =
