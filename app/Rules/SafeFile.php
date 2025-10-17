@@ -51,16 +51,24 @@ class SafeFile implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if ($value->isValid()) {
-            // Cek isi file dari temporary path
-            $content = file_get_contents($value->getRealPath(), false, null, 0, 5000);
+        if (! ($value instanceof \Illuminate\Http\UploadedFile)) {
+            return; // lewati jika bukan file upload (null, string, dsb)
+        }
 
-            foreach ($this->dangerousPatterns as $pattern) {
-                if (preg_match($pattern, $content)) {
-                    $fail('File mengandung konten berbahaya, silakan periksa kembali.');
-                    // $fail("File $attribute mengandung konten berbahaya.");
-                }
+        if (! $value->isValid()) {
+            $fail('File gagal diunggah atau rusak.');
+
+            return;
+        }
+
+        // Cek isi file dari temporary path
+        $content = file_get_contents($value->getRealPath(), false, null, 0, 5000);
+        foreach ($this->dangerousPatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                $fail('File mengandung konten berbahaya, silakan periksa kembali.');
+                // $fail("File $attribute mengandung konten berbahaya.");
             }
         }
+
     }
 }
