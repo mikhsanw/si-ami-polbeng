@@ -243,7 +243,6 @@ class HasilAuditsController extends Controller
             'upload_file' => 'required|array|min:1',
             'upload_file.*' => [
                 'file',
-                new \App\Rules\FileAllowed(),
                 'max:20480',
                 new \App\Rules\SafeFile,
             ],
