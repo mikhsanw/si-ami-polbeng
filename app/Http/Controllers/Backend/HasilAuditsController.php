@@ -250,8 +250,9 @@ class HasilAuditsController extends Controller
         // Aturan Validasi Dinamis
         $rules = [
             'audit_periode_id' => 'required|exists:audit_periodes,id',
-            'upload_file' => 'nullable|array|min:0',
+            'upload_file' => ($fileRequired ? 'required' : 'nullable').'|array|min:0',
             'upload_file.*' => [
+                'nullable',
                 'file',
                 new \App\Rules\FileAllowed(),
                 'max:20480',
