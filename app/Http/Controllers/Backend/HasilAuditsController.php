@@ -247,7 +247,7 @@ class HasilAuditsController extends Controller
         // Tentukan apakah file wajib atau tidak
         $fileRequired = ! ($dataExisting && $dataExisting->file()->exists());
 
-        // 1️⃣ Aturan Validasi Dinamis
+        // Aturan Validasi Dinamis
         $rules = [
             'audit_periode_id' => 'required|exists:audit_periodes,id',
             'upload_file' => ($fileRequired ? 'required' : 'nullable').'|array|min:0',
