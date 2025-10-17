@@ -238,15 +238,25 @@ class HasilAuditsController extends Controller
     {
         $indikator = \App\Models\Indikator::with('indikatorInputs', 'rubrikPenilaians')->findOrFail($id);
         // 2. Aturan Validasi Dinamis
+        // Ambil data hasil audit yang sudah ada (jika ada)
+        $dataExisting = $this->model::where('indikator_id', $id)
+            ->where('audit_periode_id', $request->input('audit_periode_id'))
+            ->with('file')
+            ->first();
+
+        // Tentukan apakah file wajib atau tidak
+        $fileRequired = ! ($dataExisting && $dataExisting->file()->exists());
+
+        // 1️⃣ Aturan Validasi Dinamis
         $rules = [
             'audit_periode_id' => 'required|exists:audit_periodes,id',
-            'upload_file' => 'required|array|min:1',
+            'upload_file' => ($fileRequired ? 'required' : 'nullable').'|array|min:0',
             'upload_file.*' => [
                 'file',
+                new \App\Rules\FileAllowed(),
                 'max:20480',
                 new \App\Rules\SafeFile,
             ],
-
         ];
 
         if ($indikator->tipe === 'LED') {
