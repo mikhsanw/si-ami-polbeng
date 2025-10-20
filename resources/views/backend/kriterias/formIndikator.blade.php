@@ -49,8 +49,8 @@
             </table>
         </div>
 
-        {{-- Otomatis input: Dinamis --}}
         <div id="otomatis_input">
+            {{-- INPUT FIELD DEFINISI --}}
             <hr>
             <h5 class="mt-4">Definisi Input Field</h5>
             <p class="text-muted">Tentukan data apa saja yang perlu diisi oleh auditee untuk indikator ini. Variabel
@@ -123,37 +123,18 @@
             <button type="button" class="btn btn-success btn-sm" id="addField">
                 <i class="fas fa-plus me-1"></i> Tambah Input Field
             </button>
-            <hr class="my-4">
 
-            {{-- BAGIAN 2: RUBRIK & FORMULA PENILAIAN --}}
-            <h5 class="mt-4">Definisi Rubrik & Formula Penilaian</h5>
-            <p class="text-muted">Isi deskripsi dan formula untuk setiap skor. Gunakan "Nama Variabel" yang telah Anda
-                definisikan di atas dalam formula.</p>
+            {{-- FORMULA PENILAIAN --}}
+            <hr>
+            <h5 class="mt-4">Formula Penilaian Otomatis</h5>
+            <p class="text-muted">Masukkan rumus untuk menghitung skor. Gunakan "Nama Variabel" yang Anda definisikan di
+                atas.</p>
+            <div class="form-group mb-4">
+                {!! html()->label()->class('control-label')->for('formula_penilaian')->text('Rumus') !!}
+                {!! html()->textarea('formula_penilaian', isset($data) ? $data->formula_penilaian : null)->placeholder('Contoh: (A/B)*100')->class('form-control')->id('formula_penilaian')->attributes(['rows' => 3]) !!} {{-- Menambahkan atribut rows --}}
+                <small class="form-text text-muted">Contoh: `(A/B)*100` atau `A + B - C`.</small>
+            </div>
 
-            <table class="table table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 10%;">Skor</th>
-                        <th style="width: 45%;">Deskripsi Rubrik (Penjelasan untuk manusia)</th>
-                        <th style="width: 45%;">Formula Kondisi (Logika untuk mesin)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for ($i = 4; $i >= 0; $i--)
-                        <tr>
-                            <td class="text-center fw-bold fs-5 align-middle">{{ $i }}</td>
-                            <td>
-                                <textarea name="rubrik_otomatis_deskripsi[{{ $i }}]" class="form-control" rows="2"
-                                    placeholder="Deskripsi skor {{ $i }}" disabled>{{ old("rubrik_otomatis_deskripsi.$i", $existingRubrikDeskripsi[$i] ?? '') }}</textarea>
-                            </td>
-                            <td>
-                                <textarea name="rubrik_formula[{{ $i }}]" class="form-control"
-                                    placeholder="Contoh: (jumlah_dosen / jumlah_maba) <= 25">{{ old("rubrik_formula.$i", $existingRubrikFormula[$i] ?? '') }}</textarea>
-                            </td>
-                        </tr>
-                    @endfor
-                </tbody>
-            </table>
         </div>
     </div>
 </div>

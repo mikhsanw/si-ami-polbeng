@@ -78,7 +78,7 @@
 
         <div class="mt-4">
             <label class="form-label fw-bold fs-5">Unggah Dokumen Bukti</label>
-            @if ($data->hasilAuditForPeriodes($auditPeriode->id)->flatMap->files ?? false)
+            @if ($data->hasilAuditForPeriodes($auditPeriode->id)->flatMap->files->isNotEmpty())
                 <div class="mb-3 border p-3">
                     <small class="form-text">Dokumen pendukung yang telah dilampirkan sebelumnya</small>
                     <div id="existingFilesList">

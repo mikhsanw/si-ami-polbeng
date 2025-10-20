@@ -286,13 +286,13 @@ class PenugasanAuditsController extends Controller
         if ($request->input('action') === 'finalisasi') {
             $rules['skor_final'] = 'required|integer|between:1,4';
         }
-        if ($request->input('action') === 'minta_revisi') {
+        if ($request->input('action') === 'minta_revisi' || ($request->input('action') === 'finalisasi' && $request->input('skor_final') < 4)) {
             $rules['catatan_auditor'] = 'required|string|max:5000';
         }
 
         // Gunakan $request->validate() yang akan otomatis handle response error AJAX
         $validated = $request->validate($rules, [
-            'catatan_auditor.required' => 'Catatan wajib diisi saat meminta revisi.',
+            'catatan_auditor.required' => 'Catatan wajib diisi.',
         ]);
 
         // 2. Gunakan Transaction untuk memastikan integritas data

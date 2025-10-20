@@ -184,32 +184,6 @@ class HasilAuditsController extends Controller
         return view($this->view.'.form', $data);
     }
 
-    private function calculateScore(\App\Models\Indikator $indikator, array $inputData): ?int
-    {
-        $variableValues = [];
-        foreach ($indikator->indikatorInputs as $field) {
-            if (isset($inputData[$field->id])) {
-                $variableValues[$field->nama_variable] = (float) $inputData[$field->id];
-            }
-        }
-
-        $language = new ExpressionLanguage();
-
-        foreach ($indikator->rubrikPenilaians->sortByDesc('skor') as $rubrik) {
-            try {
-                $result = $language->evaluate($rubrik->formula_kondisi, $variableValues);
-                if ($result) {
-                    return $rubrik->skor;
-                }
-            } catch (\Exception $e) {
-                // formula salah → skip
-                continue;
-            }
-        }
-
-        return null;
-    }
-
     public function show(Request $request, $id)
     {
         $auditPeriodeId = $request->get('audit_periode_id');
@@ -234,9 +208,82 @@ class HasilAuditsController extends Controller
         return view($this->view.'.form', $data);
     }
 
+    private function calculateScore(\App\Models\Indikator $indikator, array $inputData): ?float
+    {
+        if (empty($indikator->formula_penilaian)) {
+            \Log::warning("Indikator ID {$indikator->id} (LKPS) tidak memiliki formula_penilaian.");
+
+            return null;
+        }
+
+        $variableValues = [];
+        foreach ($indikator->indikatorInputs as $field) {
+            $rawValue = $inputData[$field->id] ?? null;
+
+            // Pre-process rawValue based on tipe_data for ExpressionLanguage
+            if ($rawValue !== null) {
+                if ($field->tipe_data === 'number') {
+                    $variableValues[$field->nama_variable] = (float) $rawValue;
+                } elseif ($field->tipe_data === 'date') {
+                    // Konversi tanggal ke Carbon object atau timestamp agar bisa dioperasikan (jika rumus menghendaki)
+                    // Atau biarkan string jika rumus hanya untuk perbandingan string tanggal
+                    try {
+                        $variableValues[$field->nama_variable] = Carbon::parse($rawValue)->timestamp; // atau ->toDateString() untuk perbandingan string
+                    } catch (\Exception $e) {
+                        // Jika format tanggal salah setelah validasi, ini adalah fallback
+                        $variableValues[$field->nama_variable] = 0; // atau null, tergantung bagaimana formula akan menangani
+                        \Log::warning("Failed to parse date '{$rawValue}' for variable '{$field->nama_variable}' in Indikator ID {$indikator->id}. Using 0.");
+                    }
+                } else { // text
+                    $variableValues[$field->nama_variable] = (string) $rawValue;
+                }
+            } else {
+                // Default value jika input kosong
+                $variableValues[$field->nama_variable] = ($field->tipe_data === 'number') ? 0.0 : '';
+            }
+        }
+
+        $language = new ExpressionLanguage();
+
+        // Mendaftarkan fungsi kustom jika diperlukan, contoh:
+        // $language->register('some_custom_function', function ($arg) { /* ... */ }, function (array $values, $arg) { /* ... */ });
+
+        try {
+            $result = $language->evaluate($indikator->formula_penilaian, $variableValues);
+
+            // ExpressionLanguage bisa mengembalikan boolean, string, atau angka.
+            // Jika formula adalah kondisi (misal A > B), hasilnya boolean (true/false)
+            // Anda harus memutuskan bagaimana mengubah boolean atau string menjadi skor numerik (0-4)
+            if (is_bool($result)) {
+                // Contoh: true = 4, false = 0
+                return $result ? 4.0 : 0.0;
+            } elseif (is_string($result) && is_numeric($result)) {
+                // Jika ExpressionLanguage mengembalikan string numerik
+                return (float) $result;
+            } elseif (is_numeric($result)) {
+                // Jika hasil sudah numerik
+                return (float) $result;
+            } else {
+                // Jika hasilnya string non-numerik atau tipe lain yang tidak diharapkan
+                \Log::error("Formula penilaian untuk Indikator ID {$indikator->id} menghasilkan nilai non-numerik atau tidak dapat diinterpretasikan sebagai skor: ".gettype($result).' -> '.print_r($result, true));
+
+                return null; // Tidak dapat diinterpretasikan sebagai skor
+            }
+
+        } catch (\Symfony\Component\ExpressionLanguage\SyntaxError $e) {
+            \Log::error("Syntax Error in formula for Indikator ID {$indikator->id}: ".$e->getMessage().' - Formula: '.$indikator->formula_penilaian);
+
+            return null;
+        } catch (\Exception $e) {
+            \Log::error("Error evaluating formula for Indikator ID {$indikator->id}: ".$e->getMessage().' - Formula: '.$indikator->formula_penilaian);
+
+            return null;
+        }
+    }
+
     public function update(Request $request, $id)
     {
-        $indikator = \App\Models\Indikator::with('indikatorInputs', 'rubrikPenilaians')->findOrFail($id);
+        $indikator = \App\Models\Indikator::with('indikatorInputs')->findOrFail($id);
         // 2. Aturan Validasi Dinamis
         // Ambil data hasil audit yang sudah ada (jika ada)
         $dataExisting = $this->model::where('indikator_id', $id)
@@ -282,9 +329,9 @@ class HasilAuditsController extends Controller
         } elseif ($indikator->tipe === 'LKPS') {
             // Panggil helper method untuk menghitung skor dari data LKPS
             $skorAuditee = $this->calculateScore($indikator, $validated['lkps_data']);
-            if ($skorAuditee === null) {
-                // Jika data tidak cocok dengan rubrik manapun, lempar error validasi
-                throw \Illuminate\Validation\ValidationException::withMessages(['lkps_data' => 'Data yang diinput tidak cocok dengan rubrik penilaian manapun, coba periksa kembali atau hubungi administrator.']);
+            if ($skorAuditee === null || is_nan($skorAuditee) || is_infinite($skorAuditee)) {
+                // Pesan error jika formula tidak valid atau menghasilkan nilai tak terhingga
+                throw \Illuminate\Validation\ValidationException::withMessages(['lkps_data' => 'Formula penilaian menghasilkan nilai tidak valid atau tidak dapat dihitung. Pastikan semua input data LKPS sudah benar dan sesuai dengan rumus.']);
             }
         }
 

@@ -83,6 +83,21 @@
                     });
                 }
 
+                function toggleAll(open) {
+                    collapseEls.forEach(el => {
+                        const inst = bootstrap.Collapse.getOrCreateInstance(el);
+                        if (open) inst.show();
+                        else inst.hide();
+
+                        const triggers = collapseToTriggers.get(el) || [];
+                        triggers.forEach(t => {
+                            if (open) t.classList.remove('collapsed');
+                            else t.classList.add('collapsed');
+                        });
+                    });
+                    updateSwitchState();
+                }
+
                 // attach event listener untuk mendengar perubahan manual (user click)
                 collapseEls.forEach(el => {
                     el.addEventListener('shown.bs.collapse', function() {
@@ -95,26 +110,15 @@
                     });
                 });
 
-                // inisialisasi awal (jika beberapa sudah terbuka)
-                updateSwitchState();
+                // 🔹 Inisialisasi awal: langsung ON dan tampilkan semua
+                toggleSwitch.checked = true;
+                toggleAll(true);
 
                 // ketika user toggle switch -> buka/tutup semua
                 toggleSwitch.addEventListener('change', function() {
                     const open = this.checked;
                     toggleSwitch.disabled = true; // sementara blok input untuk mencegah spam
-                    collapseEls.forEach(el => {
-                        const inst = bootstrap.Collapse.getOrCreateInstance(el);
-                        if (open) inst.show();
-                        else inst.hide();
-
-                        // update trigger langsung (agar UI tidak delay terlalu lama)
-                        const triggers = collapseToTriggers.get(el) || [];
-                        triggers.forEach(t => {
-                            if (open) t.classList.remove('collapsed');
-                            else t.classList.add('collapsed');
-                        });
-                    });
-
+                    toggleAll(open);
                     // re-enable setelah transisi (sesuaikan timeout jika transisi lebih panjang)
                     setTimeout(() => {
                         toggleSwitch.disabled = false;

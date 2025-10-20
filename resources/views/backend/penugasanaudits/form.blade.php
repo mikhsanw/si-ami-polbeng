@@ -1,4 +1,4 @@
-{{ html()->form(isset($data)?'PUT':'POST', (isset($data) ? route($page->code.'.update',$data->id) : route($page->code.'.store')))->id('form-create-'.$page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
+{{ html()->form(isset($data) ? 'PUT' : 'POST', isset($data) ? route($page->code . '.update', $data->id) : route($page->code . '.store'))->id('form-create-' . $page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
 <div class="panel">
     <div class="panel-body">
         {{-- BAGIAN 1: INFORMASI UMUM (TETAP SAMA) --}}
@@ -25,8 +25,8 @@
         {{-- =============================================== --}}
         {{-- BAGIAN 3: HASIL PENILAIAN (DIUBAH JADI VIEW) --}}
         {{-- =============================================== --}}
-       
-        @if($data->tipe === 'LKPS')
+
+        @if ($data->tipe === 'LKPS')
             {{-- TAMPILAN LIHAT UNTUK LKPS --}}
             <div>
                 <h5 class="fw-bold mb-3">Data Kinerja (LKPS) yang Diinput:</h5>
@@ -47,28 +47,29 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="2" class="text-muted text-center">Tidak ada data input yang didefinisikan.</td>
+                                <td colspan="2" class="text-muted text-center">Tidak ada data input yang
+                                    didefinisikan.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
-                 <div class="mt-3">
+                <div class="mt-3">
                     <h6 class="fw-bold">Skor Hasil Kalkulasi Sistem:</h6>
-                    <p class="fs-4 text-primary fw-bold">{{ optional($data->hasilAuditForPeriode($auditPeriode->id))->skor_auditee ?? 'Belum terhitung' }}</p>
-                 </div>
+                    <p class="fs-4 text-primary fw-bold">
+                        {{ optional($data->hasilAuditForPeriode($auditPeriode->id))->skor_auditee ?? 'Belum terhitung' }}
+                    </p>
+                </div>
             </div>
         @endif
 
         {{-- TAMPILAN LIHAT UNTUK LED --}}
-        <div>
+        <div style="{{ $data->tipe === 'LED' ? '' : 'display:none;' }}">
             <h5 class="fw-bold mb-3">Hasil Evaluasi Diri (Skor Auditee):</h5>
             @forelse ($data->rubrikPenilaians->sortByDesc('skor')->whereNotNull('deskripsi') as $rubrik)
                 <div class="form-check mb-3">
-                    <input class="form-check-input" disabled type="radio" 
-                        name="skor_auditee" 
-                        value="{{ $rubrik->skor }}" 
-                        id="skor_{{ $rubrik->skor }}"
-                        {{ (int)optional($data->hasilAuditForPeriode($auditPeriode->id))->skor_auditee === (int)$rubrik->skor ? 'checked' : '' }}>
+                    <input class="form-check-input" disabled type="radio" name="skor_auditee"
+                        value="{{ $rubrik->skor }}" id="skor_{{ $rubrik->skor }}"
+                        {{ (int) optional($data->hasilAuditForPeriode($auditPeriode->id))->skor_auditee === (int) $rubrik->skor ? 'checked' : '' }}>
 
                     <label class="" for="skor_{{ $rubrik->skor }}">
                         <strong class="text-primary">Skor {{ $rubrik->skor }}:</strong> {{ $rubrik->deskripsi }}
@@ -82,10 +83,12 @@
         {{-- BAGIAN 4: DOKUMEN BUKTI (DIUBAH JADI VIEW) --}}
         <div class="mt-4">
             <h5 class="fw-bold mb-3">Dokumen Bukti Terlampir</h5>
-            @if($data->hasilAuditForPeriode($auditPeriode->id)->files->isNotEmpty())
+            @if ($data->hasilAuditForPeriode($auditPeriode->id)->files->isNotEmpty())
                 <div class="list-group">
                     @foreach ($data->hasilAuditForPeriode($auditPeriode->id)->files as $key => $file)
-                        <a href="{{ asset($file->link_public_stream) }}" class="list-group-item list-group-item-action text-primary d-flex align-items-center" target="_blank">
+                        <a href="{{ asset($file->link_public_stream) }}"
+                            class="list-group-item list-group-item-action text-primary d-flex align-items-center"
+                            target="_blank">
                             <i class="fas fa-file-alt fa-fw me-3 text-primary"></i>
                             Bukti Penilaian {{ $key + 1 }}
                             <i class="fas fa-external-link-alt ms-auto"></i>
@@ -115,20 +118,45 @@
                 <div id="form_finalisasi" style="display: none;">
                     <div class="form-group mb-3">
                         <label class="form-label" for="skor_final">Skor Final:</label>
-                        <select name="skor_final" id="skor_final" class="form-select w-50">
-                            <option value="">Pilih Skor</option>
-                            <option value="4">4</option>
-                            <option value="3">3</option>
-                            <option value="2">2</option>
-                            <option value="1">1</option>
-                        </select>
+                        @if ($data->tipe === 'LKPS')
+                            {{-- LKPS: skor final otomatis dari sistem --}}
+                            @php
+                                $skorSistem =
+                                    optional($data->hasilAuditForPeriode($auditPeriode->id))->skor_auditee ?? null;
+                            @endphp
+                            <input type="text" readonly class="form-control w-50 text-primary fw-bold"
+                                value="{{ $skorSistem ? $skorSistem : 'Belum terhitung' }}">
+                            <input type="hidden" name="skor_final" id="skor_final_hidden" value="{{ $skorSistem }}">
+                            <small class="text-muted fst-italic">Skor final diambil otomatis dari hasil kalkulasi
+                                sistem.</small>
+                        @else
+                            {{-- LED: auditor pilih skor manual --}}
+                            <select name="skor_final" id="skor_final" class="form-select w-50">
+                                <option value="">Pilih Skor</option>
+                                <option value="4">4</option>
+                                <option value="3">3</option>
+                                <option value="2">2</option>
+                                <option value="1">1</option>
+                            </select>
+                        @endif
+                    </div>
+
+                    {{-- Catatan auditor muncul jika skor < 4 --}}
+                    <div id="catatan_kurang" style="display: none;">
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold" for="catatan_auditor_final">
+                                Temuan: </label>
+                            <textarea name="catatan_auditor" id="catatan_auditor_final" class="form-control" rows="3"
+                                placeholder="Jelaskan alasan atau rekomendasi perbaikan..."></textarea>
+                        </div>
                     </div>
                 </div>
 
                 <div id="form_revisi" style="display: none;">
                     <div class="form-group mb-3">
                         <label class="form-label" for="catatan_auditor">Catatan & Rekomendasi untuk Revisi:</label>
-                        <textarea name="catatan_auditor" class="form-control" rows="4" placeholder="Jelaskan apa yang perlu diperbaiki oleh auditee..."></textarea>
+                        <textarea name="catatan_auditor" class="form-control" rows="4"
+                            placeholder="Jelaskan apa yang perlu diperbaiki oleh auditee..."></textarea>
                     </div>
                 </div>
             </div>
@@ -139,9 +167,9 @@
 {!! html()->hidden('indikator_id')->id('indikator_id')->value($data->id) !!}
 {!! html()->hidden('audit_periode_id')->id('audit_periode_id')->value($auditPeriode->id) !!}
 
-{!! html()->hidden('table-id','datatable')->id('table-id') !!}
-{{--{!! html()->hidden('function','loadMenu,sidebarMenu')->id('function') !!}--}}
-{{--{!! html()->hidden('redirect',url('/dashboard'))->id('redirect') !!}--}}
+{!! html()->hidden('table-id', 'datatable')->id('table-id') !!}
+{{-- {!! html()->hidden('function','loadMenu,sidebarMenu')->id('function') !!} --}}
+{{-- {!! html()->hidden('redirect',url('/dashboard'))->id('redirect') !!} --}}
 {!! html()->form()->close() !!}
 <style>
     .select2-container {
@@ -169,22 +197,42 @@
         const actionSelect = $('#auditor_action');
         const formFinalisasi = $('#form_finalisasi');
         const formRevisi = $('#form_revisi');
+        const catatanKurang = $('#catatan_kurang');
+        const skorSelect = $('#skor_final');
+        const skorHidden = $('#skor_final_hidden'); // utk LKPS auto skor
+
+        function toggleCatatan(skor) {
+            if (!skor) return catatanKurang.slideUp();
+
+            const nilai = parseFloat(String(skor).replace(',', '.'));
+            if (!isNaN(nilai) && nilai < 4) {
+                catatanKurang.slideDown();
+            } else {
+                catatanKurang.slideUp();
+            }
+        }
 
         actionSelect.on('change', function() {
-            const selectedAction = $(this).val();
-
-            // Sembunyikan semua form dan tombol simpan terlebih dahulu
+            const selected = $(this).val();
             formFinalisasi.hide();
             formRevisi.hide();
+            catatanKurang.hide();
 
-            if (selectedAction === 'finalisasi') {
-                // Jika memilih "Finalisasi Skor", tampilkan form skor
+            if (selected === 'finalisasi') {
                 formFinalisasi.slideDown();
-                formRevisi.hide();
-            } else if (selectedAction === 'minta_revisi') {
-                // Jika memilih "Minta Revisi", tampilkan form catatan
+
+                // jika LKPS, cek otomatis dari skor hidden
+                if (skorHidden.length) {
+                    toggleCatatan(skorHidden.val());
+                }
+            } else if (selected === 'minta_revisi') {
                 formRevisi.slideDown();
             }
+        });
+
+        // Event untuk LED (dropdown)
+        skorSelect.on('change', function() {
+            toggleCatatan($(this).val());
         });
     });
 </script>

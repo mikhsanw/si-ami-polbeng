@@ -32,7 +32,7 @@ datatable.search( this.value ).draw();
 
 // Hook export buttons
 var exportButtons = () => {
-const documentTitle = 'Customer Orders Report';
+const documentTitle = 'Report';
 var buttons = new $.fn.dataTable.Buttons('#datatable', {
 buttons: [
 {

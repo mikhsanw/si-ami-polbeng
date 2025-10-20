@@ -54,7 +54,7 @@
                                             {{ $indikator->tipe }}
                                         </span>
                                         <span class="badge bg-primary rounded-pill text-white">
-                                            {{ $indikator->rubrikPenilaians->count() }}
+                                            {{ $indikator->tipe == 'LED' ? $indikator->rubrikPenilaians->count() : $indikator->indikatorInputs->count() }}
                                         </span>
                                         <button class="btn btn-action btn-sm btn-light-danger"
                                             data-title="Hapus Indikator" data-action="delete-indikator"

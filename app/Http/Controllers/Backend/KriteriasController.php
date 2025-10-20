@@ -260,10 +260,7 @@ class KriteriasController extends Controller
             'parent_id' => 'nullable|exists:kriterias,id',
             'rubrik_manual_deskripsi' => 'required_if:tipe,LED|array',
             'rubrik_manual_deskripsi.*' => 'nullable|string',
-            'rubrik_otomatis_deskripsi' => 'required_if:tipe,LKPS|array',
-            'rubrik_otomatis_deskripsi.*' => 'nullable|string',
-            'rubrik_formula' => 'nullable|array',
-            'rubrik_formula.*' => 'nullable|string',
+            'formula_penilaian' => 'required_if:tipe,LKPS|string',
         ]);
 
         // Validasi lanjutan untuk input_fields jika tipe LKPS
@@ -334,14 +331,11 @@ class KriteriasController extends Controller
                     ]);
                 }
 
-                $rubrik = $request->input('rubrik_otomatis_deskripsi', []);
-                $formula = $request->input('rubrik_formula', []);
+                $formula = $request->input('formula_penilaian', '');
 
-                foreach ($rubrik as $skor => $deskripsi) {
-                    $indikator->rubrikPenilaians()->create([
-                        'skor' => $skor,
-                        'deskripsi' => $deskripsi,
-                        'formula_kondisi' => $formula[$skor] ?? null,
+                if (trim($formula)) {
+                    $indikator->update([
+                        'formula_penilaian' => $formula,
                     ]);
                 }
             }
