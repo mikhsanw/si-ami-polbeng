@@ -279,20 +279,23 @@ class PenugasanAuditsController extends Controller
         // 1. Aturan Validasi Dinamis berdasarkan Aksi yang Dipilih
         $rules = [
             'action' => ['required', \Illuminate\Validation\Rule::in(['finalisasi', 'minta_revisi'])],
-            'catatan_auditor' => 'nullable|string|max:5000',
         ];
 
         // Tambahkan aturan kondisional
         if ($request->input('action') === 'finalisasi') {
-            $rules['skor_final'] = 'required|integer|between:1,4';
+            $rules['skor_final'] = 'required';
         }
-        if ($request->input('action') === 'minta_revisi' || ($request->input('action') === 'finalisasi' && $request->input('skor_final') < 4)) {
+        if ($request->input('action') === 'minta_revisi') {
             $rules['catatan_auditor'] = 'required|string|max:5000';
+        }
+        if ($request->input('action') === 'finalisasi' && $request->input('skor_final') < 4) {
+            $rules['catatan_auditor_final'] = 'required|string|max:5000';
         }
 
         // Gunakan $request->validate() yang akan otomatis handle response error AJAX
         $validated = $request->validate($rules, [
-            'catatan_auditor.required' => 'Catatan wajib diisi.',
+            'catatan_auditor.required' => 'Catatan wajib diisi saat meminta revisi.',
+            'catatan_auditor_final.required' => 'Temuan wajib diisi saat finalisasi skor < 4.',
         ]);
 
         // 2. Gunakan Transaction untuk memastikan integritas data
@@ -307,7 +310,7 @@ class PenugasanAuditsController extends Controller
 
             // 4. Proses data berdasarkan Aksi yang Dipilih
             if ($validated['action'] === 'finalisasi') {
-                $hasilAudit->skor_final = $validated['skor_final'];
+                $hasilAudit->skor_final = str_replace(',', '.', $validated['skor_final']);
                 $hasilAudit->catatan_final = $catatan; // Catatan akhir
                 $hasilAudit->status_terkini = 'Selesai';
                 $tipeAksiLog = 'FINALISASI_SKOR';

@@ -146,7 +146,7 @@
                         <div class="form-group mb-3">
                             <label class="form-label fw-bold" for="catatan_auditor_final">
                                 Temuan: </label>
-                            <textarea name="catatan_auditor" id="catatan_auditor_final" class="form-control" rows="3"
+                            <textarea name="catatan_auditor_final" id="catatan_auditor_final" class="form-control" rows="3"
                                 placeholder="Jelaskan alasan atau rekomendasi perbaikan..."></textarea>
                         </div>
                     </div>
