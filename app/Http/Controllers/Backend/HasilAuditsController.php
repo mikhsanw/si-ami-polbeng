@@ -386,13 +386,6 @@ class HasilAuditsController extends Controller
                 }
             }
 
-            $data->logAktivitasAudit()->create([
-                'tipe_aksi' => config('master.content.log_aktivitas_audit.tipe_aksi.SUBMIT_AWAL'),
-                'user_id' => auth()->id(),
-                'catatan_aksi' => 'Auditee memperbarui data evaluasi diri.',
-            ]
-            );
-
             DB::commit();
 
             return response()->json(['status' => true, 'message' => 'Data berhasil diperbarui', 'redirect' => route($this->code.'.audit-kriteria', $request->input('audit_periode_id'))]);
@@ -452,9 +445,23 @@ class HasilAuditsController extends Controller
         DB::beginTransaction();
         try {
             $hasilAudit = $this->model::where('indikator_id', $request->indikator_id)
-                ->where('audit_periode_id', $request->audit_periode_id)
-                ->update(['status_terkini' => $request->status]);
+                ->where('audit_periode_id', $request->audit_periode_id) - first();
+            if ($hasilAudit->status_terkini === 'Draft') {
+                $catatan = 'Auditee mengajukan evaluasi diri.';
+            } elseif ($hasilAudit->status_terkini === 'Revisi') {
+                $catatan = 'Auditee memperbarui data evaluasi diri.';
+            } else {
+                $catatan = 'Status evaluasi diri diperbarui.';
+            }
 
+            $hasilAudit->update(['status_terkini' => $request->status]);
+
+            $hasilAudit->logAktivitasAudit()->create([
+                'tipe_aksi' => config('master.content.log_aktivitas_audit.tipe_aksi.SUBMIT_AWAL'),
+                'user_id' => auth()->id(),
+                'catatan_aksi' => $catatan,
+            ]
+            );
             DB::commit();
 
             return response()->json([

@@ -103,12 +103,10 @@ class KriteriasController extends Controller
             'parent_id' => 'nullable|exists:kriterias,id',
             'rubrik_manual_deskripsi' => 'required_if:tipe,LED|array',
             'rubrik_manual_deskripsi.*' => 'nullable|string',
-            'rubrik_otomatis_deskripsi' => 'required_if:tipe,LKPS|array',
-            'rubrik_otomatis_deskripsi.*' => 'nullable|string',
-            'rubrik_formula' => 'nullable|array',
-            'rubrik_formula.*' => 'nullable|string',
+            'formula_penilaian' => 'required_if:tipe,LKPS|string',
         ]);
 
+        // Validasi lanjutan untuk input_fields jika tipe LKPS
         $validator = Validator::make($request->all(), []);
         $validator->after(function ($validator) use ($request) {
             if ($request->input('tipe') === 'LKPS') {
@@ -129,22 +127,18 @@ class KriteriasController extends Controller
                     }
                 }
 
-                $formulas = $request->input('rubrik_formula', []);
-                foreach ($formulas as $skor => $formula) {
-                    if (empty($formula)) {
-                        continue;
-                    }
-
+                $formulas = $request->input('formula_penilaian', '');
+                if (trim($formulas)) {
                     // Cegah pakai "x" untuk kali
-                    if (strpos($formula, 'x') !== false) {
-                        $validator->errors()->add("rubrik_formula.$skor", 'Gunakan * untuk perkalian, bukan x.');
+                    if (preg_match('/(?<=\S)\sx\s(?=\S)/', $formulas)) {
+                        $validator->errors()->add('formula_penilaian', 'Gunakan * untuk perkalian, bukan x.');
                     }
 
                     // Hanya izinkan huruf, angka, spasi, kurung, dan operator standar
-                    if (! preg_match('/^[0-9A-Za-z\s\+\-\*\/\<\>\=\!\&\|\(\)]+$/', $formula)) {
+                    if (! preg_match('/^[0-9A-Za-z\s\+\-\*\/\<\>\=\!\&\|\(\)]+$/', $formulas)) {
                         $validator->errors()->add(
-                            "rubrik_formula.$skor",
-                            "Formula skor $skor: Mengandung karakter/operator yang tidak valid. Hanya boleh gunakan + - * / < > = ! && || dan ()."
+                            'formula_penilaian',
+                            'Formula penilaian: Mengandung karakter/operator yang tidak valid. Hanya boleh gunakan + - * / < > = ! && || dan ().'
                         );
                     }
                 }
@@ -190,14 +184,11 @@ class KriteriasController extends Controller
                     ]);
                 }
 
-                $rubrik = $request->input('rubrik_otomatis_deskripsi', []);
-                $formula = $request->input('rubrik_formula', []);
+                $formula = $request->input('formula_penilaian', '');
 
-                foreach ($rubrik as $skor => $deskripsi) {
-                    $indikator->rubrikPenilaians()->create([
-                        'skor' => $skor,
-                        'deskripsi' => $deskripsi,
-                        'formula_kondisi' => $formula[$skor] ?? null,
+                if (trim($formula)) {
+                    $indikator->update([
+                        'formula_penilaian' => $formula,
                     ]);
                 }
             }
@@ -281,6 +272,22 @@ class KriteriasController extends Controller
                         $validator->errors()->add("input_fields.$index.tipe_data", 'Tipe data wajib dipilih.');
                     } elseif (! in_array($field['tipe_data'], ['ANGKA', 'PERSENTASE', 'TEKS'])) {
                         $validator->errors()->add("input_fields.$index.tipe_data", 'Tipe data tidak valid.');
+                    }
+                }
+
+                $formulas = $request->input('formula_penilaian', '');
+                if (trim($formulas)) {
+                    // Cegah pakai "x" untuk kali
+                    if (preg_match('/(?<=\S)\sx\s(?=\S)/', $formulas)) {
+                        $validator->errors()->add('formula_penilaian', 'Gunakan * untuk perkalian, bukan x.');
+                    }
+
+                    // Hanya izinkan huruf, angka, spasi, kurung, dan operator standar
+                    if (! preg_match('/^[0-9A-Za-z\s\+\-\*\/\<\>\=\!\&\|\(\)]+$/', $formulas)) {
+                        $validator->errors()->add(
+                            'formula_penilaian',
+                            'Formula penilaian: Mengandung karakter/operator yang tidak valid. Hanya boleh gunakan + - * / < > = ! && || dan ().'
+                        );
                     }
                 }
             }
