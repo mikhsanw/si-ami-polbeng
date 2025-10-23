@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class KriteriasController extends Controller
 {
@@ -423,5 +424,48 @@ class KriteriasController extends Controller
             'status' => false,
             'message' => 'Data gagal dihapus',
         ]);
+    }
+
+    public function cekFormula(Request $request)
+    {
+        $formula = $request->input('formula');
+        $variables = $request->input('variables', []);
+
+        if (empty($formula)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Formula tidak boleh kosong.',
+            ]);
+        }
+
+        if (empty($variables)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Belum ada variabel input yang didefinisikan.',
+            ]);
+        }
+
+        $language = new ExpressionLanguage();
+
+        try {
+            // 1️⃣ Parsing untuk cek sintaks formula
+            $language->parse($formula, $variables);
+
+            // 2️⃣ Siapkan data dummy sesuai jumlah variabel
+            $dummyData = collect($variables)->mapWithKeys(fn ($v) => [$v => rand(1, 5)])->toArray();
+
+            // 3️⃣ Jalankan evaluasi contoh
+            $result = $language->evaluate($formula, $dummyData);
+
+            return response()->json([
+                'valid' => true,
+                'message' => "Formula valid ✅. Contoh hasil evaluasi: {$result}",
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Formula tidak valid ❌: '.$e->getMessage(),
+            ]);
+        }
     }
 }

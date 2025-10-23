@@ -61,6 +61,7 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
         Route::put('/update-indikator/{id}', 'KriteriasController@updateIndikator')->name('update-indikator');
         Route::get('/{id}/indikators', 'KriteriasController@indikators')->name('indikators');
         Route::get('/{id?}', 'KriteriasController@index')->name('index')->where('id', '[a-f0-9\-]+');
+        Route::post('/cek-formula', 'KriteriasController@cekFormula')->name('cek-formula');
     });
     Route::resource('kriterias', 'KriteriasController')->except(['index', 'show']);
 

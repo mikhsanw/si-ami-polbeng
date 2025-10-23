@@ -131,8 +131,14 @@
                 atas.</p>
             <div class="form-group mb-4">
                 {!! html()->label()->class('control-label')->for('formula_penilaian')->text('Rumus') !!}
-                {!! html()->textarea('formula_penilaian', isset($data) ? $data->formula_penilaian : null)->placeholder('Contoh: (A/B)*100')->class('form-control')->id('formula_penilaian')->attributes(['rows' => 3]) !!} {{-- Menambahkan atribut rows --}}
-                <small class="form-text text-muted">Contoh: `(A/B)*100` atau `A + B - C`.</small>
+                <small class="form-text text-muted">(Gunakan huruf, angka, _ , + - * / <> = ! && || ? : () [] dan
+                        spasi.)</small>
+                {!! html()->textarea('formula_penilaian', isset($data) ? $data->formula_penilaian : null)->placeholder('Contoh: (A/B)*100 atau (A >= 60) ? 4 : 2')->class('form-control')->id('formula_penilaian')->attributes(['rows' => 3]) !!} {{-- Menambahkan atribut rows --}}
+
+                <button type="button" id="checkFormula" class="btn btn-info btn-sm mt-2">
+                    <i class="fas fa-check"></i> Cek Formula
+                </button>
+                <div id="formulaResult" class="mt-2"></div>
             </div>
 
         </div>
@@ -230,6 +236,49 @@
         $('#dynamicFieldsContainer').on('click', '.remove-field', function() {
             $(this).closest('tr').remove();
         });
+
+        $('#checkFormula').click(function() {
+            let formula = $('#formula_penilaian').val();
+            let resultDiv = $('#formulaResult');
+            resultDiv.html('<span class="text-muted">Memeriksa formula...</span>');
+
+            // Ambil semua nama variabel dari tabel input_fields
+            let variables = [];
+            $('input[name^="input_fields"]').each(function() {
+                let name = $(this).attr('name');
+                if (name.includes('[variable]')) {
+                    let val = $(this).val().trim();
+                    if (val) variables.push(val);
+                }
+            });
+
+            $.ajax({
+                url: "{{ route($page->code . '.cek-formula') }}", // rute akan kita buat
+                method: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    formula: formula,
+                    variables: variables // kirim array variabel ke backend
+                },
+                success: function(res) {
+                    if (res.valid) {
+                        resultDiv.html(
+                            '<span class="text-success"><i class="fas fa-check-circle"></i> ' +
+                            res.message + '</span>');
+                    } else {
+                        resultDiv.html(
+                            '<span class="text-danger"><i class="fas fa-times-circle"></i> ' +
+                            res.message + '</span>');
+                    }
+                },
+                error: function(xhr) {
+                    resultDiv.html(
+                        '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Terjadi kesalahan.</span>'
+                    );
+                }
+            });
+        });
+
 
 
         var options = {
