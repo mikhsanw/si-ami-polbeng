@@ -134,11 +134,11 @@ class KriteriasController extends Controller
                         $validator->errors()->add('formula_penilaian', 'Gunakan * untuk perkalian, bukan x.');
                     }
 
-                    // Hanya izinkan huruf, angka, spasi, kurung, dan operator standar
-                    if (! preg_match('/^[0-9A-Za-z\s\+\-\*\/\<\>\=\!\&\|\(\)]+$/', $formulas)) {
+                    if (! preg_match('/^[0-9A-Za-z_\s\.\,\+\-\*\/\<\>\=\!\&\|\?\:\(\)\[\]]+$/', $formulas)) {
                         $validator->errors()->add(
                             'formula_penilaian',
-                            'Formula penilaian: Mengandung karakter/operator yang tidak valid. Hanya boleh gunakan + - * / < > = ! && || dan ().'
+                            'Formula penilaian mengandung karakter/operator yang tidak valid. 
+                            Hanya boleh gunakan huruf, angka, _ , + - * / < > = ! && || ? : () [] dan spasi.'
                         );
                     }
                 }
@@ -282,11 +282,11 @@ class KriteriasController extends Controller
                         $validator->errors()->add('formula_penilaian', 'Gunakan * untuk perkalian, bukan x.');
                     }
 
-                    // Hanya izinkan huruf, angka, spasi, kurung, dan operator standar
-                    if (! preg_match('/^[0-9A-Za-z\s\+\-\*\/\<\>\=\!\&\|\(\)]+$/', $formulas)) {
+                    if (! preg_match('/^[0-9A-Za-z_\s\.\,\+\-\*\/\<\>\=\!\&\|\?\:\(\)\[\]]+$/', $formulas)) {
                         $validator->errors()->add(
                             'formula_penilaian',
-                            'Formula penilaian: Mengandung karakter/operator yang tidak valid. Hanya boleh gunakan + - * / < > = ! && || dan ().'
+                            'Formula penilaian mengandung karakter/operator yang tidak valid. 
+                            Hanya boleh gunakan huruf, angka, _ , + - * / < > = ! && || ? : () [] dan spasi.'
                         );
                     }
                 }
