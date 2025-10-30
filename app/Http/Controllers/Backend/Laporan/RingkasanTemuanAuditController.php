@@ -9,9 +9,9 @@ class RingkasanTemuanAuditController extends Controller
 {
     public function index(Request $request, $id = null)
     {
+        $user = $request->user();
         if ($request->ajax()) {
             $id = $id ?? $request->get('id');
-            $user = $request->user();
             $data = $this->model::with(['indikator', 'auditPeriode', 'logAktivitasAudit', 'indikator.kriteria'])
                 ->where('skor_final', '<', 4)
                 ->whereHas('auditPeriode', function ($query) use ($id) {
@@ -54,8 +54,7 @@ class RingkasanTemuanAuditController extends Controller
                 ->make();
         }
 
-        $data = \App\Models\AuditPeriode::orderBy('created_at')
-            ->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+        $data = \App\Models\AuditPeriode::orderBy('created_at')->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->get()
             ->pluck('periode_unit', 'id')
             ->toArray();
         $filterOptions = ['' => 'Pilih Periode Unit'] + $data;
