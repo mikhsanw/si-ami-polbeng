@@ -445,7 +445,7 @@ class KriteriasController extends Controller
             ]);
         }
 
-        if (! preg_match('/^[0-9A-Za-z_\s\.\,\+\-\*\/\<\>\=\!\&\|\?\:\(\)\[\]]+$/', $formulas)) {
+        if (! preg_match('/^[0-9A-Za-z_\s\.\,\+\-\*\/\<\>\=\!\&\|\?\:\(\)\[\]]+$/', $formula)) {
             return response()->json([
                 'valid' => false,
                 'message' => 'Formula penilaian mengandung karakter/operator yang tidak valid. 
