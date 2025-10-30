@@ -9,7 +9,7 @@
                 <div class="d-flex align-items-center position-relative my-1">
                     <i class="ki-duotone ki-setting-4 fs-1 position-absolute ms-6"><span class="path1"></span>
                         <span class="path2"></span></i>
-                    <select id="filter_kriteria" class="form-control form-control-solid w-250px ps-15">
+                    <select id="filter_kriteria" class="form-control form-control-solid w-400px ps-15">
                         @foreach ($filterOptions as $key => $label)
                             <option {{ $key == $id ? 'selected' : '' }} value="{{ $key }}">{{ $label }}
                             </option>

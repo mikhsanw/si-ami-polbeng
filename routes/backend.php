@@ -144,5 +144,10 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
     });
     Route::resource('penugasanauditors', 'PenugasanAuditorsController');
 
+    Route::prefix('ringkasantemuanaudits')->as('ringkasantemuanaudits.')->group(function () {
+        Route::get('/{id?}', 'Laporan\RingkasanTemuanAuditController@index')->name('index')->where('id', '[a-f0-9\-]+');
+    });
+    Route::resource('ringkasantemuanaudits', 'Laporan\RingkasanTemuanAuditController')->except(['index']);
+
     //gencrud
 });

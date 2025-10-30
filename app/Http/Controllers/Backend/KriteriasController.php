@@ -445,6 +445,14 @@ class KriteriasController extends Controller
             ]);
         }
 
+        if (! preg_match('/^[0-9A-Za-z_\s\.\,\+\-\*\/\<\>\=\!\&\|\?\:\(\)\[\]]+$/', $formulas)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Formula penilaian mengandung karakter/operator yang tidak valid. 
+                Hanya boleh gunakan huruf, angka, _ , + - * / < > = ! && || ? : () [] dan spasi.',
+            ]);
+        }
+
         $language = new ExpressionLanguage();
 
         try {
