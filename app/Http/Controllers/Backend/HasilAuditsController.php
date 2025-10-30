@@ -312,7 +312,7 @@ class HasilAuditsController extends Controller
         } elseif ($indikator->tipe === 'LKPS') {
             $rules['lkps_data'] = 'required|array';
             foreach ($indikator->indikatorInputs as $field) {
-                $rules['lkps_data.'.$field->id] = 'required|numeric';
+                $rules['lkps_data.'.$field->id] = 'required';
             }
         }
 
@@ -327,6 +327,9 @@ class HasilAuditsController extends Controller
         if ($indikator->tipe === 'LED') {
             $skorAuditee = $validated['skor_auditee'];
         } elseif ($indikator->tipe === 'LKPS') {
+            if ($indikator->formula_penilaian === null || trim($indikator->formula_penilaian) === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages(['lkps_data' => 'Formula penilaian untuk indikator LKPS ini belum ditetapkan. Silakan hubungi administrator sistem (P4MP).']);
+            }
             // Panggil helper method untuk menghitung skor dari data LKPS
             $skorAuditee = $this->calculateScore($indikator, $validated['lkps_data']);
             if ($skorAuditee === null || is_nan($skorAuditee) || is_infinite($skorAuditee)) {

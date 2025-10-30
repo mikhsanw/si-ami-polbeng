@@ -54,7 +54,8 @@ class RingkasanTemuanAuditController extends Controller
                 ->make();
         }
 
-        $data = \App\Models\AuditPeriode::orderBy('created_at')->get()
+        $data = \App\Models\AuditPeriode::orderBy('created_at')
+            ->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->get()
             ->pluck('periode_unit', 'id')
             ->toArray();
         $filterOptions = ['' => 'Pilih Periode Unit'] + $data;
