@@ -89,11 +89,22 @@
                                     </option>
                                 </select>
                             </td>
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm remove-field">
-                                    <i class="fas fa-trash"></i> Hapus
-                                </button>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-secondary move-up"
+                                        title="Pindah ke atas">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-secondary move-down"
+                                        title="Pindah ke bawah">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm remove-field" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </td>
+
                         </tr>
                     @empty
                         <tr>
@@ -202,7 +213,7 @@
         });
 
         // Dynamic input fields
-        let fieldIndex = 1;
+        let fieldIndex = $('#dynamicFieldsContainer tr').length;
 
         // Fungsi untuk menambah baris input field baru
         $('#addField').click(function() {
@@ -221,10 +232,20 @@
                         <option value="TEKS">Teks</option>
                     </select>
                 </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm remove-field">
-                            <i class="fas fa-trash"></i> Hapus
-                        </button>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-secondary move-up"
+                                title="Pindah ke atas">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary move-down"
+                                title="Pindah ke bawah">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm remove-field" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -278,6 +299,43 @@
                 }
             });
         });
+
+        //sortable rows
+        // Fungsi Pindah Naik
+        $('#dynamicFieldsContainer').on('click', '.move-up', function() {
+            let row = $(this).closest('tr');
+            let prev = row.prev();
+            if (prev.length) {
+                row.insertBefore(prev);
+                updateInputNames();
+            }
+        });
+
+        // Fungsi Pindah Turun
+        $('#dynamicFieldsContainer').on('click', '.move-down', function() {
+            let row = $(this).closest('tr');
+            let next = row.next();
+            if (next.length) {
+                row.insertAfter(next);
+                updateInputNames();
+            }
+        });
+
+        // Fungsi untuk memperbarui nama array input setelah urutan berubah
+        function updateInputNames() {
+            $('#dynamicFieldsContainer tr').each(function(index) {
+                $(this).find('input, select, textarea').each(function() {
+                    let name = $(this).attr('name');
+                    if (name) {
+                        name = name.replace(/\[\d+\]/, `[${index}]`);
+                        $(this).attr('name', name);
+                    }
+                });
+                // update nomor urut (jika ada kolom nomor)
+                $(this).find('.order-number').text(index + 1);
+            });
+        }
+
 
 
 

@@ -61,7 +61,7 @@ class KriteriasController extends Controller
             $existingRubrikDeskripsi[$rubrik->skor] = $rubrik->deskripsi;
             $existingRubrikFormula[$rubrik->skor] = $rubrik->formula_kondisi;
         }
-        $indikatorInputs = $data->indikatorInputs->map(function ($input) {
+        $indikatorInputs = $data->indikatorInputs->sortBy('urutan')->map(function ($input) {
             return [
                 'label' => $input->label_input,
                 'variable' => $input->nama_variable,
@@ -161,6 +161,7 @@ class KriteriasController extends Controller
                 'kriteria_id' => $request->input('parent_id'),
                 'nama' => $request->input('nama'),
                 'tipe' => $request->input('tipe'),
+                'formula_penilaian' => $request->input('formula_penilaian', null),
             ]);
 
             // Manual
@@ -177,19 +178,12 @@ class KriteriasController extends Controller
 
             // LKPS
             if ($request->input('tipe') === 'LKPS') {
-                foreach ($request->input('input_fields', []) as $field) {
+                foreach ($request->input('input_fields', []) as $key => $field) {
                     $indikator->indikatorInputs()->create([
                         'label_input' => $field['label'],
                         'nama_variable' => $field['variable'],
                         'tipe_data' => $field['tipe_data'],
-                    ]);
-                }
-
-                $formula = $request->input('formula_penilaian', '');
-
-                if (trim($formula)) {
-                    $indikator->update([
-                        'formula_penilaian' => $formula,
+                        'urutan' => $key + 1,
                     ]);
                 }
             }
@@ -306,46 +300,52 @@ class KriteriasController extends Controller
         try {
             $indikator = \App\Models\Indikator::findOrFail($id);
 
-            // Update indikator utama
-            $indikator->update([
+            // Cek apakah ada perubahan di kolom utama
+            $indikator->fill([
                 'kriteria_id' => $request->input('parent_id'),
                 'nama' => $request->input('nama'),
                 'tipe' => $request->input('tipe'),
+                'formula_penilaian' => $request->input('formula_penilaian'),
             ]);
 
-            // Bersihkan relasi lama
-            $indikator->rubrikPenilaians()->delete();
-            $indikator->indikatorInputs()->delete();
+            if ($indikator->isDirty()) {
+                $indikator->save();
+            }
 
-            // LED
+            // ---- LED ----
             if ($request->input('tipe') === 'LED') {
                 foreach ($request->input('rubrik_manual_deskripsi', []) as $skor => $deskripsi) {
                     if (trim($deskripsi)) {
-                        $indikator->rubrikPenilaians()->create([
-                            'skor' => $skor,
-                            'deskripsi' => $deskripsi,
-                        ]);
+                        $indikator->rubrikPenilaians()
+                            ->updateOrCreate(
+                                ['skor' => $skor],
+                                ['deskripsi' => $deskripsi]
+                            );
                     }
                 }
             }
 
-            // LKPS
+            // ---- LKPS ----
             if ($request->input('tipe') === 'LKPS') {
-                foreach ($request->input('input_fields', []) as $field) {
-                    $indikator->indikatorInputs()->create([
-                        'label_input' => $field['label'],
-                        'nama_variable' => $field['variable'],
-                        'tipe_data' => $field['tipe_data'],
-                    ]);
+                $existingInputs = $indikator->indikatorInputs()->get();
+
+                foreach ($request->input('input_fields', []) as $key => $field) {
+                    $indikator->indikatorInputs()
+                        ->updateOrCreate(
+                            ['nama_variable' => $field['variable']],
+                            [
+                                'label_input' => $field['label'],
+                                'tipe_data' => $field['tipe_data'],
+                                'urutan' => $key + 1,
+                            ]
+                        );
                 }
 
-                $formula = $request->input('formula_penilaian', '');
-
-                if (trim($formula)) {
-                    $indikator->update([
-                        'formula_penilaian' => $formula,
-                    ]);
-                }
+                // Hapus input lama yang tidak lagi ada
+                $currentVariables = collect($request->input('input_fields'))->pluck('variable')->toArray();
+                $indikator->indikatorInputs()
+                    ->whereNotIn('nama_variable', $currentVariables)
+                    ->delete();
             }
 
             DB::commit();

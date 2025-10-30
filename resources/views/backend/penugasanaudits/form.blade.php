@@ -38,7 +38,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($data->indikatorInputs as $field)
+                        @forelse ($data->indikatorInputs->sortBy('urutan') as $field)
                             <tr>
                                 <td>{{ $field->label_input }}</td>
                                 <td>

@@ -55,7 +55,7 @@
             {{-- TAMPILAN UNTUK LKPS (OTOMATIS) --}}
             <div id="form-lkps">
                 <label class="form-label fw-bold fs-5">Input Data Kinerja (LKPS):</label>
-                @forelse ($data->indikatorInputs as $field)
+                @forelse ($data->indikatorInputs->sortBy('urutan') as $field)
                     <div class="col-4 mb-3">
                         <label for="field_{{ $field->id }}">{{ $field->label_input }} dalam
                             {{ $field->tipe_data }}</label>
