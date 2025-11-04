@@ -2,31 +2,33 @@
 
 namespace App\Http\Controllers\Backend;
 
-use Illuminate\View\View;
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class MenuController extends Controller
 {
-    public function index() : View
+    public function index(): View
     {
         return view($this->view.'.index');
     }
 
     public function data()
     {
-        $menu=$this->model::with(['children'])->whereNull('parent_id')->sort()->get();
+        $menu = $this->model::whereNull('parent_id')->with('children')->get();
+
         return view($this->view.'.list-menu.list-menu', compact('menu'));
     }
 
     public function create()
     {
-        $data=[
-            'model'=>$this->help::listFile(app_path('/Models'), ['php']),
-            'role'=>Role::whereNot('name','Super Admin')->pluck('name', 'id'),
+        $data = [
+            'model' => $this->help::listFile(app_path('/Models'), ['php']),
+            'role' => Role::whereNot('name', 'Super Admin')->pluck('name', 'id'),
         ];
+
         return view($this->view.'.create', $data);
     }
 
@@ -49,22 +51,23 @@ class MenuController extends Controller
         if ($data = $this->model::create($request->all())) {
             foreach ($request->role_id as $role_id) {
                 // foreach($request->input('access_crud_'.$role_id) as $key => $permission){
-                    foreach(config('master.app.level') as $permissionName){
-                            $role = Role::find($role_id);
-                            $permission = Permission::firstOrCreate(['name' => $request->code.' '.$permissionName]);
-                            if(array_search($permissionName,$request->input('access_crud_'.$role_id))!=''){
-                                $role->givePermissionTo($permission);
-                            }else{
-                                $role->revokePermissionTo($request->code.' '.$permissionName);
-                            }
+                foreach (config('master.app.level') as $permissionName) {
+                    $role = Role::find($role_id);
+                    $permission = Permission::firstOrCreate(['name' => $request->code.' '.$permissionName]);
+                    if (array_search($permissionName, $request->input('access_crud_'.$role_id)) != '') {
+                        $role->givePermissionTo($permission);
+                    } else {
+                        $role->revokePermissionTo($request->code.' '.$permissionName);
+                    }
                 }
                 // $permissions = Permission::whereIn('name', $permissionsname)->get('name')->toArray();
                 // $role->syncPermissions($permissions);
             }
 
-            $response = ['status' => TRUE, 'message' => 'Data berhasil disimpan'];
+            $response = ['status' => true, 'message' => 'Data berhasil disimpan'];
         }
-        return response()->json($response ?? ['status' => FALSE, 'message' => 'Data gagal disimpan']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal disimpan']);
     }
 
     public function show($id)
@@ -74,13 +77,14 @@ class MenuController extends Controller
 
     public function edit($id)
     {
-        $data= $this->model::find($id);
-        $result=[
-            'model'=>$this->help::listFile(app_path('/Models'), ['php']),
-            'data'=>$data,
-            'role'=>Role::whereNot('name','Super Admin')->pluck('name', 'id'),
+        $data = $this->model::find($id);
+        $result = [
+            'model' => $this->help::listFile(app_path('/Models'), ['php']),
+            'data' => $data,
+            'role' => Role::whereNot('name', 'Super Admin')->pluck('name', 'id'),
             // 'access'=>Role::whereHas()->permissions->pluck('name'),
         ];
+
         // dd($result);
         return view($this->view.'.edit', $result);
     }
@@ -91,8 +95,8 @@ class MenuController extends Controller
             'parent_id' => 'nullable',
             'title' => 'required',
             'subtitle' => 'nullable',
-            'code' => 'required|unique:menus,code,' . $id,
-            'url' => 'required|unique:menus,url,' . $id,
+            'code' => 'required|unique:menus,code,'.$id,
+            'url' => 'required|unique:menus,url,'.$id,
             'model' => 'nullable',
             'icon' => 'nullable',
             'type' => 'required',
@@ -101,43 +105,46 @@ class MenuController extends Controller
             'role_id' => 'required|array|exists:roles,id',
         ]);
         if ($data = $this->model::find($id)) {
-            if($data->update($request->all())) {
+            if ($data->update($request->all())) {
                 foreach ($request->role_id as $role_id) {
                     // foreach($request->input('access_crud_'.$role_id) as $key => $permission){
-                        // Permission::where('name','LIKE', $request->code.'%')->delete();
-                        foreach(config('master.app.level') as $permissionName){
-                            $role = Role::find($role_id);
-                            $permission = Permission::firstOrCreate(['name' => $request->code.' '.$permissionName]);
-                            if(array_search($permissionName,$request->input('access_crud_'.$role_id))!=''){
-                                $role->givePermissionTo($permission);
-                            }else{
-                                $role->revokePermissionTo($request->code.' '.$permissionName);
-                            }
+                    // Permission::where('name','LIKE', $request->code.'%')->delete();
+                    foreach (config('master.app.level') as $permissionName) {
+                        $role = Role::find($role_id);
+                        $permission = Permission::firstOrCreate(['name' => $request->code.' '.$permissionName]);
+                        if (array_search($permissionName, $request->input('access_crud_'.$role_id)) != '') {
+                            $role->givePermissionTo($permission);
+                        } else {
+                            $role->revokePermissionTo($request->code.' '.$permissionName);
+                        }
                     }
                     // $permissions = Permission::whereIn('name', $permissionsname)->get('name')->toArray();
                     // $role->syncPermissions($permissions);
                 }
-                $response = ['status' => TRUE, 'message' => 'Data berhasil disimpan'];
-                
+                $response = ['status' => true, 'message' => 'Data berhasil disimpan'];
+
             }
         }
-        return response()->json($response ?? ['status' => FALSE, 'message' => 'Data gagal disimpan']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal disimpan']);
     }
 
     public function delete($id)
     {
-        $data=$this->model::find($id);
+        $data = $this->model::find($id);
+
         return view($this->view.'.delete', compact('data'));
     }
 
     public function destroy($id)
     {
-        $data=$this->model::find($id);
-        Permission::where('name','LIKE', $data->code.'%')->delete();
+        $data = $this->model::find($id);
+        Permission::where('name', 'LIKE', $data->code.'%')->delete();
         if ($data->forceDelete()) {
-            return response()->json(['status'=>TRUE, 'message'=>'Data berhasil dihapus']);
+            return response()->json(['status' => true, 'message' => 'Data berhasil dihapus']);
         }
-        return response()->json(['status'=>FALSE, 'message'=>'Data gagal dihapus']);
+
+        return response()->json(['status' => false, 'message' => 'Data gagal dihapus']);
     }
 
     public function sorted(Request $request)
@@ -145,14 +152,15 @@ class MenuController extends Controller
         if ($request->isMethod('post')) {
             $this->loopUpdateMenu(json_decode($request->input('sort')));
         }
-        return response()->json(['status'=>TRUE, 'message'=>'Menu berhasil diurutkan', 'redirect' => $request->input('redirect') ?? route('menu.index')]);
+
+        return response()->json(['status' => true, 'message' => 'Menu berhasil diurutkan', 'redirect' => $request->input('redirect') ?? route('menu.index')]);
     }
 
-    function loopUpdateMenu($menu, $parentMenu=NULL)
+    public function loopUpdateMenu($menu, $parentMenu = null)
     {
         if ($menu) {
-            foreach ($menu as $key=>$dt) {
-                if ($this->model::find($dt->id)->update(['parent_id'=>$parentMenu, 'sort'=>$key + 1])) {
+            foreach ($menu as $key => $dt) {
+                if ($this->model::find($dt->id)->update(['parent_id' => $parentMenu, 'sort' => $key + 1])) {
                     if (isset($dt->children) && count($dt->children) > 0) {
                         $this->loopUpdateMenu($dt->children, $dt->id);
                     }
@@ -163,9 +171,10 @@ class MenuController extends Controller
 
     public function listMenu(Request $request)
     {
-        $menu=$this->model::with(['accessChildren'])->whereHas('access_menu', function ($query) use ($request) {
+        $menu = $this->model::with(['accessChildren'])->whereHas('access_menu', function ($query) use ($request) {
             $query->where('access_group_id', $request->user()->access_group_id);
         })->whereNull('parent_id')->show()->sort()->get();
-        return response()->json(['menu'=>$menu])->header('Content-Type', 'application/json');
+
+        return response()->json(['menu' => $menu])->header('Content-Type', 'application/json');
     }
 }

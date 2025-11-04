@@ -448,7 +448,7 @@ class HasilAuditsController extends Controller
         DB::beginTransaction();
         try {
             $hasilAudit = $this->model::where('indikator_id', $request->indikator_id)
-                ->where('audit_periode_id', $request->audit_periode_id) - first();
+                ->where('audit_periode_id', $request->audit_periode_id)->first();
             if ($hasilAudit->status_terkini === 'Draft') {
                 $catatan = 'Auditee mengajukan evaluasi diri.';
             } elseif ($hasilAudit->status_terkini === 'Revisi') {
