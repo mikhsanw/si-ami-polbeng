@@ -302,7 +302,7 @@ class HasilAuditsController extends Controller
                 'nullable',
                 'file',
                 new \App\Rules\FileAllowed(),
-                'max:20480',
+                'max:40960',
                 new \App\Rules\SafeFile,
             ],
         ];
@@ -368,6 +368,7 @@ class HasilAuditsController extends Controller
                     if ($file) {
                         // Pastikan ekstensi tidak kosong
                         $ext = $file->getClientOriginalExtension() ?: pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION) ?: 'dat';
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
 
                         // Tambahkan ekstensi ke nama hasil hash
                         $path = Storage::disk(config('filesystems.default'))
@@ -378,7 +379,7 @@ class HasilAuditsController extends Controller
                             );
 
                         $data->file()->create([
-                            'alias' => 'bukti_penilaian',
+                            'alias' => $originalName ?? 'file_'.time(),
                             'data' => [
                                 'name' => basename($path),
                                 'disk' => config('filesystems.default'),

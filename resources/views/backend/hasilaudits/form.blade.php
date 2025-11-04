@@ -88,7 +88,7 @@
                                 <a href="{{ asset($file->link_public_stream) }}"
                                     class="text-primary d-flex align-items-center flex-grow-1" target="_blank">
                                     <i class="fas fa-file-alt fa-fw me-3 text-primary"></i>
-                                    Bukti Penilaian {{ $key + 1 }}
+                                    {{ basename($file->alias) . '.' . $file->extension }}
                                     <i class="fas fa-external-link-alt ms-auto"></i>
                                 </a>
                                 {{-- Tombol Hapus --}}
