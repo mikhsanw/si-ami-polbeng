@@ -302,8 +302,8 @@ class HasilAuditsController extends Controller
                 'nullable',
                 'file',
                 new \App\Rules\FileAllowed(),
-                'max:40960',
-                new \App\Rules\SafeFile,
+                'max:51240',
+                // new \App\Rules\SafeFile,
             ],
         ];
 
