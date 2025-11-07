@@ -36,15 +36,36 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for ($i = 4; $i >= 0; $i--)
+                    @php
+                        $isLamemba = isset($parent) && $parent->lembagaAkreditasi->singkatan === 'LAMEMBA';
+                        $labelLamemba = [
+                            2 => 'Melampaui',
+                            1 => 'Memenuhi Kriteria',
+                            0 => 'Tidak Memenuhi Kriteria',
+                        ];
+                    @endphp
+
+                    @for ($i = $isLamemba ? 2 : 4; $i >= 0; $i--)
+                        @php
+                            $label = $isLamemba ? $labelLamemba[$i] ?? '' : '';
+                            $value = old(
+                                "rubrik_manual_deskripsi.$i",
+                                $existingRubrikDeskripsi[$i] ?? ($isLamemba ? $label : ''),
+                            );
+                        @endphp
                         <tr>
-                            <td class="text-center fw-bold fs-5 align-middle">{{ $i }}</td>
+                            <td class="text-center fw-bold fs-5 align-middle">
+                                {{ $i }}
+                            </td>
                             <td>
                                 <textarea name="rubrik_manual_deskripsi[{{ $i }}]" class="form-control" rows="2"
-                                    placeholder="Deskripsi untuk skor {{ $i }}" disabled>{{ old("rubrik_manual_deskripsi.$i", $existingRubrikDeskripsi[$i] ?? '') }}</textarea>
+                                    placeholder="Deskripsi untuk skor {{ $i }}" {{ $isLamemba ? 'readonly' : '' }}>{{ $value }}</textarea>
                             </td>
                         </tr>
                     @endfor
+
+
+
                 </tbody>
             </table>
         </div>

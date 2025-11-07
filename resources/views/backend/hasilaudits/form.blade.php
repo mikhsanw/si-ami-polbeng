@@ -86,7 +86,7 @@
                             <div class="list-group-item list-group-item-action d-flex align-items-center mb-2"
                                 id="file-{{ $file->id }}"> {{-- Tambahkan ID unik per file --}}
                                 <a href="{{ asset($file->link_public_stream) }}"
-                                    class="text-primary d-flex align-items-center flex-grow-1" target="_blank">
+                                    class="text-primary d-flex align-items-center flex-grow-custom" target="_blank">
                                     <i class="fas fa-file-alt fa-fw me-3 text-primary"></i>
                                     {{ basename($file->alias) . '.' . $file->extension }}
                                     <i class="fas fa-external-link-alt ms-auto"></i>
@@ -138,6 +138,10 @@
         font-weight: 500 !important;
         font-size: 1.15rem !important;
         margin: .5rem !important;
+    }
+
+    .flex-grow-custom {
+        flex: 1;
     }
 </style>
 

@@ -306,13 +306,21 @@ class HasilAuditsController extends Controller
             ->with('file')
             ->first();
 
+        $request->merge([
+            'upload_file' => array_filter($request->file('upload_file') ?? [], fn ($f) => $f !== null),
+        ]);
+
         // Tentukan apakah file wajib atau tidak
         $fileRequired = ! ($dataExisting && $dataExisting->file()->exists());
+
+        if ($indikator->tipe === 'LED' && (int) $request->input('skor_auditee', -1) === 0) {
+            $fileRequired = false;
+        }
 
         // Aturan Validasi Dinamis
         $rules = [
             'audit_periode_id' => 'required|exists:audit_periodes,id',
-            'upload_file' => ($fileRequired ? 'required' : 'nullable').'|array|min:0',
+            'upload_file' => ($fileRequired ? 'required|array|min:1' : 'nullable'),
             'upload_file.*' => [
                 'nullable',
                 'file',
@@ -323,7 +331,7 @@ class HasilAuditsController extends Controller
         ];
 
         if ($indikator->tipe === 'LED') {
-            $rules['skor_auditee'] = 'required|integer|between:1,4';
+            $rules['skor_auditee'] = 'required|integer|between:0,4';
         } elseif ($indikator->tipe === 'LKPS') {
             $rules['lkps_data'] = 'required|array';
             foreach ($indikator->indikatorInputs as $field) {
