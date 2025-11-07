@@ -90,7 +90,7 @@
                             class="list-group-item list-group-item-action text-primary d-flex align-items-center"
                             target="_blank">
                             <i class="fas fa-file-alt fa-fw me-3 text-primary"></i>
-                            Bukti Penilaian {{ $key + 1 }}
+                            {{ basename($file->alias) . '.' . $file->extension }}
                             <i class="fas fa-external-link-alt ms-auto"></i>
                         </a>
                     @endforeach
@@ -131,13 +131,22 @@
                                 sistem.</small>
                         @else
                             {{-- LED: auditor pilih skor manual --}}
-                            <select name="skor_final" id="skor_final" class="form-select w-50">
-                                <option value="">Pilih Skor</option>
-                                <option value="4">4</option>
-                                <option value="3">3</option>
-                                <option value="2">2</option>
-                                <option value="1">1</option>
-                            </select>
+                            @if ($auditPeriode->instrumenTemplate->lembagaAkreditasi->singkatan === 'LAMEMBA')
+                                <select name="skor_final" id="skor_final" class="form-select w-50">
+                                    <option value="">Pilih Skor</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1</option>
+                                    <option value="0">0</option>
+                                </select>
+                            @else
+                                <select name="skor_final" id="skor_final" class="form-select w-50">
+                                    <option value="">Pilih Skor</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1</option>
+                                </select>
+                            @endif
                         @endif
                     </div>
 
@@ -201,14 +210,27 @@
         const skorSelect = $('#skor_final');
         const skorHidden = $('#skor_final_hidden'); // utk LKPS auto skor
 
+        const lembaga = "{{ $auditPeriode->instrumenTemplate->lembagaAkreditasi->singkatan }}";
+
         function toggleCatatan(skor) {
             if (!skor) return catatanKurang.slideUp();
 
             const nilai = parseFloat(String(skor).replace(',', '.'));
-            if (!isNaN(nilai) && nilai < 4) {
-                catatanKurang.slideDown();
+            if (isNaN(nilai)) return catatanKurang.slideUp();
+
+            if (lembaga === 'LAMEMBA') {
+                if (nilai === 0) {
+                    catatanKurang.slideDown();
+                } else {
+                    catatanKurang.slideUp();
+                }
             } else {
-                catatanKurang.slideUp();
+                // Default: tampilkan jika skor < 4
+                if (nilai < 4) {
+                    catatanKurang.slideDown();
+                } else {
+                    catatanKurang.slideUp();
+                }
             }
         }
 
