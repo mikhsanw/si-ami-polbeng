@@ -1,4 +1,4 @@
-{{ html()->form(isset($data)?'PUT':'POST', (isset($data) ? route($page->code.'.update',$data->id) : route($page->code.'.store')))->id('form-create-'.$page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
+{{ html()->form(isset($data) ? 'PUT' : 'POST', isset($data) ? route($page->code . '.update', $data->id) : route($page->code . '.store'))->id('form-create-' . $page->code)->acceptsFiles()->class('form form form-horizontal')->open() }}
 <div class="panel">
     <div class="panel-body">
         <div class="mb-4 p-3 bg-body-tertiary rounded">
@@ -17,17 +17,16 @@
             <label class="form-label fw-bold fs-5">Indikator Penilaian:</label>
             <p class="fs-6">{{ $data->nama }}</p>
         </div>
-        @if($data->tipe === 'LED')
+        @if ($data->tipe === 'LED')
             {{-- TAMPILAN UNTUK LED (LED) --}}
             <div id="form-led">
                 <label class="form-label fw-bold fs-5">Pilih Tingkat Capaian (Skor):</label>
                 @forelse ($data->rubrikPenilaians->sortByDesc('skor') as $rubrik)
                     <div class="form-check mb-3">
-                        <input class="form-check-input" type="radio" 
-                            name="skor_auditee" 
-                            value="{{ $rubrik->skor }}" 
+                        <input class="form-check-input" type="radio" name="skor_auditee" value="{{ $rubrik->skor }}"
                             id="skor_{{ $rubrik->skor }}"
-                            {{ (int)optional($data->hasilAudit)->skor_auditee === (int)$rubrik->skor ? 'checked' : '' }} required>
+                            {{ (int) optional($data->hasilAudit)->skor_auditee === (int) $rubrik->skor ? 'checked' : '' }}
+                            required>
 
                         <label class="form-check-label" for="skor_{{ $rubrik->skor }}">
                             <strong class="text-primary">Skor {{ $rubrik->skor }}:</strong> {{ $rubrik->deskripsi }}
@@ -42,20 +41,22 @@
                     <textarea class="form-control tinymce" name="deskripsi_pemenuhan" id="deskripsi_pemenuhan" rows="5"></textarea>
                 </div> --}}
             </div>
-
         @elseif($data->tipe === 'LKPS')
-
             {{-- TAMPILAN UNTUK LKPS (OTOMATIS) --}}
             <div id="form-lkps">
                 <label class="form-label fw-bold fs-5">Input Data Kinerja (LKPS):</label>
                 @foreach ($data->indikatorInputs as $field)
                     <div class="col-4 mb-3">
-                        <label for="field_{{ $field->id }}">{{ $field->label_input }} dalam {{$field->tipe_data}}</label>
-                        <input type="text" class="form-control pb-2" name="lkps_data[{{ $field->id }}]" id="field_{{ $field->id }}" value="{{ ($data->hasilAudit->dataAuditInput->where('indikator_input_id', $field->id)->first()->nilai_variable ?? '') }}" required>
+                        <label for="field_{{ $field->id }}">{{ $field->label_input }} dalam
+                            {{ $field->tipe_data }}</label>
+                        <input type="text" class="form-control pb-2" name="lkps_data[{{ $field->id }}]"
+                            id="field_{{ $field->id }}"
+                            value="{{ $data->hasilAudit->dataAuditInputForInput($field->id)->nilai_variable ?? '' }}"
+                            required>
                         <small class="form-text text-muted">Variabel: <code>{{ $field->nama_variable }}</code></small>
                     </div>
                 @endforeach
-                 {{-- <div class="form-group mt-4">
+                {{-- <div class="form-group mt-4">
                     <label class="form-label fw-bold fs-5" for="analisis_tambahan">Analisis / Catatan Tambahan</label>
                     <textarea class="form-control" name="analisis_tambahan" id="analisis_tambahan" rows="3"></textarea>
                 </div> --}}
@@ -65,15 +66,16 @@
 
         <div class="mt-4">
             <label class="form-label fw-bold fs-5">Unggah Dokumen Bukti</label>
-            @if($data->hasilAudit->files ?? false)
-            <div class="mb-3 border p-3">
-                <small class="form-text">Dokumen pendukung yang telah dilampirkan sebelumnya</small>
-                <div>
-                    @foreach ($data->hasilAudit->files as $key => $file)
-                    <a href="{{ asset($file->link_public_stream) }}" class="btn btn-primary btn-sm" target="_blank">Bukti Penilaian {{ $key+1 }} </i></a>
-                    @endforeach
+            @if ($data->hasilAudit->files ?? false)
+                <div class="mb-3 border p-3">
+                    <small class="form-text">Dokumen pendukung yang telah dilampirkan sebelumnya</small>
+                    <div>
+                        @foreach ($data->hasilAudit->files as $key => $file)
+                            <a href="{{ asset($file->link_public_stream) }}" class="btn btn-primary btn-sm"
+                                target="_blank">Bukti Penilaian {{ $key + 1 }} </i></a>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
             @endif
             <div id="uploadContainer">
                 {{-- Baris upload file pertama --}}
@@ -91,9 +93,9 @@
 {!! html()->hidden('indikator_id')->id('indikator_id')->value($data->id) !!}
 {!! html()->hidden('audit_periode_id')->id('audit_periode_id')->value($auditPeriode->id) !!}
 
-{!! html()->hidden('table-id','datatable')->id('table-id') !!}
-{{--{!! html()->hidden('function','loadMenu,sidebarMenu')->id('function') !!}--}}
-{{--{!! html()->hidden('redirect',url('/dashboard'))->id('redirect') !!}--}}
+{!! html()->hidden('table-id', 'datatable')->id('table-id') !!}
+{{-- {!! html()->hidden('function','loadMenu,sidebarMenu')->id('function') !!} --}}
+{{-- {!! html()->hidden('redirect',url('/dashboard'))->id('redirect') !!} --}}
 {!! html()->form()->close() !!}
 <style>
     .select2-container {
@@ -137,21 +139,22 @@
         });
 
         // Membersihkan TinyMCE saat modal ditutup (jika form ini ada di dalam modal)
-        $('body').on('hidden.bs.modal', '.modal', function () {
+        $('body').on('hidden.bs.modal', '.modal', function() {
             if (tinymce.get('deskripsi_pemenuhan')) {
                 tinymce.get('deskripsi_pemenuhan').setContent('');
             }
         });
-        
+
         // Inisialisasi TinyMCE
         var options = {
-            selector: ".tinymce", 
-            height : "300",
+            selector: ".tinymce",
+            height: "300",
             menubar: false,
             toolbar: ["styleselect fontselect fontsizeselect",
                 "undo redo | cut copy paste | bold italic | link image | alignleft aligncenter alignright alignjustify",
-                "bullist numlist | outdent indent | blockquote subscript superscript | advlist | autolink | lists charmap | print preview |  code"],
-            plugins : "advlist autolink link image lists charmap print preview code",
+                "bullist numlist | outdent indent | blockquote subscript superscript | advlist | autolink | lists charmap | print preview |  code"
+            ],
+            plugins: "advlist autolink link image lists charmap print preview code",
             setup: function(editor) {
                 editor.on('init', function() {
                     $('form').on('submit', function() {
@@ -160,13 +163,13 @@
                 });
             }
         };
-        if ( KTThemeMode.getMode() === "dark" ) {
+        if (KTThemeMode.getMode() === "dark") {
             options["skin"] = "oxide-dark";
             options["content_css"] = "dark";
         }
         tinymce.init(options);
-        });
-        $('#modal-master').on('hidden.bs.modal', function () {
-            tinymce.remove('.tinymce'); // Destroy all TinyMCE instances
-        });
+    });
+    $('#modal-master').on('hidden.bs.modal', function() {
+        tinymce.remove('.tinymce'); // Destroy all TinyMCE instances
+    });
 </script>

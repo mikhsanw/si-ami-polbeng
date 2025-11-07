@@ -42,7 +42,7 @@
                             <tr>
                                 <td>{{ $field->label_input }}</td>
                                 <td>
-                                    <strong>{{ optional($data->hasilAuditForPeriode($auditPeriode->id)->dataAuditInput->where('indikator_input_id', $field->id)->first())->nilai_variable ?? '-' }}</strong>
+                                    <strong>{{ optional($data->hasilAuditForPeriode($auditPeriode->id)->dataAuditInputForInput($field->id))->nilai_variable ?? '-' }}</strong>
                                 </td>
                             </tr>
                         @empty

@@ -39,7 +39,14 @@ class HasilAudit extends Model
 
     public function dataAuditInput()
     {
-        return $this->hasOne('App\Models\DataAuditInput');
+        return $this->hasMany('App\Models\DataAuditInput');
+    }
+
+    public function dataAuditInputForInput($indikatorInputId)
+    {
+        return $this->dataAuditInput()
+            ->where('indikator_input_id', $indikatorInputId)
+            ->first();
     }
 
     public function logAktivitasAudit()

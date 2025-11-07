@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditPeriode;
+use App\Models\HasilAudit;
+use App\Models\Indikator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -199,10 +201,23 @@ class HasilAuditsController extends Controller
     public function edit(Request $request, $id)
     {
         $auditPeriodeId = $request->get('audit_periode_id');
-
+        $auditPeriode = \App\Models\AuditPeriode::findOrFail($auditPeriodeId);
+        $indikator = Indikator::findOrFail($id);
+        $auditeeId = $auditPeriode->unit->user_id;
+        $hasilAudit = HasilAudit::with([
+            'files', // Eager load relasi files
+            'dataAuditInput', // Eager load relasi dataAuditInput
+            'logAktivitasAudit' => function ($query) {
+                $query->latest()->first(); // Hanya ambil log aktivitas terbaru
+            },
+        ])
+            ->where('indikator_id', $indikator->id)
+            ->where('audit_periode_id', $auditPeriode->id)
+            ->first();
         $data = [
             'data' => \App\Models\Indikator::findOrFail($id),
             'auditPeriode' => \App\Models\AuditPeriode::findOrFail($auditPeriodeId),
+            'hasilAudit' => $hasilAudit,
         ];
 
         return view($this->view.'.form', $data);

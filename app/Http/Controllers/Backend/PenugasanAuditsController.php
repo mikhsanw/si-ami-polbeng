@@ -239,7 +239,7 @@ class PenugasanAuditsController extends Controller
             if ($request->has('lkps_data')) {
                 foreach ($request->input('lkps_data') as $id => $value) {
                     $data->dataAuditInput()->create([
-                        'indikator_id' => $id,
+                        'indikator_input_id' => $id,
                         'nilai_variable' => $value,
                     ]);
                 }

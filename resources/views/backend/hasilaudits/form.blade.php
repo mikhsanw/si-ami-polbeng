@@ -61,7 +61,7 @@
                             {{ $field->tipe_data }}</label>
                         <input type="text" class="form-control pb-2" name="lkps_data[{{ $field->id }}]"
                             id="field_{{ $field->id }}"
-                            value="{{ $data->hasilAuditForPeriode($auditPeriode->id)?->dataAuditInput?->where('indikator_input_id', $field->id)->first()->nilai_variable ?? '' }}"
+                            value="{{ $data->hasilAuditForPeriode($auditPeriode->id)?->dataAuditInputForInput($field->id)?->nilai_variable ?? '' }}"
                             required>
                         <small class="form-text text-muted">Variabel: <code>{{ $field->nama_variable }}</code></small>
                     </div>
