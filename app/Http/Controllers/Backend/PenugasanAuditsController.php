@@ -26,7 +26,7 @@ class PenugasanAuditsController extends Controller
         // $query = AuditPeriode::whereIn('unit_id', $auditedUnitIds);
 
         // Untuk contoh ini, kita asumsikan auditor melihat semua periode audit aktif
-        $query = AuditPeriode::where('status', true)->where(function ($q) {
+        $query = AuditPeriode::where(function ($q) {
             // Hanya tampilkan periode audit yang memiliki penugasan auditor
             $q->whereHas('penugasanAuditors', function ($subQ) {
                 $subQ->where('user_id', auth()->id());
@@ -307,11 +307,14 @@ class PenugasanAuditsController extends Controller
                 ->firstOrFail(); // Gagal jika auditee belum mengisi
 
             $catatan = $validated['catatan_auditor'] ?? null;
+            if (isset($validated['catatan_auditor_final'])) {
+                $catatanFinal = $validated['catatan_auditor_final'];
+            }
 
             // 4. Proses data berdasarkan Aksi yang Dipilih
             if ($validated['action'] === 'finalisasi') {
                 $hasilAudit->skor_final = str_replace(',', '.', $validated['skor_final']);
-                $hasilAudit->catatan_final = $catatan; // Catatan akhir
+                $hasilAudit->catatan_final = $catatanFinal; // Catatan akhir
                 $hasilAudit->status_terkini = 'Selesai';
                 $tipeAksiLog = 'FINALISASI_SKOR';
             } else { // Aksi adalah 'minta_revisi'

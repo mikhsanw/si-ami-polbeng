@@ -146,6 +146,7 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
 
     Route::prefix('ringkasantemuanaudits')->as('ringkasantemuanaudits.')->group(function () {
         Route::get('/{id?}', 'Laporan\RingkasanTemuanAuditController@index')->name('index')->where('id', '[a-f0-9\-]+');
+        Route::get('/generate-form4/{id}', 'Laporan\RingkasanTemuanAuditController@generateForm4')->name('generate-form4');
     });
     Route::resource('ringkasantemuanaudits', 'Laporan\RingkasanTemuanAuditController')->except(['index']);
 

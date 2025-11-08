@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend\Laporan;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class RingkasanTemuanAuditController extends Controller
 {
@@ -15,7 +16,7 @@ class RingkasanTemuanAuditController extends Controller
             $data = $this->model::with(['indikator', 'auditPeriode', 'logAktivitasAudit', 'indikator.kriteria'])
                 ->where('skor_final', '<', 4)
                 ->whereHas('auditPeriode', function ($query) use ($id) {
-                    $query->where('id', $id)->where('status', 1);
+                    $query->where('id', $id);
                 })
                 ->where(function ($q) use ($user) {
                     $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id));
@@ -60,5 +61,75 @@ class RingkasanTemuanAuditController extends Controller
         $filterOptions = ['' => 'Pilih Periode Unit'] + $data;
 
         return view('backend.ringkasantemuanaudits.index', compact('filterOptions', 'id'));
+    }
+
+    public function generateForm4($id)
+    {
+        // Simulasi data dari database (bisa pakai model Audit)
+        $user = auth()->user();
+        $auditPeriode = \App\Models\AuditPeriode::find($id);
+        $data = $this->model::with(['indikator', 'auditPeriode', 'auditPeriode.unit', 'logAktivitasAudit', 'indikator.kriteria'])
+            ->where('skor_final', '<', 4)
+            ->whereHas('auditPeriode', function ($query) use ($id) {
+                $query->where('id', $id);
+            })
+            ->where(function ($q) use ($user) {
+                $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id));
+                // ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
+            })
+            ->get();
+
+        $dasar = [
+            'auditi' => $auditPeriode->unit->nama,
+            'kriteria' => 'Standar -',
+            'prodi' => $auditPeriode->unit->nama,
+            'lokasi' => 'Politeknik Negeri Bengkalis',
+            'ruang_lingkup' => $auditPeriode->periode_unit,
+            'tanggal_audit' => date('d F Y'),
+            'wakil_auditi' => $auditPeriode->unit->user->name ?? 'N/A',
+            'auditor_ketua' => $auditPeriode->penugasanAuditors()->first()->user->name ?? 'N/A',
+            'auditor_anggota' => $auditPeriode->penugasanAuditors()->skip(1)->take(2)->get()->pluck('user.name')->implode("\n"),
+            'distribusi_auditi' => '✔',
+            'distribusi_auditor' => '✔',
+            'distribusi_lpm' => '✔',
+            'distribusi_arsip' => '✔',
+        ];
+
+        $temuan = [];
+        // Tabel temuan dinamis (bisa ambil dari tabel audit_temuan)
+        foreach ($data as $key => $value) {
+            $data['no'] = $key + 1;
+            $data['urutan'] = $value->indikator->kriteria->kode;
+            $data['temuan'] = $value->catatan_final;
+            $data['kategori'] = 'OB'; // atau 'KTS'
+            $temuan[] = $data;
+        }
+
+        // Load template
+        $template = new TemplateProcessor(storage_path('app/templates/Form4-template.docx'));
+
+        // Set field tunggal
+        foreach ($dasar as $key => $value) {
+            $template->setValue($key, $value);
+        }
+
+        // Clone tabel temuan
+        $template->cloneRow('no', count($temuan));
+        foreach ($temuan as $index => $item) {
+            $i = $index + 1;
+            $template->setValue("no#{$i}", $item['no']);
+            $template->setValue("urutan#{$i}", $item['urutan']);
+            $template->setValue("temuan#{$i}", htmlspecialchars($item['temuan']));
+            $template->setValue("kategori#{$i}", $item['kategori']);
+        }
+
+        // Simpan hasil
+        $outputPath = storage_path('app/public/form4_'.time().'.docx');
+        $template->saveAs($outputPath);
+        unset($template);
+
+        ob_end_clean();
+
+        return response()->download($outputPath);
     }
 }

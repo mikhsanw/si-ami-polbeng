@@ -14,8 +14,7 @@ class ProsesAuditsController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            $data = $this->model::with(['indikator', 'logAktivitasAudit'])
-                ->whereHas('auditPeriode', fn ($query) => $query->where('status', 1))
+            $data = $this->model::with(['indikator', 'logAktivitasAudit', 'auditPeriode'])
                 ->where(function ($q) use ($user) {
                     $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
                 })

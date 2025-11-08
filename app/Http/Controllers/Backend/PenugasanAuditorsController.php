@@ -45,7 +45,7 @@ class PenugasanAuditorsController extends Controller
     {
         $data = [
             'user_id' => \App\Models\User::pluck('name', 'id'),
-            'audit_periode_id' => \App\Models\AuditPeriode::where('status', 1)->get()->pluck('periode_unit', 'id'),
+            'audit_periode_id' => \App\Models\AuditPeriode::get()->pluck('periode_unit', 'id'),
         ];
 
         return view($this->view.'.form', $data);
@@ -76,7 +76,7 @@ class PenugasanAuditorsController extends Controller
         $data = [
             'data' => $this->model::find($id),
             'user_id' => \App\Models\User::pluck('name', 'id'),
-            'audit_periode_id' => \App\Models\AuditPeriode::where('status', 1)->get()->pluck('periode_unit', 'id'),
+            'audit_periode_id' => \App\Models\AuditPeriode::get()->pluck('periode_unit', 'id'),
 
         ];
 

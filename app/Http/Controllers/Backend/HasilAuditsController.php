@@ -27,7 +27,6 @@ class HasilAuditsController extends Controller
             'instrumenTemplate.templateIndikators',
             'hasilAudits',
         ])
-            ->where('status', true)
             ->where('unit_id', $userUnitId)
             ->get();
 
@@ -363,7 +362,8 @@ class HasilAuditsController extends Controller
 
         DB::beginTransaction();
         try {
-            // updateOrCreate data utama
+            $status_terkini = optional($dataExisting)->status_terkini === 'Revisi' ? config('master.content.hasil_audit.status_terkini.Diajukan') : config('master.content.hasil_audit.status_terkini.Draft');
+
             $data = $this->model::updateOrCreate(
                 [
                     'audit_periode_id' => $request->input('audit_periode_id'),
@@ -371,9 +371,19 @@ class HasilAuditsController extends Controller
                 ],
                 [
                     'skor_auditee' => $skorAuditee,
-                    'status_terkini' => config('master.content.hasil_audit.status_terkini.Draft'),
+                    'status_terkini' => $status_terkini,
                 ]
             );
+
+            // Catat log aktivitas audit jika status sebelumnya adalah Revisi
+            if (optional($dataExisting)->status_terkini === 'Revisi') {
+                // Jika sebelumnya Revisi, catat sebagai SUBMIT_REVISI
+                $data->logAktivitasAudit()->create([
+                    'tipe_aksi' => config('master.content.log_aktivitas_audit.tipe_aksi.SUBMIT_REVISI'),
+                    'user_id' => auth()->id(),
+                    'catatan_aksi' => 'Auditee memperbarui data evaluasi diri setelah revisi.',
+                ]);
+            }
 
             // simpan input LKPS
             if ($indikator->tipe === 'LKPS') {

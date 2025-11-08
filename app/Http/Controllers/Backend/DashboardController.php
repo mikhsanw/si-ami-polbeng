@@ -29,7 +29,7 @@ class DashboardController extends Controller
 
     private function auditor()
     {
-        $query = AuditPeriode::where('status', true)->where(function ($q) {
+        $query = AuditPeriode::where(function ($q) {
             // Hanya tampilkan periode audit yang memiliki penugasan auditor
             $q->whereHas('penugasanAuditors', function ($subQ) {
                 $subQ->where('user_id', auth()->id());
@@ -169,7 +169,6 @@ class DashboardController extends Controller
             'instrumenTemplate.templateIndikators',
             'hasilAudits',
         ])
-            ->where('status', true)
             ->where('unit_id', $userUnitId) // Hanya yang relevan dengan unit auditee
             ->get();
 
@@ -288,7 +287,7 @@ class DashboardController extends Controller
     private function admin()
     {
         // --- Statistik Global Sistem ---
-        $totalSiklusAudit = AuditPeriode::where('status', true)->count();
+        $totalSiklusAudit = AuditPeriode::count();
         $totalAuditor = User::role('auditor')->count(); // Asumsi Anda menggunakan Spatie Permission
         $totalAuditee = User::role('auditee')->count(); // Asumsi Anda menggunakan Spatie Permission
         $totalInstrumen = InstrumenTemplate::count();
@@ -300,12 +299,11 @@ class DashboardController extends Controller
 
         // --- Ambil data Siklus Audit untuk Progres Global ---
         // Admin melihat semua periode audit aktif dari semua unit
-        $auditperiodes = AuditPeriode::where('status', true)
-            ->with([
-                'unit',
-                'instrumenTemplate.templateIndikators',
-                'hasilAudits',
-            ])
+        $auditperiodes = AuditPeriode::with([
+            'unit',
+            'instrumenTemplate.templateIndikators',
+            'hasilAudits',
+        ])
             ->get();
 
         // --- Inisialisasi Statistik Global Indikator (untuk grafik opsional) ---
