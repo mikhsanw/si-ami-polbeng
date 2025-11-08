@@ -131,7 +131,7 @@
                                 sistem.</small>
                         @else
                             {{-- LED: auditor pilih skor manual --}}
-                            @if ($auditPeriode->instrumenTemplate->lembagaAkreditasi->singkatan === 'LAMEMBA')
+                            @if ($auditPeriode->isLamemba())
                                 <select name="skor_final" id="skor_final" class="form-select w-50">
                                     <option value="">Pilih Skor</option>
                                     <option value="2">2</option>
@@ -210,7 +210,7 @@
         const skorSelect = $('#skor_final');
         const skorHidden = $('#skor_final_hidden'); // utk LKPS auto skor
 
-        const lembaga = "{{ $auditPeriode->instrumenTemplate->lembagaAkreditasi->singkatan }}";
+        const isLamemba = "{{ $auditPeriode->isLamemba() }}";
 
         function toggleCatatan(skor) {
             if (!skor) return catatanKurang.slideUp();
@@ -218,7 +218,7 @@
             const nilai = parseFloat(String(skor).replace(',', '.'));
             if (isNaN(nilai)) return catatanKurang.slideUp();
 
-            if (lembaga === 'LAMEMBA') {
+            if (isLamemba) {
                 if (nilai === 0) {
                     catatanKurang.slideDown();
                 } else {

@@ -43,4 +43,14 @@ class AuditPeriode extends Model
     {
         return $this->hasMany('App\Models\PenugasanAuditor');
     }
+
+    public function lembagaAkreditasi()
+    {
+        return $this->instrumenTemplate->lembagaAkreditasi;
+    }
+
+    public function isLamemba(): bool
+    {
+        return $this->lembagaAkreditasi()->singkatan === 'LAMEMBA';
+    }
 }

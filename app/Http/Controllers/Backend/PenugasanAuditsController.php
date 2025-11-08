@@ -281,6 +281,11 @@ class PenugasanAuditsController extends Controller
             'action' => ['required', \Illuminate\Validation\Rule::in(['finalisasi', 'minta_revisi'])],
         ];
 
+        // 3. Ambil record HasilAudit yang akan divalidasi
+        $hasilAudit = $this->model::where('audit_periode_id', $request->input('audit_periode_id'))
+            ->where('indikator_id', $request->input('indikator_id'))
+            ->firstOrFail(); // Gagal jika auditee belum mengisi
+
         // Tambahkan aturan kondisional
         if ($request->input('action') === 'finalisasi') {
             $rules['skor_final'] = 'required';
@@ -288,33 +293,36 @@ class PenugasanAuditsController extends Controller
         if ($request->input('action') === 'minta_revisi') {
             $rules['catatan_auditor'] = 'required|string|max:5000';
         }
-        if ($request->input('action') === 'finalisasi' && $request->input('skor_final') < 4) {
-            $rules['catatan_auditor_final'] = 'required|string|max:5000';
+        if ($request->input('action') === 'finalisasi') {
+            $skorFinal = $request->input('skor_final');
+            $isLamemba = $hasilAudit->auditPeriode->isLamemba();
+
+            $butuhCatatan = (! $isLamemba && $skorFinal < 4) || ($isLamemba && $skorFinal == 0);
+
+            if ($butuhCatatan) {
+                $rules['catatan_auditor_final'] = 'required|string|max:5000';
+            }
         }
 
         // Gunakan $request->validate() yang akan otomatis handle response error AJAX
         $validated = $request->validate($rules, [
             'catatan_auditor.required' => 'Catatan wajib diisi saat meminta revisi.',
-            'catatan_auditor_final.required' => 'Temuan wajib diisi saat finalisasi skor < 4.',
+            'catatan_auditor_final.required' => 'Temuan wajib diisi.',
         ]);
 
         // 2. Gunakan Transaction untuk memastikan integritas data
         DB::beginTransaction();
         try {
-            // 3. Ambil record HasilAudit yang akan divalidasi
-            $hasilAudit = $this->model::where('audit_periode_id', $request->input('audit_periode_id'))
-                ->where('indikator_id', $request->input('indikator_id'))
-                ->firstOrFail(); // Gagal jika auditee belum mengisi
 
             $catatan = $validated['catatan_auditor'] ?? null;
             if (isset($validated['catatan_auditor_final'])) {
                 $catatanFinal = $validated['catatan_auditor_final'];
             }
 
-            // 4. Proses data berdasarkan Aksi yang Dipilih
+            // 4. Proses data ber dasarkan Aksi yang Dipilih
             if ($validated['action'] === 'finalisasi') {
                 $hasilAudit->skor_final = str_replace(',', '.', $validated['skor_final']);
-                $hasilAudit->catatan_final = $catatanFinal; // Catatan akhir
+                $hasilAudit->catatan_final = $catatanFinal ?? null; // Catatan akhir
                 $hasilAudit->status_terkini = 'Selesai';
                 $tipeAksiLog = 'FINALISASI_SKOR';
             } else { // Aksi adalah 'minta_revisi'
