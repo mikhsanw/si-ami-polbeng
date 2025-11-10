@@ -18,7 +18,7 @@ columns: [
 'text-center' },
 { data: 'indikator.nama' },
 { data: 'catatan_final' },
-{ data: 'skor_auditee' },
+{ data: 'skor_final' },
 { data: 'periode' },
 
 { data: 'action', orderable: false, searchable: false , className: 'text-center'}
