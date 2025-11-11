@@ -69,7 +69,6 @@ class RingkasanTemuanAuditController extends Controller
         $user = auth()->user();
         $auditPeriode = \App\Models\AuditPeriode::find($id);
         $data = $this->model::with(['indikator', 'auditPeriode', 'auditPeriode.unit', 'logAktivitasAudit', 'indikator.kriteria'])
-            ->where('skor_final', '<', 4)
             ->whereHas('auditPeriode', function ($query) use ($id) {
                 $query->where('id', $id);
             })
@@ -77,6 +76,7 @@ class RingkasanTemuanAuditController extends Controller
                 $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id));
                 // ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
             })
+            ->where('skor_final', '<', 4)
             ->get();
 
         $dasar = [
@@ -98,11 +98,11 @@ class RingkasanTemuanAuditController extends Controller
         $temuan = [];
         // Tabel temuan dinamis (bisa ambil dari tabel audit_temuan)
         foreach ($data as $key => $value) {
-            $data['no'] = $key + 1;
-            $data['urutan'] = $value->indikator->kriteria->kode;
-            $data['temuan'] = $value->catatan_final;
-            $data['kategori'] = 'OB'; // atau 'KTS'
-            $temuan[] = $data;
+            $q['no'] = $key + 1;
+            $q['urutan'] = $value->indikator->kriteria->kode;
+            $q['temuan'] = $value->catatan_final;
+            $q['kategori'] = 'KTS'; // atau 'KTS'
+            $temuan[] = $q;
         }
 
         // Load template
@@ -122,7 +122,6 @@ class RingkasanTemuanAuditController extends Controller
             $template->setValue("temuan#{$i}", htmlspecialchars($item['temuan']));
             $template->setValue("kategori#{$i}", $item['kategori']);
         }
-
         // Simpan hasil
         $outputPath = storage_path('app/public/form4_'.time().'.docx');
         $template->saveAs($outputPath);
