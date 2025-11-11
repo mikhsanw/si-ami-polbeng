@@ -14,13 +14,20 @@ class RingkasanTemuanAuditController extends Controller
         if ($request->ajax()) {
             $id = $id ?? $request->get('id');
             $data = $this->model::with(['indikator', 'auditPeriode', 'logAktivitasAudit', 'indikator.kriteria'])
-                ->where('skor_final', '<', 4)
                 ->whereHas('auditPeriode', function ($query) use ($id) {
                     $query->where('id', $id);
                 })
                 ->where(function ($q) use ($user) {
                     $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id));
                     // ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
+                })
+                ->where(function ($q) {
+                    $q->whereHas('auditPeriode.instrumenTemplate.lembagaAkreditasi', function ($sub) {
+                        $sub->where('singkatan', '!=', 'LAMEMBA');
+                    })->where('skor_final', '<', 4)
+                        ->orWhereHas('auditPeriode.instrumenTemplate.lembagaAkreditasi', function ($sub) {
+                            $sub->where('singkatan', 'LAMEMBA');
+                        })->where('skor_final', 0);
                 })
                 ->get();
 
@@ -76,7 +83,14 @@ class RingkasanTemuanAuditController extends Controller
                 $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id));
                 // ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
             })
-            ->where('skor_final', '<', 4)
+            ->where(function ($q) {
+                $q->whereHas('auditPeriode.instrumenTemplate.lembagaAkreditasi', function ($sub) {
+                    $sub->where('singkatan', '!=', 'LAMEMBA');
+                })->where('skor_final', '<', 4)
+                    ->orWhereHas('auditPeriode.instrumenTemplate.lembagaAkreditasi', function ($sub) {
+                        $sub->where('singkatan', 'LAMEMBA');
+                    })->where('skor_final', 0);
+            })
             ->get();
 
         $dasar = [
