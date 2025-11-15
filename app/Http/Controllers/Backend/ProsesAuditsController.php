@@ -54,7 +54,7 @@ class ProsesAuditsController extends Controller
                 ->rawColumns(['action', 'status_terkini'])
                 ->make();
         }
-        $data = \App\Models\AuditPeriode::orderBy('created_at')->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->get()
+        $data = \App\Models\AuditPeriode::orderBy('created_at')->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->orWhereHas('unit', fn ($query2) => $query2->where('user_id', $user->id))->get()
             ->pluck('periode_unit', 'id')
             ->toArray();
         $filterOptions = ['' => 'Pilih Periode Unit'] + $data;
