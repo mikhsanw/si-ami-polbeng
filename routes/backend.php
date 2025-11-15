@@ -124,10 +124,12 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
     Route::resource('penugasanaudits', 'PenugasanAuditsController')->except(['edit', 'show']);
 
     Route::prefix('prosesaudits')->as('prosesaudits.')->group(function () {
+        Route::get('/{id?}', 'ProsesAuditsController@index')->name('index')->where('id', '[a-f0-9\-]+');
         Route::get('/delete/{id}', 'ProsesAuditsController@delete');
         Route::get('/{id}/edit', 'ProsesAuditsController@edit')->name('edit');
+        Route::get('/{id}/show', 'ProsesAuditsController@show')->name('show');
     });
-    Route::resource('prosesaudits', 'ProsesAuditsController')->except(['edit']);
+    Route::resource('prosesaudits', 'ProsesAuditsController')->except(['edit', 'index', 'show']);
 
     Route::prefix('logaktivitasaudits')->as('logaktivitasaudits')->group(function () {
         Route::get('/delete/{id}', 'LogAktivitasAuditsController@delete');

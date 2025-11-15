@@ -10,20 +10,27 @@ class ProsesAuditsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, $id = null)
     {
+        $user = $request->user();
         if ($request->ajax()) {
-            $user = $request->user();
+            $id = $id ?? $request->get('id');
             $data = $this->model::with(['indikator', 'logAktivitasAudit', 'auditPeriode'])
-                ->where(function ($q) use ($user) {
-                    $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
+                ->where('status_terkini', '!=', 'Draft')
+                ->whereHas('auditPeriode', function ($query) use ($id) {
+                    $query->where('id', $id);
                 })
+                ->where(function ($q) use ($user) {
+                    $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                        ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
+                })
+                ->latest('updated_at')
                 ->get();
 
             return datatables()->of($data)
                 ->addColumn('action', function ($data) use ($user) {
                     $button = '';
-                    $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
+                    $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show-audit" data-url="'.route($this->code.'.show', [$data->id]).'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
                     if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? [])) {
                         if (auth()->user()->hasRole('Super Admin')) {
                             $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
@@ -47,8 +54,12 @@ class ProsesAuditsController extends Controller
                 ->rawColumns(['action', 'status_terkini'])
                 ->make();
         }
+        $data = \App\Models\AuditPeriode::orderBy('created_at')->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->get()
+            ->pluck('periode_unit', 'id')
+            ->toArray();
+        $filterOptions = ['' => 'Pilih Periode Unit'] + $data;
 
-        return view($this->view.'.index');
+        return view($this->view.'.index', compact('id', 'filterOptions'));
     }
 
     /**

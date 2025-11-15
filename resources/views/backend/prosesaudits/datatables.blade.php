@@ -1,4 +1,5 @@
 $(document).ready(function () {
+let id = $('#datatable').data('id');
 var datatable = $('#datatable').DataTable({
 responsive: true,
 lengthChange: false,
@@ -7,7 +8,7 @@ processing: true,
 serverSide: true,
 stateSave: true,
 lengthMenu: [[10, 25, 50, 100 ,200 , 500, -1], [10, 25, 50, 100 ,200 , 500, "All"]],
-ajax: "{{ route($url . '.index') }}",
+ajax: "{{ route($url . '.index') }}" + "?id=" + id,
 language: {
 {{-- Uncomment this line to use Indonesian language --}}
 {{-- url: "{{ asset(config('master.app.web.assets').'/assets/vendor_components/datatable/indonesian.json') }}" --}}

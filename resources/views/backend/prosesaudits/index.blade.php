@@ -7,11 +7,23 @@
         <div class="card-header border-0 pt-6">
             <div class="card-title">
                 <div class="d-flex align-items-center position-relative my-1">
-                    <i class="ki-duotone ki-magnifier fs-1 position-absolute ms-6"><span class="path1"></span><span
-                            class="path2"></span></i>
-                    <input type="text" id="search" data-kt-docs-table-filter="search"
-                        class="form-control form-control-solid w-250px ps-15"
-                        placeholder="Search {{ $page->title }}" />
+                    <i class="ki-duotone ki-setting-4 fs-1 position-absolute ms-6"><span class="path1"></span>
+                        <span class="path2"></span></i>
+                    <select id="filter_kriteria" class="form-control form-control-solid w-400px ps-15">
+                        @foreach ($filterOptions as $key => $label)
+                            <option {{ $key == $id ? 'selected' : '' }} value="{{ $key }}">{{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div id="kt_datatable_example_1_export" class="d-none"></div>
+            </div>
+            <div class="card-title w-300px">
+                <div class="d-flex align-items-center position-relative my-1">
+                    <i class="ki-duotone ki-setting-4 fs-1 position-absolute ms-6"><span class="path1"></span>
+                        <span class="path2"></span></i>
+                    <input type="text" data-kt-user-table-filter="search" id="search"
+                        class="form-control form-control-solid w-250px ps-15" placeholder="Search Indikator" />
                 </div>
                 <div id="kt_datatable_example_1_export" class="d-none"></div>
             </div>
@@ -59,7 +71,7 @@
         </div>
 
         <div class="card-body py-4">
-            <table id="datatable" class="table align-middle table-row-dashed fs-6 gy-5">
+            <table id="datatable" data-id="{{ $id ?? '' }}" class="table align-middle table-row-dashed fs-6 gy-5">
                 <thead>
                     <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
                         <th class="w-0">No</th>
@@ -89,6 +101,16 @@
         <script src="{{ asset('js/jquery-validation-1.19.5/lib/jquery.form.js') }}"></script>
         <script src="{{ asset('js/jquery-crud.js') }}"></script>
         <script src="{{ asset('assets/plugins/custom/tinymce/tinymce.bundle.js') }}"></script>
+        <script>
+            $(document).ready(function() {
+                $('#filter_kriteria').on('change', function() {
+                    let filterValue = $(this).val();
+                    console.log('{{ url($page->url) }}' + '/' + filterValue);
+                    window.location.href = "{{ url(config('master.app.url.backend') . '/' . $page->url) }}" +
+                        '/' + filterValue; // reload dengan query string
+                });
+            });
+        </script>
     @endprepend
 
 </x-app-layout>
