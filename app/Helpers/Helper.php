@@ -137,4 +137,19 @@ class Helper
 
         return $options;
     }
+
+    public static function generateTahunAkademikOptions()
+    {
+        $currentYear = date('Y');
+        $startYear = $currentYear - 5; // Misalnya, 5 tahun ke belakang
+
+        $options = [];
+        for ($year = $startYear; $year <= $currentYear; $year++) {
+            $nextYear = $year + 1;
+            $option = $year.'/'.$nextYear;
+            $options[$option] = $option;
+        }
+
+        return $options;
+    }
 }

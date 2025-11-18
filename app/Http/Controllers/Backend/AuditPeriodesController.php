@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers\Backend;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 class AuditPeriodesController extends Controller
 {
@@ -12,74 +11,81 @@ class AuditPeriodesController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            $data=$this->model::with('unit','instrumenTemplate')->get();
+            $data = $this->model::with('unit', 'instrumenTemplate')->get();
+
             return datatables()->of($data)
-                ->addColumn('status', function($data) {
+                ->addColumn('status', function ($data) {
                     return $data->status ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-danger">Tidak Aktif</span>';
                 })
                 ->addColumn('action', function ($data) use ($user) {
-                    $button ='';
+                    $button = '';
                     $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
-                    if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? []) ){
-                        if (auth()->user()->hasRole('Super Admin')){
-                        $button.='<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
-                        $button.='<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
+                    if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? [])) {
+                        if (auth()->user()->hasRole('Super Admin')) {
+                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
+                            $button .= '<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
                         }
-                    }else{
-                        if($user->hasPermissionTo($this->code.' edit')){
-                            $button.='<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
+                    } else {
+                        if ($user->hasPermissionTo($this->code.' edit')) {
+                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
                         }
-                        if($user->hasPermissionTo($this->code.' delete')){
-                            $button.='<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
+                        if ($user->hasPermissionTo($this->code.' delete')) {
+                            $button .= '<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
                         }
                     }
-                    return "<div class='btn-group'>".$button."</div>";
+
+                    return "<div class='btn-group'>".$button.'</div>';
                 })
                 ->addIndexColumn()
                 ->rawColumns(['action', 'status'])
                 ->make();
         }
+
         return view($this->view.'.index');
     }
 
     public function create()
     {
         $units = \App\Models\Unit::with('children')->whereNull('parent_id')->get();
-		$data=[
-			'unit_id'	=> $this->help->buildUnitOptions($units),
-			'instrumen_template_id'	=> \App\Models\InstrumenTemplate::pluck('nama','id'),
-		];
+        $data = [
+            'unit_id' => $this->help->buildUnitOptions($units),
+            'instrumen_template_id' => \App\Models\InstrumenTemplate::pluck('nama', 'id'),
+            'tahun_akademik' => $this->help->generateTahunAkademikOptions(),
+        ];
 
-        return view($this->view.'.form' ,$data);
+        return view($this->view.'.form', $data);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-					'tahun_akademik' => 'required|'.config('master.regex.json'),
-					'status' => 'required|'.config('master.regex.json'),
-					'unit_id' => 'required|'.config('master.regex.json'),
-					'instrumen_template_id' => 'required|'.config('master.regex.json'),
+            'tahun_akademik' => 'required|'.config('master.regex.json'),
+            'status' => 'required|'.config('master.regex.json'),
+            'unit_id' => 'required|'.config('master.regex.json'),
+            'instrumen_template_id' => 'required|'.config('master.regex.json'),
         ]);
         if ($data = $this->model::create($request->all())) {
-            $response=[ 'status'=>TRUE, 'message'=>'Data berhasil disimpan'];
+            $response = ['status' => true, 'message' => 'Data berhasil disimpan'];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal disimpan']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal disimpan']);
     }
 
     public function show($id)
     {
         $data = $this->model::find($id);
+
         return view($this->view.'.show', compact('data'));
     }
 
     public function edit($id)
     {
         $units = \App\Models\Unit::with('children')->whereNull('parent_id')->get();
-        $data=[
-            'data'    => $this->model::find($id),
-			'unit_id'	=> $this->help->buildUnitOptions($units),
-			'instrumen_template_id'	=> \App\Models\InstrumenTemplate::pluck('nama','id'),
+        $data = [
+            'data' => $this->model::find($id),
+            'unit_id' => $this->help->buildUnitOptions($units),
+            'instrumen_template_id' => \App\Models\InstrumenTemplate::pluck('nama', 'id'),
+            'tahun_akademik' => $this->help->generateTahunAkademikOptions(),
 
         ];
 
@@ -89,31 +95,34 @@ class AuditPeriodesController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-					'tahun_akademik' => 'required|'.config('master.regex.json'),
-					'status' => 'required|'.config('master.regex.json'),
-					'unit_id' => 'required|'.config('master.regex.json'),
-					'instrumen_template_id' => 'required|'.config('master.regex.json'),
+            'tahun_akademik' => 'required|'.config('master.regex.json'),
+            'status' => 'required|'.config('master.regex.json'),
+            'unit_id' => 'required|'.config('master.regex.json'),
+            'instrumen_template_id' => 'required|'.config('master.regex.json'),
         ]);
 
-        $data=$this->model::find($id);
-        if($data->update($request->all())){
-            $response=[ 'status'=>TRUE, 'message'=>'Data berhasil disimpan'];
+        $data = $this->model::find($id);
+        if ($data->update($request->all())) {
+            $response = ['status' => true, 'message' => 'Data berhasil disimpan'];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal disimpan']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal disimpan']);
     }
 
     public function delete($id)
     {
-        $data=$this->model::find($id);
+        $data = $this->model::find($id);
+
         return view($this->view.'.delete', compact('data'));
     }
 
     public function destroy($id)
     {
-        $data=$this->model::find($id);
-        if($data->delete()){
-            $response=[ 'status'=>TRUE, 'message'=>'Data berhasil dihapus'];
+        $data = $this->model::find($id);
+        if ($data->delete()) {
+            $response = ['status' => true, 'message' => 'Data berhasil dihapus'];
         }
-        return response()->json($response ?? ['status'=>FALSE, 'message'=>'Data gagal dihapus']);
+
+        return response()->json($response ?? ['status' => false, 'message' => 'Data gagal dihapus']);
     }
 }
