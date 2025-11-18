@@ -144,7 +144,7 @@ class Helper
         $startYear = $currentYear - 5; // Misalnya, 5 tahun ke belakang
 
         $options = [];
-        for ($year = $startYear; $year <= $currentYear; $year++) {
+        for ($year = $currentYear; $year >= $startYear; $year--) {
             $nextYear = $year + 1;
             $option = $year.'/'.$nextYear;
             $options[$option] = $option;
