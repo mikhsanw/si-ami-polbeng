@@ -3,7 +3,7 @@
     <div class="panel-body">
         <div class="form-group">
             {!! html()->label()->class('control-label')->for('tahun_akademik')->text('Tahun Akademik') !!}
-            {!! html()->select('tahun_akademik', $tahun_akademik, isset($data) ? $data->tahun_akademik : null)->placeholder('Pilih Tahun Akademik')->class('form-control')->id('tahun_akademik') !!}
+            {!! html()->select('tahun_akademik', $tahun_akademik, isset($data) ? $data->tahun_akademik : null)->placeholder('Pilih Tahun Akademik')->class('form-select')->id('tahun_akademik') !!}
         </div>
         <div class="form-group">
             {!! html()->label()->class('control-label')->for('unit_id')->text('Unit') !!}
