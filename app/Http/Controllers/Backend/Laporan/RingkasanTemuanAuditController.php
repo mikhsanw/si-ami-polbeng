@@ -17,10 +17,6 @@ class RingkasanTemuanAuditController extends Controller
                 ->whereHas('auditPeriode', function ($query) use ($id) {
                     $query->where('id', $id);
                 })
-                ->where(function ($q) use ($user) {
-                    $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id));
-                    // ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
-                })
                 ->where(function ($q) {
                     $q->whereHas('auditPeriode.instrumenTemplate.lembagaAkreditasi', function ($sub) {
                         $sub->where('singkatan', '!=', 'LAMEMBA');
