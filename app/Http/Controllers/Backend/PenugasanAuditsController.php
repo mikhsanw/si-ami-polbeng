@@ -328,11 +328,11 @@ class PenugasanAuditsController extends Controller
                 $hasilAudit->catatan_final = $catatanFinal ?? null; // Catatan akhir
                 $hasilAudit->status_terkini = 'Selesai';
                 $tipeAksiLog = 'FINALISASI_SKOR';
-                $catatan = $catatanFinal;
+                $catatan = $catatanFinal ?? 'Finalisasi skor oleh auditor.';
             } else { // Aksi adalah 'minta_revisi'
-                $catatan = $validated['catatan_auditor'];
                 $hasilAudit->status_terkini = 'Revisi';
                 $tipeAksiLog = 'MINTA_REVISI';
+                $catatan = $validated['catatan_auditor'] ?? 'Revisi diminta oleh auditor.';
             }
 
             // Simpan perubahan pada HasilAudit
