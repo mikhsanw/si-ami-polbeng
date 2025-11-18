@@ -62,9 +62,20 @@ class RingkasanTemuanAuditController extends Controller
                 ->make();
         }
 
-        $data = \App\Models\AuditPeriode::orderBy('created_at')->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->get()
-            ->pluck('periode_unit', 'id')
-            ->toArray();
+        if ($user->hasRole(['Super Admin', 'Admin'])) {
+            // Ambil semua audit periode
+            $data = \App\Models\AuditPeriode::orderBy('created_at')
+                ->get()
+                ->pluck('periode_unit', 'id')
+                ->toArray();
+        } else {
+            // Ambil hanya audit periode yang ditugaskan ke user
+            $data = \App\Models\AuditPeriode::orderBy('created_at')
+                ->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                ->get()
+                ->pluck('periode_unit', 'id')
+                ->toArray();
+        }
         $filterOptions = ['' => 'Pilih Periode Unit'] + $data;
 
         return view('backend.ringkasantemuanaudits.index', compact('filterOptions', 'id'));

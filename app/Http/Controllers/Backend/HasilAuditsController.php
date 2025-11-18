@@ -15,8 +15,9 @@ class HasilAuditsController extends Controller
 {
     public function index(Request $request)
     {
-        $userUnitId = optional(auth()->user()->unit)->id;
-        if (! $userUnitId || ! auth()->user()->hasPermissionTo($this->code.' list')) {
+        $user = auth()->user();
+
+        if (! $user->hasPermissionTo($this->code.' list') && ! $user->hasRole('Super Admin')) {
             $auditperiodes = collect();
 
             return view($this->view.'.index', compact('auditperiodes'));
@@ -27,9 +28,13 @@ class HasilAuditsController extends Controller
             'instrumenTemplate.templateIndikators',
             'hasilAudits',
         ])
-            ->where('unit_id', $userUnitId)
+            ->when(! $user->hasRole(['Super Admin']), function ($query) use ($user) {
+                $userUnitId = optional($user->unit)->id;
+                if ($userUnitId) {
+                    $query->where('unit_id', $userUnitId);
+                }
+            })
             ->get();
-
         foreach ($auditperiodes as $periode) {
             $template = $periode->instrumenTemplate;
 

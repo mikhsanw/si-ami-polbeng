@@ -12,12 +12,14 @@ class PenugasanAuditsController extends Controller
     public function index(Request $request)
     {
         // Pengecekan izin untuk auditor
-        if (! auth()->user()->hasPermissionTo($this->code.' list')) {
+        $user = auth()->user();
+
+        // Pengecekan izin untuk auditor
+        if (! $user->hasPermissionTo($this->code.' list') && ! $user->hasRole(['Super Admin', 'Admin'])) {
             $auditperiodes = collect();
 
             return view($this->view.'.index', compact('auditperiodes'));
         }
-
         // --- Perbedaan Utama untuk Auditor ---
         // Auditor melihat audit dari SEMUA unit, bukan hanya unitnya sendiri.
         // Jika auditor hanya bertanggung jawab atas unit tertentu, filter di sini.
@@ -26,12 +28,14 @@ class PenugasanAuditsController extends Controller
         // $query = AuditPeriode::whereIn('unit_id', $auditedUnitIds);
 
         // Untuk contoh ini, kita asumsikan auditor melihat semua periode audit aktif
-        $query = AuditPeriode::where(function ($q) {
-            // Hanya tampilkan periode audit yang memiliki penugasan auditor
-            $q->whereHas('penugasanAuditors', function ($subQ) {
-                $subQ->where('user_id', auth()->id());
+        $query = AuditPeriode::query();
+
+        // Jika bukan Super Admin/Admin, filter hanya audit periode yang ditugaskan ke user
+        if (! $user->hasRole(['Super Admin'])) {
+            $query->whereHas('penugasanAuditors', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
             });
-        });
+        }
 
         // Ambil periode audit dengan eager load yang sama
         $auditperiodes = $query->with([
