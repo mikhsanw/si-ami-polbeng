@@ -149,8 +149,8 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
     Route::prefix('ringkasantemuanaudits')->as('ringkasantemuanaudits.')->group(function () {
         Route::get('/{id?}', 'Laporan\RingkasanTemuanAuditController@index')->name('index')->where('id', '[a-f0-9\-]+');
         Route::get('/generate-form4/{id}', 'Laporan\RingkasanTemuanAuditController@generateForm4')->name('generate-form4');
+        Route::get('/{id}/show', 'Laporan\RingkasanTemuanAuditController@show')->name('show');
     });
-    Route::resource('ringkasantemuanaudits', 'Laporan\RingkasanTemuanAuditController')->except(['index']);
 
     //ringkasanunits
     Route::prefix('ringkasanunits')->as('ringkasanunits.')->group(function () {

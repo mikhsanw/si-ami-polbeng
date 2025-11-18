@@ -83,7 +83,8 @@
                                 @foreach ($data->files as $key => $file)
                                     {{-- Sesuaikan URL jika link_public_stream tidak langsung dapat diakses --}}
                                     <a href="{{ asset($file->link_public_stream ?? '#') }}"
-                                        class="list-group-item list-group-item-action px-0 py-1" target="_blank">
+                                        class="list-group-item list-group-item-action px-0 py-1 text-primary"
+                                        target="_blank">
                                         <i class="fas fa-file-alt fa-fw me-2 text-primary"></i>
                                         {{ $file->nama_file ?? 'File Bukti ' . ($key + 1) }}
                                     </a>

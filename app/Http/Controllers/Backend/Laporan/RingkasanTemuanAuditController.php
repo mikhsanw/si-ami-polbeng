@@ -33,7 +33,7 @@ class RingkasanTemuanAuditController extends Controller
                 })
                 ->addColumn('action', function ($data) use ($user) {
                     $button = '';
-                    $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
+                    $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show-detail" data-url="'.url($this->url.'/'.$data->id.'/show').'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
                     if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? [])) {
                         if (auth()->user()->hasRole('Super Admin')) {
                             $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
@@ -151,5 +151,14 @@ class RingkasanTemuanAuditController extends Controller
         ob_end_clean();
 
         return response()->download($outputPath);
+    }
+
+    public function show($id)
+    {
+        $data = $this->model::with(['indikator', 'auditPeriode', 'logAktivitasAudit', 'indikator.kriteria'])
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return view('backend.ringkasantemuanaudits.show', compact('data'));
     }
 }

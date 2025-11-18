@@ -318,7 +318,6 @@ class PenugasanAuditsController extends Controller
         DB::beginTransaction();
         try {
 
-            $catatan = $validated['catatan_auditor'] ?? null;
             if (isset($validated['catatan_auditor_final'])) {
                 $catatanFinal = $validated['catatan_auditor_final'];
             }
@@ -329,7 +328,9 @@ class PenugasanAuditsController extends Controller
                 $hasilAudit->catatan_final = $catatanFinal ?? null; // Catatan akhir
                 $hasilAudit->status_terkini = 'Selesai';
                 $tipeAksiLog = 'FINALISASI_SKOR';
+                $catatan = $catatanFinal;
             } else { // Aksi adalah 'minta_revisi'
+                $catatan = $validated['catatan_auditor'];
                 $hasilAudit->status_terkini = 'Revisi';
                 $tipeAksiLog = 'MINTA_REVISI';
             }
@@ -341,7 +342,7 @@ class PenugasanAuditsController extends Controller
             $hasilAudit->logAktivitasAudit()->create([
                 'user_id' => \Illuminate\Support\Facades\Auth::id(), // ID Auditor yang sedang login
                 'tipe_aksi' => $tipeAksiLog,
-                'catatan_aksi' => $catatan,
+                'catatan_aksi' => $catatan ?? '-',
             ]);
 
             DB::commit(); // Konfirmasi semua perubahan jika berhasil
