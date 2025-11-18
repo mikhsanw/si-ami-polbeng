@@ -152,5 +152,10 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
     });
     Route::resource('ringkasantemuanaudits', 'Laporan\RingkasanTemuanAuditController')->except(['index']);
 
+    //ringkasanunits
+    Route::prefix('ringkasanunits')->as('ringkasanunits.')->group(function () {
+        Route::get('/', 'Laporan\RingkasanUnitController@index')->name('index');
+        Route::get('/{id}/show', 'Laporan\RingkasanUnitController@show')->name('show');
+    });
     //gencrud
 });
