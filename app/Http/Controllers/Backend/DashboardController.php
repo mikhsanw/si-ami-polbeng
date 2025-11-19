@@ -20,7 +20,7 @@ class DashboardController extends Controller
             return $this->auditee();
         } elseif ($user->hasRole('Auditor')) {
             return $this->auditor();
-        } elseif ($user->hasRole('Admin')) {
+        } elseif ($user->hasRole(['Admin', 'Super Admin', 'Direktur'])) {
             return $this->admin();
         }
 
