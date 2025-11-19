@@ -58,7 +58,7 @@ class RingkasanTemuanAuditController extends Controller
                 ->make();
         }
 
-        if ($user->hasRole(['Super Admin', 'Admin'])) {
+        if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
             // Ambil semua audit periode
             $data = \App\Models\AuditPeriode::orderBy('created_at')
                 ->get()
