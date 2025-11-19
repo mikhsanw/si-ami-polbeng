@@ -60,12 +60,15 @@ class RingkasanUnitController extends Controller
                         $badge = '<span class="badge badge-light">Dalam Proses</span>';
                     }
 
-                    return $badge.'<br>
-                        <small>(
-                            S: '.$counts->get('Selesai', 0).',
-                            D: '.$counts->get('Diajukan', 0).',
-                            R: '.$counts->get('Revisi', 0).'
-                        )</small>';
+                    return $badge.' <button 
+                        type="button" 
+                        class="btn btn-sm btn-light-info btn-chart"
+                        data-selesai="'.$counts->get('Selesai', 0).'"
+                        data-diajukan="'.$counts->get('Diajukan', 0).'"
+                        data-revisi="'.$counts->get('Revisi', 0).'"
+                        title="Lihat Grafik">
+                        <i class="fa fa-chart-pie"></i>
+                    </button>';
                 })
                 ->addColumn('indikator_terisi', function ($data) {
                     $totalIndikator = $data->instrumenTemplate->templateIndikators->count();

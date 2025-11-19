@@ -84,6 +84,15 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalChart" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content p-5">
+                <h3 class="mb-3">Ringkasan Status Indikator</h3>
+                <div id="pie_chart" style="height: 350px"></div>
+            </div>
+        </div>
+    </div>
+
     @prepend('css')
         <link href="{{ asset('assets/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet"
             type="text/css" />
@@ -102,6 +111,51 @@
                     window.location.href = "{{ url(config('master.app.url.backend') . '/' . $page->url) }}" +
                         '?id=' + encodeURIComponent(filterValue); // reload dengan query string
                 });
+            });
+        </script>
+        <script>
+            document.addEventListener("click", function(e) {
+                const btn = e.target.closest('.btn-chart');
+                if (!btn) return;
+
+                const selesai = parseInt(btn.dataset.selesai);
+                const diajukan = parseInt(btn.dataset.diajukan);
+                const revisi = parseInt(btn.dataset.revisi);
+
+                const data = [selesai, diajukan, revisi];
+                const labels = ['Selesai', 'Diajukan', 'Revisi'];
+
+                $('#modalChart').modal('show');
+
+                setTimeout(() => {
+                    const element = document.querySelector('#pie_chart');
+                    element.innerHTML = ""; // reset chart sebelumnya
+
+                    const options = {
+                        series: data,
+                        labels: labels,
+                        colors: [
+                            '#16a34a', '#eab308', '#f97316'
+                        ],
+                        chart: {
+                            type: 'donut',
+                        },
+                        stroke: {
+                            show: true,
+                            width: 2,
+                            colors: 'var(--color-background)',
+                        },
+                        dataLabels: {
+                            enabled: false,
+                        },
+                        legend: {
+                            position: 'bottom',
+                        },
+                    };
+
+                    const chart = new ApexCharts(element, options);
+                    chart.render();
+                }, 200);
             });
         </script>
     @endprepend
