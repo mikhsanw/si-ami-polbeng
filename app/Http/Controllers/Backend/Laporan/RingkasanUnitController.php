@@ -11,20 +11,20 @@ class RingkasanUnitController extends Controller
     public function index(Request $request)
     {
         // Bersihkan data HasilAudit yang tidak sesuai dengan template indikator
-        $auditPeriodes = \App\Models\AuditPeriode::with('instrumenTemplate.templateIndikators')->get();
-        foreach ($auditPeriodes as $auditPeriode) {
-            $auditPeriodeId = $auditPeriode->id;
+        // $auditPeriodes = \App\Models\AuditPeriode::with('instrumenTemplate.templateIndikators')->get();
+        // foreach ($auditPeriodes as $auditPeriode) {
+        //     $auditPeriodeId = $auditPeriode->id;
 
-            // Dapatkan daftar indikator yang valid dari template indikator
-            $validIndikatorIds = $auditPeriode->instrumenTemplate->templateIndikators
-                ->pluck('indikator_id')
-                ->toArray();
+        //     // Dapatkan daftar indikator yang valid dari template indikator
+        //     $validIndikatorIds = $auditPeriode->instrumenTemplate->templateIndikators
+        //         ->pluck('indikator_id')
+        //         ->toArray();
 
-            // Hapus hasil audit yang indikatornya tidak terdapat dalam template indikator
-            $deleted = \App\Models\HasilAudit::where('audit_periode_id', $auditPeriodeId)
-                ->whereNotIn('indikator_id', $validIndikatorIds)
-                ->delete();
-        }
+        //     // Hapus hasil audit yang indikatornya tidak terdapat dalam template indikator
+        //     $deleted = \App\Models\HasilAudit::where('audit_periode_id', $auditPeriodeId)
+        //         ->whereNotIn('indikator_id', $validIndikatorIds)
+        //         ->delete();
+        // }
 
         $user = $request->user();
         $id = $request->get('id') ? urldecode($request->get('id')) : null;
@@ -40,18 +40,32 @@ class RingkasanUnitController extends Controller
                     })->implode(', ');
                 })
                 ->addColumn('status_audit', function ($data) {
-                    $status = $data->hasilaudits()->whereNotIn('status_terkini', ['Draft'])->pluck('status_terkini');
-                    if ($status->isEmpty()) {
-                        return '<span class="badge badge-light">Belum Dikerjakan</span>';
-                    } elseif ($status->count() === 1 && $status->first() === 'Selesai') {
-                        return '<span class="badge badge-light-success">Selesai</span>';
-                    } elseif ($status->contains('Revisi')) {
-                        return '<span class="badge badge-light-danger">Revisi Diperlukan</span>';
-                    } elseif ($status->contains('Diajukan')) {
-                        return '<span class="badge badge-light-warning">Menunggu Validasi</span>';
+
+                    $counts = $data->hasilaudits()
+                        ->whereIn('status_terkini', ['Selesai', 'Revisi', 'Diajukan'])
+                        ->selectRaw('status_terkini, COUNT(*) AS total')
+                        ->groupBy('status_terkini')
+                        ->pluck('total', 'status_terkini');
+
+                    // Tentukan status utama
+                    if ($counts->isEmpty()) {
+                        $badge = '<span class="badge badge-light">Belum Dikerjakan</span>';
+                    } elseif ($counts->has('Revisi')) {
+                        $badge = '<span class="badge badge-light-danger">Revisi Diperlukan</span>';
+                    } elseif ($counts->has('Diajukan')) {
+                        $badge = '<span class="badge badge-light-warning">Menunggu Validasi</span>';
+                    } elseif ($counts->has('Selesai') && $counts->count() === 1) {
+                        $badge = '<span class="badge badge-light-success">Selesai</span>';
                     } else {
-                        return '<span class="badge badge-light">Dalam Proses</span>';
+                        $badge = '<span class="badge badge-light">Dalam Proses</span>';
                     }
+
+                    return $badge.'<br>
+                        <small>(
+                            S: '.$counts->get('Selesai', 0).',
+                            D: '.$counts->get('Diajukan', 0).',
+                            R: '.$counts->get('Revisi', 0).'
+                        )</small>';
                 })
                 ->addColumn('indikator_terisi', function ($data) {
                     $totalIndikator = $data->instrumenTemplate->templateIndikators->count();
