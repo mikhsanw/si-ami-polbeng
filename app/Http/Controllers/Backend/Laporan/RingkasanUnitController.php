@@ -10,6 +10,22 @@ class RingkasanUnitController extends Controller
 {
     public function index(Request $request)
     {
+        // Bersihkan data HasilAudit yang tidak sesuai dengan template indikator
+        $auditPeriodes = \App\Models\AuditPeriode::with('instrumenTemplate.templateIndikators')->get();
+        foreach ($auditPeriodes as $auditPeriode) {
+            $auditPeriodeId = $auditPeriode->id;
+
+            // Dapatkan daftar indikator yang valid dari template indikator
+            $validIndikatorIds = $auditPeriode->instrumenTemplate->templateIndikators
+                ->pluck('indikator_id')
+                ->toArray();
+
+            // Hapus hasil audit yang indikatornya tidak terdapat dalam template indikator
+            $deleted = \App\Models\HasilAudit::where('audit_periode_id', $auditPeriodeId)
+                ->whereNotIn('indikator_id', $validIndikatorIds)
+                ->delete();
+        }
+
         $user = $request->user();
         $id = $request->get('id') ? urldecode($request->get('id')) : null;
         if ($request->ajax()) {

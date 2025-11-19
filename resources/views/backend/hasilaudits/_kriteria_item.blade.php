@@ -27,10 +27,10 @@
 
 {{-- Isi collapse --}}
 <div id="kt_{{ $collapseId }}" class="fs-6 ms-1 collapse">
-    {{-- DIUBAH: Menggunakan relasi 'childrenRecursive' --}}
-    @if ($item->childrenRecursive && $item->childrenRecursive->isNotEmpty())
+    {{-- DIUBAH: Menggunakan relasi 'children' --}}
+    @if ($item->children && $item->children->isNotEmpty())
         {{-- Kalau punya sub-kriteria, tampilkan secara rekursif --}}
-        @foreach ($item->childrenRecursive as $child)
+        @foreach ($item->children as $child)
             @include($backend . '.hasilaudits._kriteria_item', [
                 'item' => $child,
                 'parentId' => $collapseId,

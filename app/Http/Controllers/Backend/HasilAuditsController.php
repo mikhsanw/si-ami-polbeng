@@ -145,7 +145,7 @@ class HasilAuditsController extends Controller
 
         // Ambil semua Indikator ID yang termasuk dalam template ini dari tabel template_indikator
         // Beserta bobotnya, dan kuncikan berdasarkan id_indikator untuk akses mudah di view
-        $templateIndikators = $template->templateIndikators()->with('indikator')->get()->keyBy('indikator_id');
+        $templateIndikators = $template->templateIndikators;
         $indikatorIdsInTemplate = $templateIndikators->pluck('indikator_id')->toArray();
 
         // --- DEFINISIKAN CLOSURE REKURSIF UNTUK EAGER LOADING KRITERIA & INDIKATOR ---
