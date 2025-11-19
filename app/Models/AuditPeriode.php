@@ -34,7 +34,7 @@ class AuditPeriode extends Model
         return $this->belongsTo('App\Models\Unit');
     }
 
-    public function hasilaudits()
+    public function hasilAudits()
     {
         return $this->hasMany('App\Models\HasilAudit');
     }

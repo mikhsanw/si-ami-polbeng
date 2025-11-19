@@ -41,7 +41,7 @@ class RingkasanUnitController extends Controller
                 })
                 ->addColumn('status_audit', function ($data) {
 
-                    $counts = $data->hasilaudits()
+                    $counts = $data->hasilAudits()
                         ->whereIn('status_terkini', ['Selesai', 'Revisi', 'Diajukan'])
                         ->selectRaw('status_terkini, COUNT(*) AS total')
                         ->groupBy('status_terkini')
