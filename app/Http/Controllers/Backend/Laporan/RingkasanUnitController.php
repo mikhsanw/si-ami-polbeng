@@ -115,12 +115,12 @@ class RingkasanUnitController extends Controller
 
     public function show($id)
     {
-        $data = AuditPeriode::with(['unit', 'penugasanAuditors.user'])
-            ->withWhereHas('hasilAudits', function ($query) {
-                $query->where('status_terkini', '!=', 'Draft');
-            })
-            ->where('id', $id)
-            ->firstOrFail();
+        $data = AuditPeriode::with([
+            'unit',
+            'penugasanAuditors.user',
+            'hasilAudits' => fn ($q) => $q->where('status_terkini', '!=', 'Draft'),
+        ])
+            ->findOrFail($id);
 
         return view('backend.ringkasanunits.show', compact('data'));
     }
