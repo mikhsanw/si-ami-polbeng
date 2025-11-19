@@ -35,7 +35,7 @@
                     <div class="page-title d-flex flex-column justify-content-center gap-1 me-3">
                         <h1
                             class="page-heading d-flex flex-column justify-content-center text-gray-900 fw-bold fs-3 m-0">
-                            Selamat Datang, Admin {{ auth()->user()->name }}!
+                            Selamat Datang, {{ auth()->user()->name }}!
                         </h1>
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0">
                             <li class="breadcrumb-item text-muted">Ringkasan Sistem Audit</li>
