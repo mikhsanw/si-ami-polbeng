@@ -291,19 +291,6 @@
                     </div>
                 @endif
 
-
-                {{-- Bagian Opsional: Grafik Ringkasan Global Status Indikator --}}
-                {{-- <div class="card mb-5 mb-xl-10">
-                    <div class="card-header border-0 pt-6">
-                        <div class="card-title">
-                            <h3 class="fw-bold m-0">Distribusi Status Indikator (Semua Audit)</h3>
-                        </div>
-                    </div>
-                    <div class="card-body py-4">
-                        <canvas id="globalIndicatorStatusChart"></canvas>
-                    </div>
-                </div> --}}
-
             </div>
         </div>
     </div>
@@ -320,43 +307,6 @@
                 var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl)
                 })
-
-                // Contoh untuk Chart.js (jika Anda ingin menambahkan grafik)
-                // if ($('#globalIndicatorStatusChart').length) {
-                //     const ctx = document.getElementById('globalIndicatorStatusChart').getContext('2d');
-                //     new Chart(ctx, {
-                //         type: 'pie', // atau 'bar'
-                //         data: {
-                //             labels: ['Selesai', 'Diajukan', 'Draft', 'Revisi', 'Belum Dikerjakan'],
-                //             datasets: [{
-                //                 data: [{{ $chartData['selesai'] }}, {{ $chartData['diajukan'] }}, {{ $chartData['draft'] }}, {{ $chartData['revisi'] }}, {{ $chartData['belum_dikerjakan'] }}],
-                //                 backgroundColor: ['#198754', '#0dcaf0', '#ffc107', '#dc3545', '#6c757d']
-                //             }]
-                //         },
-                //         options: {
-                //             responsive: true,
-                //             plugins: {
-                //                 legend: {
-                //                     position: 'top',
-                //                 },
-                //                 tooltip: {
-                //                     callbacks: {
-                //                         label: function(context) {
-                //                             let label = context.label || '';
-                //                             if (label) {
-                //                                 label += ': ';
-                //                             }
-                //                             if (context.parsed !== null) {
-                //                                 label += context.parsed;
-                //                             }
-                //                             return label;
-                //                         }
-                //                     }
-                //                 }
-                //             }
-                //         }
-                //     });
-                // }
             });
         </script>
 

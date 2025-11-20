@@ -45,7 +45,7 @@
                     @php
                         // --- INI BAGIAN YANG DIPERBAIKI ---
                         // Cek dulu apakah relasi hasilAudit tidak kosong sebelum memanggil first()
-                        $hasil = $indikator->hasilAuditForPeriode($auditPeriode->id) ?? null;
+                        $hasil = $indikator->hasilAudits->first() ?? null;
 
                         // Tentukan status berdasarkan data $hasil
                         $status = $hasil ? $hasil->status_terkini : 'BELUM_DIKERJAKAN';
