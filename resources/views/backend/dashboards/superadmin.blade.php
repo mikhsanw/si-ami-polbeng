@@ -447,13 +447,7 @@
                 $('#modalHeatmap').modal('show');
 
                 fetch(
-                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/detail`, {
-                            method: 'GET',
-                            credentials: 'same-origin', // atau include
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                            }
-                        }
+                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/detail`,
                     )
                     .then(res => res.json())
                     .then(data => {

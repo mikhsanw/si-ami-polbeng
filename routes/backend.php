@@ -10,8 +10,7 @@ Route::prefix('file')->as('file')->group(function () {
     Route::post('upload-image-editor', 'FileController@handleEditorImageUpload');
 });
 
-Route::group(['middleware' => ['auth', 'check.permission']], function () {
-    Route::get('/home', 'DashboardController@index')->name('home');
+Route::group(['middleware' => ['auth']], function () {
     Route::get('/home/standar/{kriteria}/detail',
         'DashboardController@detailStandar'
     )->name('dashboard.superadmin.detail-standar');
@@ -20,6 +19,10 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
     )->name('dashboard.superadmin.detail-indikator');
     Route::get('/home/units/ranking', 'DashboardController@unitRanking')
         ->name('dashboard.unit.ranking');
+});
+
+Route::group(['middleware' => ['auth', 'check.permission']], function () {
+    Route::get('/home', 'DashboardController@index')->name('home');
 
     Route::post('/sorted', 'MenuController@sorted')->name('menu.sorted');
     //menus
