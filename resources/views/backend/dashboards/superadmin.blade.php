@@ -447,14 +447,8 @@
                 $('#modalHeatmap').modal('show');
 
                 fetch(
-                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/detail`, {
-                            method: "GET",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({})
-                        })
+                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/detail`
+                    )
                     .then(res => res.json())
                     .then(data => {
 
@@ -526,13 +520,7 @@ Final Gagal: ${u.count_fail}
                 $('#modalDetailIndikator').modal('show');
 
                 fetch(
-                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/${unitId}/indikator`, {
-                            method: "GET",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                            }
-                        }
+                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/${unitId}/indikator`
                     )
                     .then(res => res.json())
                     .then(res => {
@@ -579,13 +567,7 @@ Final Gagal: ${u.count_fail}
                 const container = document.getElementById('unitRanking_container');
                 container.innerHTML = '<div class="text-center py-5">Memuat data…</div>';
 
-                fetch('{{ route('dashboard.unit.ranking') }}', {
-                        method: "GET",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    })
+                fetch('{{ route('dashboard.unit.ranking') }}')
                     .then(res => res.json())
                     .then(res => {
                         const rows = res.data.map((u, idx) => {
