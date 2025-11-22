@@ -12,6 +12,15 @@ Route::prefix('file')->as('file')->group(function () {
 
 Route::group(['middleware' => ['auth', 'check.permission']], function () {
     Route::get('/home', 'DashboardController@index')->name('home');
+    Route::get('/home/standar/{kriteria}/detail',
+        'DashboardController@detailStandar'
+    )->name('dashboard.superadmin.detail-standar');
+    Route::get('/home/standar/{kriteria}/{unit}/indikator',
+        'DashboardController@detailIndikator'
+    )->name('dashboard.superadmin.detail-indikator');
+    Route::get('/home/units/ranking', 'DashboardController@unitRanking')
+        ->name('dashboard.unit.ranking');
+
     Route::post('/sorted', 'MenuController@sorted')->name('menu.sorted');
     //menus
     Route::prefix('menu')->as('menu')->group(function () {

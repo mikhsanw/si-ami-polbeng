@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditPeriode;
 use App\Models\HasilAudit;
 use App\Models\InstrumenTemplate;
+use App\Models\Kriteria;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -576,41 +577,45 @@ class DashboardController extends Controller
 
         $unitTerbaik = Unit::with([
             'auditPeriodes.instrumenTemplate.templateIndikators',
-            'auditPeriodes.hasilAudits',
-        ])
-            ->get()
-            ->map(function ($unit) {
+            'auditPeriodes.hasilAudits' => function ($q) {
+                $q->where('status_terkini', 'Selesai');
+            },
+        ])->get()->map(function ($unit) {
 
-                $totalIndikator = 0;
-                $totalSelesai = 0;
+            $totalIndikator = 0;
+            $totalSelesai = 0;
 
-                foreach ($unit->auditPeriodes as $periode) {
+            foreach ($unit->auditPeriodes as $periode) {
 
-                    // Hitung total indikator dalam template
-                    $totalIndikator += $periode->instrumenTemplate
-                        ? $periode->instrumenTemplate->templateIndikators->count()
-                        : 0;
-
-                    // Hitung indikator yang selesai
-                    $totalSelesai += $periode->hasilAudits
-                        ->where('status_terkini', 'Selesai')
-                        ->count();
+                // jika tidak ada template, skip
+                if (! $periode->instrumenTemplate) {
+                    continue;
                 }
 
-                // Hindari pembagian nol
-                $skor = ($totalIndikator > 0)
-                    ? round(($totalSelesai / $totalIndikator) * 100, 2)
+                // Hitung total indikator dalam template (jika templateIndikators mungkin null -> 0)
+                $indCount = $periode->instrumenTemplate->templateIndikators
+                    ? $periode->instrumenTemplate->templateIndikators->count()
                     : 0;
 
-                return (object) [
-                    'unit_id' => $unit->id,
-                    'nama_unit' => $unit->nama,
-                    'total_indikator' => $totalIndikator,
-                    'total_selesai' => $totalSelesai,
-                    'skor_pengisian' => $skor, // persentase
-                ];
-            })
+                $totalIndikator += $indCount;
 
+                // Karena kita sudah eager-load hasilAudits hanya yg 'Selesai', cukup count()
+                $selesaiCount = $periode->hasilAudits->count();
+                $totalSelesai += $selesaiCount;
+            }
+
+            $skor = ($totalIndikator > 0)
+                ? round(($totalSelesai / $totalIndikator) * 100, 2)
+                : 0;
+
+            return (object) [
+                'unit_id' => $unit->id,
+                'nama_unit' => $unit->nama,
+                'total_indikator' => $totalIndikator,
+                'total_selesai' => $totalSelesai,
+                'skor_pengisian' => $skor,
+            ];
+        })
             ->filter(fn ($u) => $u->total_indikator > 0)
             ->sortByDesc('skor_pengisian')
             ->take(5)
@@ -786,5 +791,192 @@ class DashboardController extends Controller
             'progressTL',
             'unitSudahDiaudit',
         ));
+    }
+
+    public function detailStandar($kriteriaId)
+    {
+        $hasil = HasilAudit::with([
+            'auditPeriode.unit:id,nama',
+            'auditPeriode.instrumenTemplate.lembagaAkreditasi',
+            'indikator:id,kriteria_id',
+        ])
+            ->whereHas('indikator', fn ($q) => $q->where('kriteria_id', $kriteriaId))
+            ->where('status_terkini', '!=', 'Draft') // konsisten dg filter global
+            ->get();
+
+        $kriteria = Kriteria::find($kriteriaId);
+
+        // kumpulkan semua unit yang pernah dinilai untuk kriteria ini
+        $units = $hasil->map(fn ($h) => $h->auditPeriode->unit)
+            ->unique('id')
+            ->values();
+
+        $data = $units->map(function ($u) use ($hasil) {
+
+            // semua hasil untuk unit ini & kriteria ini
+            $rows = $hasil->filter(fn ($h) => $h->auditPeriode->unit->id === $u->id);
+
+            if ($rows->isEmpty()) {
+                return [
+                    'unit' => $u->nama,
+                    'status' => 'none',
+                    'not_met' => 0,
+                    'total' => 0,
+                ];
+            }
+
+            // pilih sample untuk ambil lembaga (anggap sama per periode/template)
+            $sample = $rows->first();
+            $lembaga = optional($sample->auditPeriode->instrumenTemplate->lembagaAkreditasi)->singkatan;
+            $threshold = ($lembaga === 'LAMEMBA') ? 1.0 : 3.0;
+
+            // hitung kategori per indikator
+            $count_total = $rows->count();
+            $count_selesai = $rows->where('status_terkini', 'Selesai')->count();
+            $count_fail = $rows->filter(function ($h) use ($threshold) {
+                return $h->status_terkini === 'Selesai'
+                    && ! is_null($h->skor_final)
+                    && floatval($h->skor_final) < $threshold;
+            })->count();
+            $count_pending = $rows->filter(fn ($h) => $h->status_terkini !== 'Selesai')->count();
+
+            // not_met: indikator yang belum terpenuhi (final gagal) + indikator belum selesai
+            $not_met = $count_fail + $count_pending;
+
+            // Tentukan status dengan prioritas
+            if ($count_total === 0) {
+                $status = 'none';
+            } elseif ($count_fail > 0) {
+                $status = 'fail';
+            } elseif ($count_pending > 0) {
+                // tidak ada fail, tapi masih ada indikator belum selesai
+                $status = 'warn';
+            } elseif ($count_selesai === $count_total && $count_fail === 0) {
+                $status = 'ok';
+            } else {
+                // fallback
+                $status = 'warn';
+            }
+
+            return [
+                'unit_id' => $u->id,
+                'unit' => $u->nama,
+                'status' => $status,
+                'not_met' => $not_met,
+                'total' => $count_total,
+                'count_selesai' => $count_selesai,
+                'count_fail' => $count_fail,
+                'count_pending' => $count_pending,
+            ];
+        });
+
+        return response()->json([
+            'kriteria' => $kriteria,
+            'result' => $data->values(),
+        ]);
+    }
+
+    public function detailIndikator($kriteriaId, $unitId)
+    {
+        $hasil = HasilAudit::with([
+            'indikator:id,kriteria_id,nama,tipe',
+            'auditPeriode:id,unit_id,instrumen_template_id',
+            'auditPeriode.instrumenTemplate.lembagaAkreditasi',
+            'auditPeriode.instrumenTemplate.templateIndikators:bobot,id',
+        ])
+            ->whereHas('indikator', fn ($q) => $q->where('kriteria_id', $kriteriaId))
+            ->whereHas('auditPeriode', fn ($q) => $q->where('unit_id', $unitId))
+            ->where('status_terkini', '!=', 'Draft')
+            ->get();
+
+        $unit = Unit::find($unitId);
+        $kriteria = Kriteria::find($kriteriaId);
+
+        // Tentukan threshold lembaga (ambil dari salah satu hasil)
+        $sample = $hasil->first();
+        $lembaga = optional($sample->auditPeriode->instrumenTemplate->lembagaAkreditasi)->singkatan;
+        $threshold = ($lembaga === 'LAMEMBA') ? 1.0 : 3.0;
+
+        $data = $hasil->map(function ($h) use ($threshold) {
+
+            $skor = floatval($h->skor_final);
+            $status = $h->status_terkini;
+
+            if ($status === 'Selesai' && $skor >= $threshold) {
+                $class = 'ok';
+            } elseif ($status === 'Selesai' && $skor < $threshold) {
+                $class = 'fail';
+            } else {
+                $class = 'warn';
+            }
+
+            return [
+                'indikator' => $h->indikator->nama,
+                'tipe' => $h->indikator->tipe,
+                'bobot' => $h->auditPeriode->instrumenTemplate->templateIndikators->firstWhere('id', $h->indikator->id)->bobot ?? null,
+                'skor_final' => $h->skor_final,
+                'status' => $status,
+                'class' => $class,
+            ];
+        });
+
+        return response()->json([
+            'kriteria' => $kriteria,
+            'unit' => $unit,
+            'threshold' => $threshold,
+            'indikators' => $data,
+        ]);
+    }
+
+    public function unitRanking()
+    {
+        $units = \App\Models\Unit::with([
+            'auditPeriodes.instrumenTemplate.templateIndikators',
+            'auditPeriodes.hasilAudits' => function ($q) {
+                $q->where('status_terkini', 'Selesai');
+            },
+        ])->get(['id', 'nama']);
+
+        $rank = $units->map(function ($unit) {
+
+            $totalIndikator = 0;
+            $totalSelesai = 0;
+
+            foreach ($unit->auditPeriodes as $periode) {
+
+                if (! $periode->instrumenTemplate) {
+                    continue;
+                }
+
+                // total indikator template per-periode
+                $indCount = $periode->instrumenTemplate->templateIndikators
+                    ? $periode->instrumenTemplate->templateIndikators->count()
+                    : 0;
+
+                $totalIndikator += $indCount;
+
+                // selesai sudah difilter hanya status = 'Selesai'
+                $selesaiCount = $periode->hasilAudits->count();
+
+                $totalSelesai += $selesaiCount;
+            }
+
+            $skor = ($totalIndikator > 0)
+                ? round(($totalSelesai / $totalIndikator) * 100, 2)
+                : 0;
+
+            return [
+                'unit_id' => $unit->id,
+                'nama' => $unit->nama,
+                'total_indikator' => $totalIndikator,
+                'total_selesai' => $totalSelesai,
+                'skor_pengisian' => $skor,
+            ];
+        })
+            ->filter(fn ($u) => $u['total_indikator'] > 0)
+            ->sortByDesc('skor_pengisian')
+            ->values();
+
+        return response()->json(['data' => $rank]);
     }
 }

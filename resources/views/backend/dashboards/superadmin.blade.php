@@ -170,6 +170,10 @@
                             <div class="card-header">
                                 <div class="card-title">
                                     <h6 class="mb-0">Top 5 Unit Dengan Pengisian Terbaik</h6>
+                                    <!-- Tombol panggil modal -->
+                                    <button class="btn btn-sm btn-light-primary" id="btnOpenUnitRanking">
+                                        <i class="fas fa-eye"></i> Semua
+                                    </button>
                                 </div>
                             </div>
 
@@ -187,7 +191,8 @@
                                                 </small>
                                             </div>
 
-                                            <span class="badge bg-success fs-6">
+                                            <span
+                                                class="badge {{ $u->skor_pengisian > 80 ? 'bg-success' : ($u->skor_pengisian > 50 ? 'bg-warning' : 'bg-danger') }} fs-6">
                                                 {{ $u->skor_pengisian }}%
                                             </span>
 
@@ -247,7 +252,14 @@
                                     <tr>
                                         <td>{{ $s['kode'] }}</td>
                                         <td>{{ $s['nama_kriteria'] }}</td>
-                                        <td class="text-end">{{ $s['total_not_met'] }}</td>
+                                        <td class="text-end">
+                                            <button class="btn btn-sm btn-light-info btn-heatmap"
+                                                data-kriteria-id="{{ $s['kriteria_id'] }}"
+                                                title="Detail Prodi Bermasalah">
+                                                {{ $s['total_not_met'] }}
+                                            </button>
+
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -295,18 +307,311 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalHeatmap" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Heatmap Standar - Prodi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div id="heatmap_container" class="table-responsive">
+                        <!-- Heatmap akan dimuat lewat JS -->
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="heatmap-cell hm-ok" style="width: 24px; height: 24px; font-size: 0.7rem;"></span>
+                        <small class="text-muted"><strong>OK:</strong> Semua indikator selesai & memenuhi
+                            threshold</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="heatmap-cell hm-warn"
+                            style="width: 24px; height: 24px; font-size: 0.7rem;"></span>
+                        <small class="text-muted"><strong>WARN:</strong> Ada indikator belum selesai
+                            (pending)</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="heatmap-cell hm-fail"
+                            style="width: 24px; height: 24px; font-size: 0.7rem;"></span>
+                        <small class="text-muted"><strong>FAIL:</strong> Ada indikator skor rendah</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="heatmap-cell hm-none"
+                            style="width: 24px; height: 24px; font-size: 0.7rem;"></span>
+                        <small class="text-muted"><strong>NONE:</strong> Tidak ada data penilaian</small>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDetailIndikator" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Indikator</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="detail_indikator_container">
+                    <!-- isi dari JS -->
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ranking -->
+    <div class="modal fade" id="modalUnitRanking" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ranking Unit — Pengisian Indikator (Terbaik → Terburuk)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="unitRanking_container" class="table-responsive">
+                        <!-- akan diisi oleh JS -->
+                        <div class="text-center py-5">Memuat data…</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="text-muted me-auto">Urut berdasarkan persentase pengisian.</small>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     @prepend('css')
         {{-- Tambahan CSS khusus jika ada --}}
+
+        <style>
+            .heatmap-cell {
+                width: 36px;
+                height: 36px;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 0.80rem;
+                font-weight: 700;
+            }
+
+            .hm-ok {
+                background: #16a34a;
+            }
+
+            /* hijau */
+            .hm-warn {
+                background: #eab308;
+                color: #0f172a;
+            }
+
+            /* kuning (text gelap) */
+            .hm-fail {
+                background: #dc2626;
+            }
+
+            /* merah */
+            .hm-none {
+                background: #d1d5db;
+                color: #0f172a;
+            }
+
+
+            .badge-score {
+                min-width: 72px;
+                display: inline-block;
+                text-align: center;
+                font-weight: 600;
+            }
+        </style>
     @endprepend
 
     @prepend('js')
         <script>
-            $(document).ready(function() {
-                // Inisialisasi Tooltip Bootstrap
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-                var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl)
-                })
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-heatmap');
+                if (!btn) return;
+
+                const kriteriaId = btn.dataset.kriteriaId;
+
+                $('#modalHeatmap').modal('show');
+
+                fetch(
+                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/detail`
+                    )
+                    .then(res => res.json())
+                    .then(data => {
+
+                        const rows = data.result.map(u => {
+
+                            const statusLabel = u.status === 'ok' ? 'Terpenuhi' :
+                                u.status === 'fail' ? 'Tidak Terpenuhi' :
+                                u.status === 'warn' ? 'Belum Selesai' :
+                                'Belum Ada Penilaian';
+
+                            const tooltip = `
+Prodi: ${u.unit}
+Status: ${statusLabel}
+Indikator Tidak Terpenuhi: ${u.not_met} dari ${u.total}
+Selesai: ${u.count_selesai}
+Pending: ${u.count_pending}
+Final Gagal: ${u.count_fail}
+`.trim();
+
+                            return `
+                <tr>
+                    <td class="text-start">${u.unit}</td>
+                    <td class="text-center">
+                        <span class="btn heatmap-cell hm-${u.status}"
+                        data-unit-id="${u.unit_id}"
+                        data-kriteria-id="${data.kriteria.id}"
+                        data-bs-toggle="tooltip"
+                        title="${tooltip}">
+                        ${u.not_met > 0 ? u.not_met : ''}
+                    </span>
+
+                    </td>
+                </tr>`;
+                        }).join('');
+
+                        document.querySelector('#heatmap_container').innerHTML = `
+                <h5 class="mb-4">
+                    Detail Prodi Bermasalah – <strong>${data.kriteria.kode ?? ''}</strong><br>
+                    <small>${data.kriteria.nama ?? ''}</small>
+                </h5>
+
+                <table class="table table-bordered text-center align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-start">Unit / Prodi</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+
+                        // re-init tooltip bootstrap
+                        var tooltipTriggerList = [].slice.call(
+                            document.querySelectorAll('#heatmap_container [data-bs-toggle="tooltip"]')
+                        );
+                        tooltipTriggerList.map(t => new bootstrap.Tooltip(t));
+                    });
+            });
+
+            document.addEventListener('click', function(e) {
+                const cell = e.target.closest('.heatmap-cell');
+                if (!cell) return;
+
+                const kriteriaId = cell.dataset.kriteriaId;
+                const unitId = cell.dataset.unitId;
+
+                // buka modal
+                $('#modalDetailIndikator').modal('show');
+
+                fetch(
+                        `{{ url(config('master.app.url.backend') . '/' . $page->url . '/standar') }}/${kriteriaId}/${unitId}/indikator`
+                    )
+                    .then(res => res.json())
+                    .then(res => {
+
+                        const rows = res.indikators.map(i => {
+                            return `
+                    <tr>
+                        <td class="text-start">${i.indikator}</td>
+                        <td>${i.tipe}</td>
+                        <td>${i.skor_final ?? '-'}</td>
+                        <td><span class="badge bg-${i.class}">
+                            ${i.class.toUpperCase()}
+                        </span></td>
+                    </tr>
+                `;
+                        }).join('');
+
+                        document.querySelector('#detail_indikator_container').innerHTML = `
+                <h5 class="mb-3">
+                    Prodi: <strong>${res.unit.nama}</strong><br>
+                    Standar: <strong>${res.kriteria.kode}</strong> – ${res.kriteria.nama}<br>
+                    Threshold: <strong>${res.threshold}</strong>
+                </h5>
+
+                <table class="table table-bordered align-middle">
+                    <thead>
+                        <tr>
+                            <th>Indikator</th>
+                            <th>Tipe</th>
+                            <th>Skor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+                    });
+            });
+
+            document.getElementById('btnOpenUnitRanking').addEventListener('click', function() {
+                const modal = new bootstrap.Modal(document.getElementById('modalUnitRanking'));
+                modal.show();
+
+                const container = document.getElementById('unitRanking_container');
+                container.innerHTML = '<div class="text-center py-5">Memuat data…</div>';
+
+                fetch('{{ route('dashboard.unit.ranking') }}')
+                    .then(res => res.json())
+                    .then(res => {
+                        const rows = res.data.map((u, idx) => {
+                            // warna badge berdasarkan skor
+                            const cls = u.skor_pengisian >= 90 ? 'bg-success' :
+                                (u.skor_pengisian >= 70 ? 'bg-warning text-dark' : 'bg-danger');
+
+                            return `
+                    <tr>
+                        <td class="text-center align-middle">${idx + 1}</td>
+                        <td class="text-start align-middle">${u.nama}</td>
+                        <td class="text-center align-middle">${u.total_indikator}</td>
+                        <td class="text-center align-middle">${u.total_selesai}</td>
+                        <td class="text-center align-middle">
+                            <span class="badge badge-score ${cls}">
+                                ${u.skor_pengisian}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                        }).join('');
+
+                        container.innerHTML = `
+                <table class="table table-hover table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width:48px">#</th>
+                            <th>Unit / Prodi</th>
+                            <th class="text-center">Total Indikator</th>
+                            <th class="text-center">Selesai</th>
+                            <th class="text-center">Skor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            `;
+                    })
+                    .catch(err => {
+                        container.innerHTML =
+                            `<div class="text-danger p-4">Gagal memuat data. Coba refresh halaman.</div>`;
+                        console.error(err);
+                    });
             });
         </script>
 

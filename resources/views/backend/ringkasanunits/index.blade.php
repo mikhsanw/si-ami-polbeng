@@ -114,6 +114,8 @@
             });
         </script>
         <script>
+            let pieChartInstance = null;
+
             document.addEventListener("click", function(e) {
                 const btn = e.target.closest('.btn-chart');
                 if (!btn) return;
@@ -129,14 +131,17 @@
 
                 setTimeout(() => {
                     const element = document.querySelector('#pie_chart');
-                    element.innerHTML = ""; // reset chart sebelumnya
+
+                    // 🔥 Destroy chart lama jika masih ada
+                    if (pieChartInstance !== null) {
+                        pieChartInstance.destroy();
+                        pieChartInstance = null;
+                    }
 
                     const options = {
                         series: data,
                         labels: labels,
-                        colors: [
-                            '#16a34a', '#eab308', '#f97316'
-                        ],
+                        colors: ['#16a34a', '#eab308', '#f97316'],
                         chart: {
                             type: 'donut',
                         },
@@ -153,9 +158,19 @@
                         },
                     };
 
-                    const chart = new ApexCharts(element, options);
-                    chart.render();
+                    // 🔥 Simpan instance
+                    pieChartInstance = new ApexCharts(element, options);
+                    pieChartInstance.render();
+
                 }, 200);
+            });
+
+            // 🔥 Opsional: Destroy saat modal ditutup
+            $('#modalChart').on('hidden.bs.modal', function() {
+                if (pieChartInstance !== null) {
+                    pieChartInstance.destroy();
+                    pieChartInstance = null;
+                }
             });
         </script>
     @endprepend
