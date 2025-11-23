@@ -215,6 +215,10 @@
                             <div class="card-header">
                                 <div class="card-title">
                                     <h6 class="mb-0">Top 5 Unit Dengan Temuan Terbanyak</h6>
+                                    <button class="btn btn-sm btn-light-primary" id="btnOpenTemuanTerbanyak">
+                                        <i class="fas fa-eye"></i> Semua
+                                    </button>
+
                                 </div>
                             </div>
                             <div class="card-body">
@@ -387,6 +391,32 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="modalUnitTemuan" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Daftar Unit — Temuan Terbanyak (Terbesar → Terkecil)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="unitTemuan_container" class="table-responsive">
+                        <!-- akan diisi via JS -->
+                        <div class="text-center py-5">Memuat data…</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <small class="text-muted me-auto">Jumlah temuan dihitung berdasarkan skor final dengan threshold
+                        lembaga.</small>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 
 
     @prepend('css')
@@ -612,6 +642,59 @@ Final Gagal: ${u.count_fail}
                             `<div class="text-danger p-4">Gagal memuat data. Coba refresh halaman.</div>`;
                         console.error(err);
                     });
+            });
+
+            // buka modal temuan
+            document.getElementById('btnOpenTemuanTerbanyak').addEventListener('click', function() {
+
+                const modal = new bootstrap.Modal(document.getElementById('modalUnitTemuan'));
+                modal.show();
+
+                const container = document.getElementById('unitTemuan_container');
+                container.innerHTML = '<div class="text-center py-5">Memuat data…</div>';
+
+                fetch('{{ route('dashboard.unit.temuan-semua') }}')
+                    .then(res => res.json())
+                    .then(res => {
+
+                        const rows = res.data.map((u, idx) => {
+
+                            const cls = u.total_temuan >= 10 ? 'bg-danger' :
+                                u.total_temuan >= 5 ? 'bg-warning text-dark' :
+                                'bg-success';
+
+                            return `
+                    <tr>
+                        <td class="text-center align-middle">${idx + 1}</td>
+                        <td class="text-start align-middle">${u.nama}</td>
+                        <td class="text-center align-middle">
+                            <span class="badge badge-score ${cls}">
+                                ${u.total_temuan}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                        }).join('');
+
+                        container.innerHTML = `
+                <table class="table table-hover table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width:48px">#</th>
+                            <th>Unit / Prodi</th>
+                            <th class="text-center">Total Temuan</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+                    })
+                    .catch(err => {
+                        container.innerHTML =
+                            `<div class="text-danger p-4">Gagal memuat data. Coba refresh halaman.</div>`;
+                        console.error(err);
+                    });
+
             });
         </script>
 

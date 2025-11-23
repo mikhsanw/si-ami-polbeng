@@ -19,6 +19,9 @@ Route::group(['middleware' => ['auth']], function () {
     )->name('dashboard.superadmin.detail-indikator');
     Route::get('/home/units/ranking', 'DashboardController@unitRanking')
         ->name('dashboard.unit.ranking');
+    Route::get('/home/units/temuan', 'DashboardController@unitTemuanDetail')
+        ->name('dashboard.unit.temuan-semua');
+
 });
 
 Route::group(['middleware' => ['auth', 'check.permission']], function () {

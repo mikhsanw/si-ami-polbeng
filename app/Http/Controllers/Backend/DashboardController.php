@@ -575,6 +575,9 @@ class DashboardController extends Controller
 
         })->count();
 
+        // ============================
+        // 3) Top 5 unit dengan skor pengisian terbaik
+        // ============================
         $unitTerbaik = Unit::with([
             'auditPeriodes.instrumenTemplate.templateIndikators',
             'auditPeriodes.hasilAudits' => function ($q) {
@@ -978,5 +981,52 @@ class DashboardController extends Controller
             ->values();
 
         return response()->json(['data' => $rank]);
+    }
+
+    public function unitTemuanDetail()
+    {
+        $units = Unit::with([
+            'auditPeriodes.hasilAudits' => function ($q) {
+                $q->where('status_terkini', 'Selesai')
+                    ->whereNotNull('skor_final');
+            },
+            'auditPeriodes.instrumenTemplate.lembagaAkreditasi',
+        ])->get(['id', 'nama']);
+
+        $data = $units->map(function ($unit) {
+
+            $total = 0;
+
+            foreach ($unit->auditPeriodes as $periode) {
+
+                $lembaga = $periode->instrumenTemplate
+                                   ->lembagaAkreditasi
+                                   ->singkatan ?? null;
+
+                // threshold per lembaga
+                $threshold = ($lembaga === 'LAMEMBA') ? 1.0 : 4.0;
+
+                foreach ($periode->hasilAudits as $hasil) {
+
+                    $skor = floatval($hasil->skor_final);
+
+                    if ($skor < $threshold) {
+                        $total++;
+                    }
+                }
+            }
+
+            return [
+                'unit_id' => $unit->id,
+                'nama' => $unit->nama,
+                'total_temuan' => $total,
+            ];
+        })
+            ->sortByDesc('total_temuan') // urutkan besar → kecil
+            ->values();
+
+        return response()->json([
+            'data' => $data,
+        ]);
     }
 }
