@@ -167,12 +167,14 @@
                     {{-- Top 5 unit dengan pengisian terbaik --}}
                     <div class="col-md-6">
                         <div class="card h-100 shadow-sm">
-                            <div class="card-header">
+                            <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="card-title">
-                                    <h6 class="mb-0">Top 5 Unit Dengan Pengisian Terbaik</h6>
-                                    <!-- Tombol panggil modal -->
+                                    <h6 class="mb-0 fw-bold">Top 5 Unit Dengan Pengisian Terbaik</h6>
+                                </div>
+
+                                <div class="card-toolbar">
                                     <button class="btn btn-sm btn-light-primary" id="btnOpenUnitRanking">
-                                        <i class="fas fa-eye"></i> Semua
+                                        <i class="fas fa-list"></i> Lihat Semua
                                     </button>
                                 </div>
                             </div>
@@ -212,15 +214,19 @@
                     {{-- Top 5 temuan --}}
                     <div class="col-md-6">
                         <div class="card h-100">
-                            <div class="card-header">
+                            <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="card-title">
-                                    <h6 class="mb-0">Top 5 Unit Dengan Temuan Terbanyak</h6>
-                                    <button class="btn btn-sm btn-light-primary" id="btnOpenTemuanTerbanyak">
-                                        <i class="fas fa-eye"></i> Semua
-                                    </button>
+                                    <h6 class="mb-0 fw-bold">Top 5 Unit Dengan Temuan Terbanyak</h6>
+                                </div>
 
+                                <div class="card-toolbar">
+                                    <button class="btn btn-sm btn-light-primary" id="btnOpenTemuanTerbanyak">
+                                        <i class="fas fa-list"></i> Lihat Semua
+                                    </button>
                                 </div>
                             </div>
+
+
                             <div class="card-body">
                                 <ul class="list-group">
                                     @foreach ($unitTemuan as $u)
