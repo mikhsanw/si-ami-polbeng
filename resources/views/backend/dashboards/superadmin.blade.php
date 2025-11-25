@@ -496,12 +496,12 @@
                                 'Belum Ada Penilaian';
 
                             const tooltip = `
-Prodi: ${u.unit}
-Status: ${statusLabel}
-Indikator Tidak Terpenuhi: ${u.not_met} dari ${u.total}
-Selesai: ${u.count_selesai}
-Pending: ${u.count_pending}
-Final Gagal: ${u.count_fail}
+Prodi: ${u.unit},
+Status: ${statusLabel},
+Indikator Tidak Terpenuhi: ${u.not_met} dari ${u.total},
+Selesai: ${u.count_selesai},
+Pending: ${u.count_pending},
+Final Gagal: ${u.count_fail},
 `.trim();
 
                             return `
