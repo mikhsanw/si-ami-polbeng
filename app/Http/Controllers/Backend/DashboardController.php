@@ -716,6 +716,9 @@ class DashboardController extends Controller
                     'kriteria_id' => $kriteria->id,
                     'kode' => $kriteria->kode,
                     'nama_kriteria' => $kriteria->nama,
+                    'lembaga_akreditasi' => optional(
+                        $items->first()->auditPeriode->instrumenTemplate->lembagaAkreditasi
+                    )->singkatan,
                     'total_not_met' => $notMet,
                     'total_dinilai' => $items->count(),
                 ];

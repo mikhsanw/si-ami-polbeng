@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="title">
-        {{ __('Dashboard Administrator') }}
+        {{ __('Dashboard') }}
     </x-slot>
 
     <div class="card border-transparent" data-bs-theme="light" style="background-color: #1C325E;">
@@ -247,6 +247,11 @@
                         <div class="card-title">
                             <h6 class="mb-0">Standar SPMI yang Sering Tidak Terpenuhi</h6>
                         </div>
+                        <div class="card-toolbar">
+                            <a class="btn btn-sm btn-light-primary" href="{{ route('ringkasanstandars.index') }}">
+                                <i class="fas fa-list"></i> Lihat Semua
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <table class="table table-sm table-hover">
@@ -254,6 +259,7 @@
                                 <tr>
                                     <th>Standar (Kode)</th>
                                     <th>Nama Kriteria</th>
+                                    <th>Lembaga Akreditasi</th>
                                     <th class="text-end">Jumlah Tidak Terpenuhi</th>
                                 </tr>
                             </thead>
@@ -262,6 +268,7 @@
                                     <tr>
                                         <td>{{ $s['kode'] }}</td>
                                         <td>{{ $s['nama_kriteria'] }}</td>
+                                        <td>{{ $s['lembaga_akreditasi'] }}</td>
                                         <td class="text-end">
                                             <button class="btn btn-sm btn-light-info btn-heatmap"
                                                 data-kriteria-id="{{ $s['kriteria_id'] }}"

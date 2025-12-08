@@ -14,7 +14,8 @@
         "spatie/laravel-permission": "^6.7",
         "symfony/expression-language": "^7.3",
         "yajra/laravel-datatables": "11.0",
-        "yajra/laravel-datatables-oracle": "^11.1"
+        "yajra/laravel-datatables-oracle": "^11.1",
+        "yaza/laravel-google-drive-storage": "^4.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.13",

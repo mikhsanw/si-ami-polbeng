@@ -161,6 +161,8 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
     });
     Route::resource('penugasanauditors', 'PenugasanAuditorsController');
 
+    // Laporan Routes
+    //ringkasantemuanaudits
     Route::prefix('ringkasantemuanaudits')->as('ringkasantemuanaudits.')->group(function () {
         Route::get('/{id?}', 'Laporan\RingkasanTemuanAuditController@index')->name('index')->where('id', '[a-f0-9\-]+');
         Route::get('/generate-form4/{id}', 'Laporan\RingkasanTemuanAuditController@generateForm4')->name('generate-form4');
@@ -171,6 +173,23 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
     Route::prefix('ringkasanunits')->as('ringkasanunits.')->group(function () {
         Route::get('/', 'Laporan\RingkasanUnitController@index')->name('index');
         Route::get('/{id}/show', 'Laporan\RingkasanUnitController@show')->name('show');
+    });
+
+    //ringkasianstandars
+    Route::prefix('ringkasanstandars')->as('ringkasanstandars.')->group(function () {
+        Route::get('/{id?}', 'Laporan\RingkasanStandarController@index')->name('index')->where('id', '[a-f0-9\-]+');
+        Route::get('/{id}/show', 'Laporan\RingkasanStandarController@show')->name('show');
+        Route::get('/standar/{kriteria}/{unit}/indikator',
+            'Laporan\RingkasanStandarController@detailIndikator'
+        )->name('dashboard.superadmin.detail-indikator');
+    });
+
+    //settings
+    Route::prefix('settings')->as('settings.')->group(function () {
+        Route::get('/', 'SettingController@index')->name('index');
+        Route::post('/backup', 'SettingController@backupFiles')->name('backup.files');
+        Route::post('/update', 'SettingController@update')->name('update');
+
     });
     //gencrud
 });
