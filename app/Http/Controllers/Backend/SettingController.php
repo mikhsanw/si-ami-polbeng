@@ -26,7 +26,7 @@ class SettingController extends Controller
             ->map(function ($f) {
                 return [
                     'id' => $f->id,
-                    'nama' => $f->name,
+                    'nama' => $f->alias,
                     'path' => $f->target,
                     'status' => $f->data['backup']['status'] ?? 'unknown',
                     'time' => $f->data['backup']['time'] ?? $f->updated_at,
@@ -56,7 +56,12 @@ class SettingController extends Controller
             }
         }
 
-        return view('backend.settings.index', compact('backups', 'settings'));
+        $jobs = [
+            'total_files' => File::whereNull('data->backup->status')->count(),
+            'total_jobs' => \DB::table('jobs')->where('queue', 'default')->count(),
+        ];
+
+        return view('backend.settings.index', compact('backups', 'settings', 'jobs'));
     }
 
     public function backupFiles(Request $request)

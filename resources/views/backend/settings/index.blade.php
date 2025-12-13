@@ -79,6 +79,8 @@
                                     Backup file yang tersimpan di server ke Google Drive secara otomatis.
                                 </p>
                                 <div id="backupStatus" class="text-primary fw-bold small mb-3">
+                                    {{ $jobs['total_files'] ?? 0 }} file menunggu untuk dibackup.</br>
+                                    {{ $jobs['total_jobs'] ?? 0 }} job dalam antrean.
                                 </div>
 
                                 <hr>
