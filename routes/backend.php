@@ -191,5 +191,10 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
         Route::post('/update', 'SettingController@update')->name('update');
 
     });
-    //gencrud
+    	Route::prefix('beritaacaras')->as('beritaacaras')->group(function () {
+		Route::get('/delete/{id}', 'BeritaAcarasController@delete');
+	});
+	Route::resource('beritaacaras', 'BeritaAcarasController');
+
+//gencrud
 });
