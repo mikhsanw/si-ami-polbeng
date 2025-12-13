@@ -66,6 +66,12 @@ class SettingController extends Controller
 
     public function backupFiles(Request $request)
     {
+        if (\DB::table('jobs')->where('queue', 'default')->count() > 0) {
+            return response()->json([
+                'status' => 'warning',
+                'message' => 'Masih ada proses backup yang berjalan. Silakan tunggu hingga selesai.',
+            ]);
+        }
         //backup database
         BackupDatabaseToGoogle::dispatch();
 
