@@ -12,7 +12,14 @@ class BeritaAcarasController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            $data = $this->model::with('auditPeriode')->get();
+            if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
+                $data = $this->model::with('auditPeriode')->get();
+            } else {
+                $data = $this->model::with('auditPeriode')
+                    ->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                    ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id))
+                    ->get();
+            }
 
             return datatables()->of($data)
                 ->addColumn('action', function ($data) use ($user) {

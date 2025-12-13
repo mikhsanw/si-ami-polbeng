@@ -13,19 +13,27 @@ class ProsesAuditsController extends Controller
     public function index(Request $request, $id = null)
     {
         $user = $request->user();
+
         if ($request->ajax()) {
             $id = $id ?? $request->get('id');
-            $data = $this->model::with(['indikator', 'logAktivitasAudit', 'auditPeriode'])
-                ->where('status_terkini', '!=', 'Draft')
-                ->whereHas('auditPeriode', function ($query) use ($id) {
-                    $query->where('id', $id);
-                })
-                ->where(function ($q) use ($user) {
-                    $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
-                        ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
-                })
-                ->latest('updated_at')
-                ->get();
+            if (empty($id)) {
+                $data = $this->model::with(['indikator', 'logAktivitasAudit', 'auditPeriode'])
+                    ->where('status_terkini', '!=', 'Draft')
+                    ->where(function ($q) use ($user) {
+                        $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                            ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
+                    })
+                    ->latest('updated_at')
+                    ->get();
+            } else {
+                $data = $this->model::with(['indikator', 'logAktivitasAudit', 'auditPeriode'])
+                    ->where('status_terkini', '!=', 'Draft')
+                    ->whereHas('auditPeriode', function ($query) use ($id) {
+                        $query->where('id', $id);
+                    })
+                    ->latest('updated_at')
+                    ->get();
+            }
 
             return datatables()->of($data)
                 ->addColumn('action', function ($data) use ($user) {
@@ -54,10 +62,21 @@ class ProsesAuditsController extends Controller
                 ->rawColumns(['action', 'status_terkini'])
                 ->make();
         }
-        $data = \App\Models\AuditPeriode::orderBy('created_at')->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))->orWhereHas('unit', fn ($query2) => $query2->where('user_id', $user->id))->get()
-            ->pluck('periode_unit', 'id')
-            ->toArray();
-        $filterOptions = ['' => 'Pilih Periode Unit'] + $data;
+        if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
+            // Ambil semua audit periode
+            $data = \App\Models\AuditPeriode::orderBy('created_at')
+                ->get()
+                ->pluck('periode_unit', 'id')
+                ->toArray();
+        } else {
+            $data = \App\Models\AuditPeriode::orderBy('created_at')
+                ->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                ->orWhereHas('unit', fn ($query2) => $query2->where('user_id', $user->id))
+                ->get()
+                ->pluck('periode_unit', 'id')
+                ->toArray();
+        }
+        $filterOptions = count($data) > 1 ? ['' => 'Pilih Periode Unit'] + $data : $data;
 
         return view($this->view.'.index', compact('id', 'filterOptions'));
     }
