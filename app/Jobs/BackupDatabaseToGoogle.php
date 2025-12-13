@@ -29,7 +29,7 @@ class BackupDatabaseToGoogle implements ShouldQueue
 
         $timestamp = Carbon::now()->format('Ymd_His');
         $backupName = "backup_db_{$dbName}_{$timestamp}.sql";
-        $localPath = storage_path("app/{$backupName}");
+        $localPath = "{$backupName}";
 
         $command = sprintf(
             'mysqldump -h%s -u%s -p%s %s > %s',
@@ -37,7 +37,7 @@ class BackupDatabaseToGoogle implements ShouldQueue
             $username,
             $password,
             $dbName,
-            storage_path("app/{$backupName}")
+            storage_path("app/{$localPath}")
         );
 
         exec($command, $output, $result);

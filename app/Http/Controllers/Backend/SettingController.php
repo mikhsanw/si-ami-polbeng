@@ -34,23 +34,26 @@ class SettingController extends Controller
             });
 
         //tambahkan file backup database terakhir, langsung check di storage google
-        $googleFiles = Storage::disk('google')->files('/database/');
+        // cek jika tidak ada folder database maka skip
         $latestDbBackup = null;
-        foreach ($googleFiles as $filePath) {
-            if (str_starts_with(basename($filePath), 'backup_db_')) {
-                if ($latestDbBackup === null || $filePath > $latestDbBackup['path']) {
-                    $latestDbBackup = [
-                        'id' => null,
-                        'nama' => basename($filePath),
-                        'path' => $filePath,
-                        'status' => 'done',
-                        'time' => Storage::disk('google')->lastModified($filePath),
-                    ];
+        if (Storage::disk('google')->exists('/database/')) {
+            $googleFiles = Storage::disk('google')->files('/database/');
+            foreach ($googleFiles as $filePath) {
+                if (str_starts_with(basename($filePath), 'backup_db_')) {
+                    if ($latestDbBackup === null || $filePath > $latestDbBackup['path']) {
+                        $latestDbBackup = [
+                            'id' => null,
+                            'nama' => basename($filePath),
+                            'path' => $filePath,
+                            'status' => 'done',
+                            'time' => Storage::disk('google')->lastModified($filePath),
+                        ];
+                    }
                 }
             }
-        }
-        if ($latestDbBackup) {
-            $backups->prepend($latestDbBackup);
+            if ($latestDbBackup) {
+                $backups->prepend($latestDbBackup);
+            }
         }
 
         return view('backend.settings.index', compact('backups', 'settings'));
