@@ -1,7 +1,7 @@
 $(document).ready(function () {
 var datatable = $('#datatable').DataTable({
 responsive: true,
-lengthChange: false,
+lengthChange: true,
 searchDelay: 500,
 processing: true,
 serverSide: true,
