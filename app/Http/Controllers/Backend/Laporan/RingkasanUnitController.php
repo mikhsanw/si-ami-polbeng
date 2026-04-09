@@ -29,7 +29,12 @@ class RingkasanUnitController extends Controller
         $user = $request->user();
         $id = $request->get('id') ? urldecode($request->get('id')) : null;
         if ($request->ajax()) {
-            $data = AuditPeriode::with(['unit', 'penugasanAuditors.user'])
+            $data = AuditPeriode::with([
+                    'unit',
+                    'penugasanAuditors.user',
+                    'hasilAudits.indikator.rubrikPenilaians',
+                    'instrumenTemplate.lembagaAkreditasi',
+                ])
                 ->where('tahun_akademik', 'LIKE', '%'.$id.'%')
                 ->get();
 
@@ -97,6 +102,16 @@ class RingkasanUnitController extends Controller
 
                     return round(($filledIndikatorsCount / $totalIndikator) * 100).'%';
                 })
+                ->addColumn('indikator_tidak_standar', function ($data) {
+                    $notStandar = $data->hasilAudits
+                        ->where('status_terkini', config('master.content.hasil_audit.status_terkini.Selesai'))
+                        ->filter(function ($hasilAudit) {
+                            return $this->isNotStandardHasilAudit($hasilAudit);
+                        })
+                        ->count();
+
+                    return $notStandar;
+                })
                 ->addColumn('action', function ($data) {
                     $button = '';
                     $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show-detail" data-url="'.url($this->url.'/'.$data->id.'/show').'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
@@ -104,7 +119,7 @@ class RingkasanUnitController extends Controller
                     return "<div class='btn-group'>".$button.'</div>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'indikator_terisi', 'status_audit'])
+                ->rawColumns(['action', 'indikator_terisi', 'status_audit', 'indikator_tidak_standar'])
                 ->make();
         }
 
@@ -114,6 +129,49 @@ class RingkasanUnitController extends Controller
         $filterOptions = ['' => 'Pilih Periode'] + $data;
 
         return view('backend.ringkasanunits.index', compact('filterOptions', 'id'));
+    }
+
+    private function isNotStandardHasilAudit($hasilAudit)
+    {
+        if (! $hasilAudit->indikator) {
+            return false;
+        }
+
+        if ($hasilAudit->status_terkini !== 'Selesai') {
+            return false;
+        }
+
+        $skorFinal = $hasilAudit->skor_final;
+        if (is_null($skorFinal) || $skorFinal === '') {
+            return false;
+        }
+
+        $threshold = $this->determineThreshold($hasilAudit);
+        if (is_null($threshold)) {
+            return false;
+        }
+
+        return floatval(str_replace(',', '.', $skorFinal)) < $threshold;
+    }
+
+    private function determineThreshold($hasilAudit)
+    {
+        $indikator = $hasilAudit->indikator;
+        if (! $indikator) {
+            return null;
+        }
+
+        $maxSkor = $indikator->rubrikPenilaians->max('skor');
+        if ($maxSkor > 0) {
+            if (floatval($maxSkor) === 4.0) {
+                return 2.0;
+            }
+
+            return max(1.0, floatval($maxSkor) / 2.0);
+        }
+
+        $lembaga = optional($hasilAudit->auditPeriode->instrumenTemplate->lembagaAkreditasi)->singkatan;
+        return $lembaga === 'LAMEMBA' ? 1.0 : 2.0;
     }
 
     public function show($id)

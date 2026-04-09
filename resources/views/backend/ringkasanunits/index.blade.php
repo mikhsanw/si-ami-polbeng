@@ -73,6 +73,7 @@
                         <th class="text-center">Status Audit</th>
                         <th class="text-center">Indikator Terisi</th>
                         <th class="text-center">Persentase Terisi</th>
+                        <th class="text-center">Indikator Tidak Standar</th>
                         <th class="text-center max-w-100px">Action</th>
                     </tr>
                 </thead>
