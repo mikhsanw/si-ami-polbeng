@@ -18,6 +18,7 @@ class GenerateDesignDocs extends Command
 
         $phpWord = new PhpWord();
         $phpWord->getSettings()->setUpdateFields(true);
+        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
 
         // === STYLES ===
         $phpWord->addTitleStyle(1, ['bold' => true, 'size' => 18, 'color' => '1e3a5f'], ['spaceAfter' => 240]);
@@ -36,14 +37,8 @@ class GenerateDesignDocs extends Command
         $bodyFontStyle   = ['size' => 10];
         $bodyFontBold    = ['bold' => true, 'size' => 10];
 
-        // Register ALL table styles once here — calling addTableStyle() twice with the same
-        // name corrupts the .docx ZIP structure.
-        $phpWord->addTableStyle('actorTable',  $tableStyle);
-        $phpWord->addTableStyle('ucTable',     $tableStyle);
-        $phpWord->addTableStyle('ucNarTable',  $tableStyle);
-        $phpWord->addTableStyle('erdTable',    $tableStyle);
-        $phpWord->addTableStyle('dictTable',   $tableStyle);
-        $phpWord->addTableStyle('flowTable',   $tableStyle);
+        // Table styles will be passed directly as arrays instead of named styles
+        // to avoid any registry corruption issues.
 
         // =============================================
         // HALAMAN JUDUL
@@ -99,8 +94,7 @@ class GenerateDesignDocs extends Command
         );
 
         $section->addTitle('Daftar Aktor', 2);
-        // actorTable already registered above
-        $tbl = $section->addTable('actorTable');
+        $tbl = $section->addTable($tableStyle);
 
         $tbl->addRow();
         $tbl->addCell(2000, $headerCellStyle)->addText('Aktor', $headerFontStyle);
@@ -122,8 +116,7 @@ class GenerateDesignDocs extends Command
         $section->addText('', [], ['spaceAfter' => 120]);
         $section->addTitle('Daftar Use Case', 2);
 
-        // ucTable already registered above
-        $ucTbl = $section->addTable('ucTable');
+        $ucTbl = $section->addTable($tableStyle);
         $ucTbl->addRow();
         $ucTbl->addCell(1200, $headerCellStyle)->addText('Kode', $headerFontStyle);
         $ucTbl->addCell(3800, $headerCellStyle)->addText('Nama Use Case', $headerFontStyle);
@@ -133,14 +126,14 @@ class GenerateDesignDocs extends Command
             ['UC-01','Masuk Sistem (Login)','Semua Pengguna'],
             ['UC-02','Keluar Sistem (Logout)','Semua Pengguna'],
             ['UC-03','Kelola Pengguna','Super Admin'],
-            ['UC-04','Kelola Menu & Hak Akses','Super Admin'],
+            ['UC-04','Kelola Menu dan Hak Akses','Super Admin'],
             ['UC-05','Kelola Pengaturan Sistem','Super Admin'],
             ['UC-06','Buat Backup Database','Super Admin'],
             ['UC-07','Buat Backup File','Super Admin'],
             ['UC-08','Kelola Unit','Admin'],
             ['UC-09','Kelola Lembaga Akreditasi','Admin'],
             ['UC-10','Kelola Template Instrumen','Admin'],
-            ['UC-11','Kelola Kriteria & Indikator','Admin'],
+            ['UC-11','Kelola Kriteria dan Indikator','Admin'],
             ['UC-12','Kelola Rubrik Penilaian','Admin'],
             ['UC-13','Buat Periode Audit','Admin'],
             ['UC-14','Tugaskan Auditor','Admin'],
@@ -236,8 +229,7 @@ class GenerateDesignDocs extends Command
 
         foreach ($narratives as $n) {
             $section->addTitle("{$n['kode']}: {$n['nama']}", 2);
-            // ucNarTable already registered above — do NOT call addTableStyle() again
-            $narTbl = $section->addTable('ucNarTable');
+            $narTbl = $section->addTable($tableStyle);
 
             $multilineFields = ['Alur Utama', 'Alur Alternatif'];
             $rows = [
@@ -276,7 +268,7 @@ class GenerateDesignDocs extends Command
 
         $section->addTitle('Ringkasan Entitas', 2);
         $phpWord->addTableStyle('erdTable', $tableStyle);
-        $erdTbl = $section->addTable('erdTable');
+        $erdTbl = $section->addTable($tableStyle);
         $erdTbl->addRow();
         $erdTbl->addCell(1800, $headerCellStyle)->addText('Nama Tabel', $headerFontStyle);
         $erdTbl->addCell(3500, $headerCellStyle)->addText('Entitas (Indonesia)', $headerFontStyle);
@@ -286,7 +278,7 @@ class GenerateDesignDocs extends Command
             ['users','Pengguna','Seluruh pengguna sistem dengan peran berbeda'],
             ['units','Unit','Unit organisasi objek audit (Prodi, Jurusan, dll.)'],
             ['lembaga_akreditasis','Lembaga Akreditasi','Badan pemberi akreditasi (BAN-PT, LAMEMBA, dll.)'],
-            ['instrumen_templates','Template Instrumen','Kumpulan kriteria & indikator untuk satu standar akreditasi'],
+            ['instrumen_templates','Template Instrumen','Kumpulan kriteria dan indikator untuk satu standar akreditasi'],
             ['kriterias','Kriteria','Standar/butir penilaian utama dalam instrumen'],
             ['template_kriterias','Template-Kriteria (Pivot)','Relasi template dengan kriteria beserta bobot'],
             ['indikators','Indikator','Ukuran spesifik dari setiap kriteria'],
@@ -358,8 +350,7 @@ class GenerateDesignDocs extends Command
 
         foreach ($dictEntities as $de) {
             $section->addTitle($de['table'], 2);
-            // dictTable already registered above — do NOT call addTableStyle() again
-            $dictTbl = $section->addTable('dictTable');
+            $dictTbl = $section->addTable($tableStyle);
             $dictTbl->addRow();
             $dictTbl->addCell(2000, $headerCellStyle)->addText('Field', $headerFontStyle);
             $dictTbl->addCell(1500, $headerCellStyle)->addText('Tipe Data', $headerFontStyle);
@@ -409,7 +400,7 @@ class GenerateDesignDocs extends Command
                 'Jika tidak sesuai → Auditor meminta revisi (status: Revision Requested)',
                 'Auditee memperbaiki dan meng-submit ulang',
             ]],
-            ['FASE 5 — Pelaporan & Analitik', 'Admin, Direktur', [
+            ['FASE 5 — Pelaporan dan Analitik', 'Admin, Direktur', [
                 'Sistem menghitung skor dan nilai akhir per unit',
                 'Admin membuat Berita Acara Audit',
                 'Dashboard menampilkan ranking unit, temuan, dan standar bermasalah',
@@ -418,8 +409,7 @@ class GenerateDesignDocs extends Command
             ]],
         ];
 
-        // flowTable already registered above
-        $flowTbl = $section->addTable('flowTable');
+        $flowTbl = $section->addTable($tableStyle);
         $flowTbl->addRow();
         $flowTbl->addCell(500,  $headerCellStyle)->addText('No', $headerFontStyle);
         $flowTbl->addCell(3000, $headerCellStyle)->addText('Fase', $headerFontStyle);
