@@ -1,0 +1,75 @@
+flowchart TD
+    %% SI-AMI Polbeng — Flowchart Alur Sistem Audit Mutu Internal
+    %% Generated: 2026-05-12
+
+    START([🟢 Mulai Siklus AMI]) --> A
+
+    %% FASE 1: SETUP INSTRUMEN
+    subgraph FASE1["📋 FASE 1 — Setup Instrumen (Admin)"]
+        A[Admin membuat\nLembaga Akreditasi] --> B
+        B[Admin membuat\nTemplate Instrumen] --> C
+        C[Admin menambahkan\nKriteria & Indikator] --> D
+        D[Admin menetapkan\nRubrik Penilaian & Formula]
+    end
+
+    D --> E
+
+    %% FASE 2: PERIODE AUDIT
+    subgraph FASE2["📅 FASE 2 — Periode Audit (Admin)"]
+        E[Admin membuat\nPeriode Audit\nuntuk Unit tertentu] --> F
+        F[Admin memilih\nTemplate Instrumen] --> G
+        G[Admin menugaskan\nAuditor ke Periode]
+    end
+
+    G --> H
+
+    %% FASE 3: PENGISIAN AUDIT
+    subgraph FASE3["✏️ FASE 3 — Pengisian Hasil Audit (Auditee)"]
+        H[Auditee melihat\nPeriode Audit aktif] --> I
+        I[Auditee mengisi\nHasil Audit per Indikator] --> J
+        J{Simpan\nDraft?}
+        J -- Ya --> K[Status: Draft\nDapat diedit kembali]
+        K --> I
+        J -- Tidak\nSubmit --> L[Status: Submitted\nMenunggu verifikasi]
+    end
+
+    L --> M
+
+    %% FASE 4: VERIFIKASI
+    subgraph FASE4["🔍 FASE 4 — Verifikasi (Auditor)"]
+        M[Auditor melihat\nHasil Audit yang masuk] --> N
+        N{Hasil Audit\nsesuai?}
+        N -- Ya,\nVerifikasi --> O[Status: Verified\n✅ Diterima]
+        N -- Tidak,\nRevisi --> P[Status: Revision Requested\n🔄 Dikembalikan]
+        P --> Q[Auditee\nmenerima notifikasi revisi]
+        Q --> I
+    end
+
+    O --> R
+
+    %% FASE 5: PELAPORAN
+    subgraph FASE5["📊 FASE 5 — Pelaporan & Analitik"]
+        R[Sistem menghitung\nSkor & Nilai per Indikator] --> S
+        S[Admin membuat\nBerita Acara Audit] --> T
+        T[Dashboard menampilkan:\n- Ranking Unit\n- Temuan Audit\n- Standar Bermasalah] --> U
+        U[Direktur melihat\nDashboard Eksekutif] --> V
+        V[Cetak/Unduh\nLaporan Ringkasan\nTemuan Audit]
+    end
+
+    V --> W
+    W([🔴 Siklus AMI Selesai])
+
+    %% Styling
+    classDef fase1 fill:#dbeafe,stroke:#3b82f6
+    classDef fase2 fill:#dcfce7,stroke:#22c55e
+    classDef fase3 fill:#fef9c3,stroke:#eab308
+    classDef fase4 fill:#fee2e2,stroke:#ef4444
+    classDef fase5 fill:#f3e8ff,stroke:#a855f7
+    classDef terminal fill:#1f2937,color:#fff,stroke:#374151
+
+    class A,B,C,D fase1
+    class E,F,G fase2
+    class H,I,J,K,L fase3
+    class M,N,O,P,Q fase4
+    class R,S,T,U,V fase5
+    class START,W terminal

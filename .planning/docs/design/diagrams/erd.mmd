@@ -1,0 +1,164 @@
+erDiagram
+    %% SI-AMI Polbeng — Entity Relationship Diagram
+    %% Generated: 2026-05-12
+
+    USERS {
+        uuid id PK
+        string name
+        string email
+        string password
+        string status
+        datetime last_login_at
+    }
+
+    UNITS {
+        uuid id PK
+        string nama
+        string tipe
+        uuid parent_id FK
+        uuid user_id FK
+    }
+
+    LEMBAGA_AKREDITASIS {
+        uuid id PK
+        string nama
+        string singkatan
+        string kategori
+    }
+
+    INSTRUMEN_TEMPLATES {
+        uuid id PK
+        string nama
+        text deskripsi
+        boolean is_active
+        uuid lembaga_akreditasi_id FK
+    }
+
+    KRITERIAS {
+        uuid id PK
+        string kode
+        text nama
+        uuid parent_id FK
+        uuid lembaga_akreditasi_id FK
+    }
+
+    TEMPLATE_KRITERIAS {
+        uuid id PK
+        decimal bobot
+        uuid instrumen_template_id FK
+        uuid kriteria_id FK
+    }
+
+    INDIKATORS {
+        uuid id PK
+        text nama
+        string tipe
+        text formula_penilaian
+        uuid kriteria_id FK
+    }
+
+    TEMPLATE_INDIKATORS {
+        uuid id PK
+        decimal bobot
+        uuid instrumen_template_id FK
+        uuid indikator_id FK
+    }
+
+    INDIKATOR_INPUTS {
+        uuid id PK
+        string nama_variable
+        string label_input
+        string tipe_data
+        uuid indikator_id FK
+    }
+
+    RUBRIK_PENILAIANS {
+        uuid id PK
+        text deskripsi
+        text formula_kondisi
+        uuid indikator_id FK
+    }
+
+    AUDIT_PERIODES {
+        uuid id PK
+        string tahun_akademik
+        string status
+        uuid unit_id FK
+        uuid instrumen_template_id FK
+    }
+
+    PENUGASAN_AUDITORS {
+        uuid id PK
+        uuid user_id FK
+        uuid audit_periode_id FK
+    }
+
+    HASIL_AUDITS {
+        uuid id PK
+        text catatan_final
+        string status_terkini
+        uuid audit_periode_id FK
+        uuid indikator_id FK
+    }
+
+    DATA_AUDIT_INPUTS {
+        uuid id PK
+        string nilai_variable
+        uuid hasil_audit_id FK
+        uuid indikator_input_id FK
+    }
+
+    LOG_AKTIVITAS_AUDITS {
+        uuid id PK
+        string tipe_aksi
+        text catatan_aksi
+        uuid hasil_audit_id FK
+        uuid user_id FK
+    }
+
+    BERITA_ACARAS {
+        uuid id PK
+        text catatan
+        uuid audit_periode_id FK
+    }
+
+    BERITAS {
+        uuid id PK
+        string judul
+        text isi
+        datetime tanggal
+        integer view
+        string slug
+    }
+
+    FILES {
+        uuid id PK
+        string fileable_type
+        uuid fileable_id
+        string alias
+    }
+
+    %% Relationships
+    USERS ||--o{ UNITS : "mengelola"
+    UNITS ||--o{ UNITS : "memiliki sub-unit"
+    UNITS ||--o{ AUDIT_PERIODES : "memiliki"
+    LEMBAGA_AKREDITASIS ||--o{ INSTRUMEN_TEMPLATES : "memiliki"
+    LEMBAGA_AKREDITASIS ||--o{ KRITERIAS : "memiliki"
+    INSTRUMEN_TEMPLATES ||--o{ TEMPLATE_KRITERIAS : "berisi"
+    INSTRUMEN_TEMPLATES ||--o{ TEMPLATE_INDIKATORS : "berisi"
+    INSTRUMEN_TEMPLATES ||--o{ AUDIT_PERIODES : "digunakan di"
+    KRITERIAS ||--o{ KRITERIAS : "memiliki sub-kriteria"
+    KRITERIAS ||--o{ TEMPLATE_KRITERIAS : "digunakan di"
+    KRITERIAS ||--o{ INDIKATORS : "memiliki"
+    INDIKATORS ||--o{ TEMPLATE_INDIKATORS : "digunakan di"
+    INDIKATORS ||--o{ INDIKATOR_INPUTS : "memiliki input"
+    INDIKATORS ||--o{ RUBRIK_PENILAIANS : "memiliki rubrik"
+    INDIKATORS ||--o{ HASIL_AUDITS : "dinilai di"
+    INDIKATOR_INPUTS ||--o{ DATA_AUDIT_INPUTS : "diisi di"
+    AUDIT_PERIODES ||--o{ PENUGASAN_AUDITORS : "memiliki"
+    AUDIT_PERIODES ||--o{ HASIL_AUDITS : "memiliki"
+    AUDIT_PERIODES ||--o{ BERITA_ACARAS : "memiliki"
+    USERS ||--o{ PENUGASAN_AUDITORS : "ditugaskan sebagai"
+    HASIL_AUDITS ||--o{ DATA_AUDIT_INPUTS : "berisi"
+    HASIL_AUDITS ||--o{ LOG_AKTIVITAS_AUDITS : "dicatat di"
+    USERS ||--o{ LOG_AKTIVITAS_AUDITS : "melakukan"

@@ -1,0 +1,111 @@
+%% SI-AMI Polbeng — Use Case Diagram
+%% Generated: 2026-05-12
+
+graph TB
+    %% Actors
+    SuperAdmin(["👤 Super Admin"])
+    Admin(["👤 Admin"])
+    Auditor(["👤 Auditor"])
+    Auditee(["👤 Auditee"])
+    Direktur(["👤 Direktur"])
+
+    %% System Boundary
+    subgraph SI-AMI["Sistem SI-AMI Polbeng"]
+
+        %% Auth
+        UC01(["UC-01\nMasuk Sistem"])
+        UC02(["UC-02\nKeluar Sistem"])
+
+        %% Super Admin
+        UC03(["UC-03\nKelola Pengguna"])
+        UC04(["UC-04\nKelola Menu & Hak Akses"])
+        UC05(["UC-05\nKelola Pengaturan Sistem"])
+        UC06(["UC-06\nBuat Backup Database"])
+        UC07(["UC-07\nBuat Backup File"])
+
+        %% Admin
+        UC08(["UC-08\nKelola Unit"])
+        UC09(["UC-09\nKelola Lembaga Akreditasi"])
+        UC10(["UC-10\nKelola Template Instrumen"])
+        UC11(["UC-11\nKelola Kriteria & Indikator"])
+        UC12(["UC-12\nKelola Rubrik Penilaian"])
+        UC13(["UC-13\nBuat Periode Audit"])
+        UC14(["UC-14\nTugaskan Auditor"])
+        UC15(["UC-15\nKelola Berita/Pengumuman"])
+        UC16(["UC-16\nLihat Laporan Admin"])
+
+        %% Auditor
+        UC17(["UC-17\nLihat Penugasan Audit"])
+        UC18(["UC-18\nVerifikasi Hasil Audit"])
+        UC19(["UC-19\nMinta Revisi Hasil Audit"])
+        UC20(["UC-20\nLihat Progress Audit"])
+
+        %% Auditee
+        UC21(["UC-21\nLihat Periode Audit"])
+        UC22(["UC-22\nIsi Hasil Audit (Draft)"])
+        UC23(["UC-23\nSubmit Hasil Audit"])
+        UC24(["UC-24\nRevisi Hasil Audit"])
+        UC25(["UC-25\nUnggah Dokumen Pendukung"])
+        UC26(["UC-26\nLihat Status Audit"])
+
+        %% Direktur
+        UC27(["UC-27\nLihat Dashboard Eksekutif"])
+        UC28(["UC-28\nLihat Ranking Unit"])
+        UC29(["UC-29\nLihat Temuan Audit"])
+        UC30(["UC-30\nUnduh Laporan"])
+
+        %% Berita Acara
+        UC31(["UC-31\nBuat Berita Acara Audit"])
+
+    end
+
+    %% Connections — Super Admin
+    SuperAdmin --> UC01
+    SuperAdmin --> UC02
+    SuperAdmin --> UC03
+    SuperAdmin --> UC04
+    SuperAdmin --> UC05
+    SuperAdmin --> UC06
+    SuperAdmin --> UC07
+    SuperAdmin --> UC16
+
+    %% Connections — Admin
+    Admin --> UC01
+    Admin --> UC02
+    Admin --> UC08
+    Admin --> UC09
+    Admin --> UC10
+    Admin --> UC11
+    Admin --> UC12
+    Admin --> UC13
+    Admin --> UC14
+    Admin --> UC15
+    Admin --> UC16
+    Admin --> UC31
+
+    %% Connections — Auditor
+    Auditor --> UC01
+    Auditor --> UC02
+    Auditor --> UC17
+    Auditor --> UC18
+    Auditor --> UC19
+    Auditor --> UC20
+    Auditor --> UC31
+
+    %% Connections — Auditee
+    Auditee --> UC01
+    Auditee --> UC02
+    Auditee --> UC21
+    Auditee --> UC22
+    Auditee --> UC23
+    Auditee --> UC24
+    Auditee --> UC25
+    Auditee --> UC26
+
+    %% Connections — Direktur
+    Direktur --> UC01
+    Direktur --> UC02
+    Direktur --> UC27
+    Direktur --> UC28
+    Direktur --> UC29
+    Direktur --> UC30
