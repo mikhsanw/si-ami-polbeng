@@ -7,6 +7,25 @@
 
 ---
 
+### Phase 0 — System Design Documentation
+**Priority:** 🔴 Immediate (prerequisite for all phases)  
+**Estimated effort:** 3–5 days
+
+Produce internal team documentation artifacts that accurately reflect the SI-AMI Polbeng v1 system, enabling new contributors to onboard quickly and providing a shared reference for all future development.
+
+Artifacts to produce:
+- [ ] **Use Case Diagram** — all actors and their interactions with the system
+- [ ] **Use Case Narratives** — written descriptions (actor, precondition, main flow, alternative flow, postcondition) for all major flows
+- [ ] **ERD (Entity Relationship Diagram)** — all entities, attributes, and relationships
+- [ ] **Data Dictionary** — definition of every entity and key fields
+- [ ] **System Flowchart** — main audit lifecycle end-to-end
+- [ ] **Sequence Diagrams** — detailed interaction diagrams for critical flows (audit submission, verification, dashboard aggregation)
+- [ ] **Role–Permission Matrix** — which role can do what action on which resource
+
+**Verification:** All diagrams reviewed and approved by team; stored in `.planning/docs/design/` with index page.
+
+---
+
 ### Phase 1 — Critical Bug Fixes
 **Priority:** 🔴 Immediate  
 **Estimated effort:** 1–2 days
