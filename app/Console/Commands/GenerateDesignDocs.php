@@ -36,6 +36,15 @@ class GenerateDesignDocs extends Command
         $bodyFontStyle   = ['size' => 10];
         $bodyFontBold    = ['bold' => true, 'size' => 10];
 
+        // Register ALL table styles once here — calling addTableStyle() twice with the same
+        // name corrupts the .docx ZIP structure.
+        $phpWord->addTableStyle('actorTable',  $tableStyle);
+        $phpWord->addTableStyle('ucTable',     $tableStyle);
+        $phpWord->addTableStyle('ucNarTable',  $tableStyle);
+        $phpWord->addTableStyle('erdTable',    $tableStyle);
+        $phpWord->addTableStyle('dictTable',   $tableStyle);
+        $phpWord->addTableStyle('flowTable',   $tableStyle);
+
         // =============================================
         // HALAMAN JUDUL
         // =============================================
@@ -90,7 +99,7 @@ class GenerateDesignDocs extends Command
         );
 
         $section->addTitle('Daftar Aktor', 2);
-        $phpWord->addTableStyle('actorTable', $tableStyle);
+        // actorTable already registered above
         $tbl = $section->addTable('actorTable');
 
         $tbl->addRow();
@@ -113,7 +122,7 @@ class GenerateDesignDocs extends Command
         $section->addText('', [], ['spaceAfter' => 120]);
         $section->addTitle('Daftar Use Case', 2);
 
-        $phpWord->addTableStyle('ucTable', $tableStyle);
+        // ucTable already registered above
         $ucTbl = $section->addTable('ucTable');
         $ucTbl->addRow();
         $ucTbl->addCell(1200, $headerCellStyle)->addText('Kode', $headerFontStyle);
@@ -227,9 +236,10 @@ class GenerateDesignDocs extends Command
 
         foreach ($narratives as $n) {
             $section->addTitle("{$n['kode']}: {$n['nama']}", 2);
-            $phpWord->addTableStyle('ucNarTable', $tableStyle);
+            // ucNarTable already registered above — do NOT call addTableStyle() again
             $narTbl = $section->addTable('ucNarTable');
 
+            $multilineFields = ['Alur Utama', 'Alur Alternatif'];
             $rows = [
                 ['Kode Use Case', $n['kode']],
                 ['Aktor', $n['aktor']],
@@ -241,7 +251,15 @@ class GenerateDesignDocs extends Command
             foreach ($rows as $r) {
                 $narTbl->addRow();
                 $narTbl->addCell(2500)->addText($r[0], $bodyFontBold);
-                $narTbl->addCell(6500)->addText($r[1], $bodyFontStyle);
+                $cell = $narTbl->addCell(6500);
+                // Split on \n so Word renders each step on its own line
+                $lines = explode("\n", $r[1]);
+                foreach ($lines as $idx => $line) {
+                    $cell->addText($line, $bodyFontStyle);
+                    if ($idx < count($lines) - 1) {
+                        $cell->addTextBreak();
+                    }
+                }
             }
             $section->addText('', [], ['spaceAfter' => 80]);
         }
@@ -340,7 +358,7 @@ class GenerateDesignDocs extends Command
 
         foreach ($dictEntities as $de) {
             $section->addTitle($de['table'], 2);
-            $phpWord->addTableStyle('dictTable', $tableStyle);
+            // dictTable already registered above — do NOT call addTableStyle() again
             $dictTbl = $section->addTable('dictTable');
             $dictTbl->addRow();
             $dictTbl->addCell(2000, $headerCellStyle)->addText('Field', $headerFontStyle);
@@ -400,7 +418,7 @@ class GenerateDesignDocs extends Command
             ]],
         ];
 
-        $phpWord->addTableStyle('flowTable', $tableStyle);
+        // flowTable already registered above
         $flowTbl = $section->addTable('flowTable');
         $flowTbl->addRow();
         $flowTbl->addCell(500,  $headerCellStyle)->addText('No', $headerFontStyle);
