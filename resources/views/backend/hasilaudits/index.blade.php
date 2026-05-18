@@ -123,8 +123,12 @@
 
                                 {{-- Tombol Aksi Dinamis --}}
                                 <a href="{{ route($page->code . '.audit-kriteria', $periode->id) }}"
-                                    class="btn btn-primary w-100 fw-semibold mt-auto">
-                                    {{ $periode->overall_progress > 0 ? 'Lanjutkan Evaluasi' : 'Mulai Evaluasi' }}
+                                    class="btn @if($periode->status) btn-primary @else btn-secondary @endif w-100 fw-semibold mt-auto">
+                                    @if($periode->status)
+                                        {{ $periode->overall_progress > 0 ? 'Lanjutkan Evaluasi' : 'Mulai Evaluasi' }}
+                                    @else
+                                        Lihat Hasil Evaluasi
+                                    @endif
                                 </a>
                             </div>
                         </div>

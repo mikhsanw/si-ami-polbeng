@@ -87,18 +87,18 @@
                                 <!--end::Indicator progress-->
                             </button>
                             
-                            @if (Route::has('password.request'))
+                            {{-- @if (Route::has('password.request'))
                                 <a class="btn link-primary" href="{{ route('password.request') }}">
                                     {{ __('Forgot Your Password?') }}
                                 </a>
-                            @endif
+                            @endif --}}
                         </div>
                         <!--end::Submit button-->
                         <!--begin::Sign up-->
-                        @if (Route::has('register'))
+                        {{-- @if (Route::has('register'))
                             <div class="text-gray-500 text-center fw-semibold fs-6">Not a Member yet? 
                             <a href="{{url('register')}}" class="link-primary">Sign up</a></div>
-                        @endif
+                        @endif --}}
                         <!--end::Sign up-->
                     </form>
                     <!--end::Form-->

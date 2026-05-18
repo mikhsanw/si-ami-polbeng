@@ -50,7 +50,7 @@
                         // Tentukan status berdasarkan data $hasil
                         $status = $hasil ? $hasil->status_terkini : 'BELUM_DIKERJAKAN';
 
-                        $isAuditPeriodeActive = (bool) $auditPeriode->status;
+                        $isAuditPeriodeActive = $auditPeriode->status;
                     @endphp
                     <div class="d-flex justify-content-between align-items-center mb-2"
                         style="padding-left: {{ $padding + 45 }}px">

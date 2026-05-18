@@ -11,7 +11,7 @@ class AuditPeriodesController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            $data = $this->model::with('unit', 'instrumenTemplate')->get();
+            $data = $this->model::with('unit', 'instrumenTemplate')->latest()->get();
 
             return datatables()->of($data)
                 ->addColumn('status', function ($data) {

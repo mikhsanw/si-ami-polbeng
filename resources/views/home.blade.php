@@ -222,7 +222,7 @@ Ayo manfaatkan aplikasi ini dengan optimal!<br>
                             </a>
                         </li>
                     </ul>
-                    <div class="footer-copyright">&copy; 2025 Politeknik Negeri Bengkalis, all rights reserved</div>
+                    <div class="footer-copyright">&copy; 2026 Politeknik Negeri Bengkalis, all rights reserved</div>
                 </div>
             </div>
         </footer>

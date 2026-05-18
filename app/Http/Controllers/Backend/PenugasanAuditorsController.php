@@ -11,7 +11,9 @@ class PenugasanAuditorsController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            $data = $this->model::with('user', 'auditPeriode')->get();
+            $data = $this->model::with('user', 'auditPeriode')->whereHas('auditPeriode', function ($q) {
+                $q->where('status', true);
+            })->latest()->get();
 
             return datatables()->of($data)
                 ->addColumn('action', function ($data) use ($user) {
@@ -44,8 +46,8 @@ class PenugasanAuditorsController extends Controller
     public function create()
     {
         $data = [
-            'user_id' => \App\Models\User::pluck('name', 'id'),
-            'audit_periode_id' => \App\Models\AuditPeriode::get()->pluck('periode_unit', 'id'),
+            'user_id' => \App\Models\User::role('Auditor')->pluck('name', 'id'),
+            'audit_periode_id' => \App\Models\AuditPeriode::where('status', true)->latest()->get()->pluck('periode_unit', 'id'),
         ];
 
         return view($this->view.'.form', $data);
@@ -75,8 +77,8 @@ class PenugasanAuditorsController extends Controller
     {
         $data = [
             'data' => $this->model::find($id),
-            'user_id' => \App\Models\User::pluck('name', 'id'),
-            'audit_periode_id' => \App\Models\AuditPeriode::get()->pluck('periode_unit', 'id'),
+            'user_id' => \App\Models\User::role('Auditor')->pluck('name', 'id'),
+            'audit_periode_id' => \App\Models\AuditPeriode::where('status', true)->latest()->get()->pluck('periode_unit', 'id'),
 
         ];
 

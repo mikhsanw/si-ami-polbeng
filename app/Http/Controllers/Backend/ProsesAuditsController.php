@@ -64,12 +64,12 @@ class ProsesAuditsController extends Controller
         }
         if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
             // Ambil semua audit periode
-            $data = \App\Models\AuditPeriode::orderBy('created_at')
+            $data = \App\Models\AuditPeriode::orderBy('created_at', 'desc')
                 ->get()
                 ->pluck('periode_unit', 'id')
                 ->toArray();
         } else {
-            $data = \App\Models\AuditPeriode::orderBy('created_at')
+            $data = \App\Models\AuditPeriode::orderBy('created_at', 'desc')
                 ->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
                 ->orWhereHas('unit', fn ($query2) => $query2->where('user_id', $user->id))
                 ->get()

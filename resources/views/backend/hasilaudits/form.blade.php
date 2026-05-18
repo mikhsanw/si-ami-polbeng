@@ -28,6 +28,18 @@
             <label class="form-label fw-bold fs-5">Indikator Penilaian:</label>
             <p class="fs-6">{{ $data->nama }}</p>
         </div>
+        
+        {{-- Button untuk load data periode sebelumnya --}}
+        @if (!$isReadOnly)
+            <div class="mb-4">
+                <button type="button" class="btn btn-outline-info btn-sm" id="load-previous-data-btn">
+                    <i class="fas fa-history me-2"></i>Gunakan Data Periode Sebelumnya
+                </button>
+                <small class="form-text text-muted d-block mt-1">
+                    Memuat skor dan dokumen bukti dari periode audit sebelumnya yang sudah selesai
+                </small>
+            </div>
+        @endif
         @if ($data->tipe === 'LED')
             {{-- TAMPILAN UNTUK LED (LED) --}}
             <div id="form-led">
@@ -36,6 +48,7 @@
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="radio" name="skor_auditee" value="{{ $rubrik->skor }}"
                             id="skor_{{ $rubrik->skor }}"
+                            {{ $isReadOnly ? 'disabled' : '' }}
                             {{ (int) optional($data->hasilAuditForPeriode($auditPeriode->id))->skor_auditee === (int) $rubrik->skor ? 'checked' : '' }}>
 
                         <label class="form-check-label" for="skor_{{ $rubrik->skor }}">
@@ -45,11 +58,6 @@
                 @empty
                     <p class="text-muted">Rubrik penilaian untuk indikator ini belum didefinisikan.</p>
                 @endforelse
-
-                {{-- <div class="form-group mt-4">
-                    <label class="form-label fw-bold fs-5" for="deskripsi_pemenuhan">Deskripsi Pemenuhan / Analisis Diri</label>
-                    <textarea class="form-control tinymce" name="deskripsi_pemenuhan" id="deskripsi_pemenuhan" rows="5"></textarea>
-                </div> --}}
             </div>
         @elseif($data->tipe === 'LKPS')
             {{-- TAMPILAN UNTUK LKPS (OTOMATIS) --}}
@@ -61,6 +69,7 @@
                             {{ $field->tipe_data }}</label>
                         <input type="text" class="form-control pb-2" name="lkps_data[{{ $field->id }}]"
                             id="field_{{ $field->id }}"
+                            {{ $isReadOnly ? 'disabled' : '' }}
                             value="{{ $data->hasilAuditForPeriode($auditPeriode->id)?->dataAuditInputForInput($field->id)?->nilai_variable ?? '' }}"
                             required>
                         <small class="form-text text-muted">Variabel: <code>{{ $field->nama_variable }}</code></small>
@@ -68,10 +77,6 @@
                 @empty
                     <p class="text-muted">Tidak ada input data kinerja yang tersedia.</p>
                 @endforelse
-                {{-- <div class="form-group mt-4">
-                    <label class="form-label fw-bold fs-5" for="analisis_tambahan">Analisis / Catatan Tambahan</label>
-                    <textarea class="form-control" name="analisis_tambahan" id="analisis_tambahan" rows="3"></textarea>
-                </div> --}}
             </div>
 
         @endif
@@ -92,7 +97,7 @@
                                     <i class="fas fa-external-link-alt ms-auto"></i>
                                 </a>
                                 {{-- Tombol Hapus --}}
-                                @if (in_array(optional($data->hasilAuditForPeriode($auditPeriode->id))->status_terkini, ['Revisi', 'Draft']))
+                                @if (!$isReadOnly && in_array(optional($data->hasilAuditForPeriode($auditPeriode->id))->status_terkini, ['Revisi', 'Draft']))
                                     <button type="button" class="btn btn-sm btn-danger ms-3 delete-existing-file-btn"
                                         data-file-id="{{ $file->id }}"
                                         data-file-name="{{ basename($file->alias) }}">
@@ -104,16 +109,18 @@
                     </div>
                 </div>
             @endif
-            <div id="uploadContainer">
-                {{-- Baris upload file pertama --}}
-                <div class="input-group mb-3 upload-row">
-                    <input class="form-control" type="file" name="upload_file[]">
-                    {{-- Tombol hapus tidak ada untuk baris pertama --}}
+            @if (!$isReadOnly)
+                <div id="uploadContainer">
+                    {{-- Baris upload file pertama --}}
+                    <div class="input-group mb-3 upload-row">
+                        <input class="form-control" type="file" name="upload_file[]">
+                        {{-- Tombol hapus tidak ada untuk baris pertama --}}
+                    </div>
                 </div>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center" id="add-file-btn">
-                <i class="fas fa-plus me-2"></i>Tambah File
-            </button>
+                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center" id="add-file-btn">
+                    <i class="fas fa-plus me-2"></i>Tambah File
+                </button>
+            @endif
         </div>
     </div>
 </div>
@@ -233,6 +240,156 @@
         // Fungsi untuk menghapus baris upload file
         $('#uploadContainer').on('click', '.btn-remove-file', function() {
             $(this).closest('.upload-row').remove();
+        });
+
+        // Handler untuk menghapus file dari daftar periode sebelumnya
+        $(document).on('click', '.remove-previous-file', function() {
+            const fileIndex = $(this).data('file-index');
+            const $fileElement = $(this).closest('li');
+            
+            Swal.fire({
+                title: 'Hapus File Referensi?',
+                text: "File ini akan dihapus dari daftar referensi (tidak menghapus file asli dari periode sebelumnya)",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Hapus elemen dari DOM
+                    $fileElement.remove();
+                    
+                    // Jika tidak ada file tersisa, hapus seluruh alert
+                    if ($('#previous-files-list li').length === 0) {
+                        $('.previous-period-files-alert').remove();
+                    }
+                    
+                    Swal.fire({
+                        title: 'Dihapus!',
+                        text: 'File referensi telah dihapus dari daftar.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        });
+
+        // Handler untuk button load data periode sebelumnya
+        $('#load-previous-data-btn').click(function() {
+            const indikatorId = $('#indikator_id').val();
+            const auditPeriodeId = $('#audit_periode_id').val();
+            const button = $(this);
+            
+            // Disable button dan tampilkan loading
+            button.prop('disabled', true);
+            button.html('<i class="fas fa-spinner fa-spin me-2"></i>Memuat data...');
+
+            $.ajax({
+                url: "{{ route('hasilaudits.getPreviousPeriodData') }}",
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    indikator_id: indikatorId,
+                    current_audit_periode_id: auditPeriodeId
+                },
+                success: function(response) {
+                    if (response.status) {
+                        // Pastikan skor_final ada, jika tidak gunakan skor_auditee
+                        const skor = response.data.skor_final || response.data.skor_auditee || 'N/A';
+                        
+                        Swal.fire({
+                            title: 'Data Ditemukan!',
+                            html: `Data dari periode <strong>${response.data.periode}</strong> akan dimuat.<br>
+                                   Skor: <strong>${skor}</strong><br>
+                                   Dokumen: <strong>${response.data.files.length} file</strong>`,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Ya, Gunakan Data Ini',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Load skor untuk LED
+                                if ($('#form-led').length > 0) {
+                                    const rawSkor = response.data.skor_final || response.data.skor_auditee;
+                                    if (rawSkor !== null && rawSkor !== undefined) {
+                                        const targetSkor = parseFloat(rawSkor);
+                                        
+                                        // Uncheck semua dulu
+                                        $(`input[name="skor_auditee"]`).prop('checked', false);
+                                        
+                                        // Cari radio button dengan membandingkan nilai secara numerik
+                                        let found = false;
+                                        $(`input[name="skor_auditee"]`).each(function() {
+                                            if (parseFloat($(this).val()) === targetSkor) {
+                                                $(this).prop('checked', true).trigger('change');
+                                                found = true;
+                                            }
+                                        });
+
+                                        // Fallback jika tidak ada yang cocok eksak (misal 4.00 vs 4)
+                                        if (!found) {
+                                            const roundedSkor = Math.round(targetSkor);
+                                            $(`input[name="skor_auditee"]`).each(function() {
+                                                if (Math.round(parseFloat($(this).val())) === roundedSkor) {
+                                                    $(this).prop('checked', true).trigger('change');
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                                
+                                // Load data LKPS
+                                if ($('#form-lkps').length > 0 && response.data.lkps_data) {
+                                    $.each(response.data.lkps_data, function(fieldId, value) {
+                                        $(`input[name="lkps_data[${fieldId}]"]`).val(value).trigger('change').trigger('keyup');
+                                    });
+                                }
+                                
+                                // Hapus alert file lama jika ada
+                                $('.previous-period-files-alert').remove();
+                                
+                                 // Tampilkan informasi file yang akan di-reference dengan tombol hapus
+                                 if (response.data.files.length > 0) {
+                                     let fileListHtml = '<div class="alert alert-info mt-3 previous-period-files-alert" id="previous-files-container">';
+                                     fileListHtml += '<strong>File dari periode sebelumnya (akan digunakan kembali):</strong>';
+                                     fileListHtml += '<ul class="mb-0 mt-2" id="previous-files-list">';
+                                     response.data.files.forEach(function(file, index) {
+                                         fileListHtml += `<li class="d-flex align-items-center justify-content-between mb-2" data-file-index="${index}">
+                                             <input type="hidden" name="reused_files[]" value="${file.id}">
+                                             <a href="${file.url}" target="_blank" class="text-primary">${file.name}</a>
+                                             <button type="button" class="btn btn-sm btn-danger ms-3 remove-previous-file" data-file-index="${index}">
+                                                 <i class="fas fa-times"></i>
+                                             </button>
+                                         </li>`;
+                                     });
+                                     fileListHtml += '</ul>';
+                                     fileListHtml += '<small class="text-muted d-block mt-2">Catatan: File-file di atas akan disalin ke periode saat ini saat Anda menyimpan data.</small>';
+                                     fileListHtml += '</div>';
+                                     
+                                     $('#uploadContainer').before(fileListHtml);
+                                 }
+                                
+                                Swal.fire('Berhasil!', 'Data periode sebelumnya berhasil dimuat. Silakan review dan sesuaikan jika diperlukan.', 'success');
+                            }
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'Terjadi kesalahan saat memuat data.';
+                    if (xhr.status === 404) {
+                        message = xhr.responseJSON?.message || 'Tidak ada data periode sebelumnya yang sudah selesai.';
+                    }
+                    Swal.fire('Tidak Ditemukan', message, 'warning');
+                },
+                complete: function() {
+                    // Re-enable button
+                    button.prop('disabled', false);
+                    button.html('<i class="fas fa-history me-2"></i>Gunakan Data Periode Sebelumnya');
+                }
+            });
         });
 
         // Membersihkan TinyMCE saat modal ditutup (jika form ini ada di dalam modal)

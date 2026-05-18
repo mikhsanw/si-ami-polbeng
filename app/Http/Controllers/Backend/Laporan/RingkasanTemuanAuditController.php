@@ -61,13 +61,14 @@ class RingkasanTemuanAuditController extends Controller
         if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
             // Ambil semua audit periode
             $data = \App\Models\AuditPeriode::orderBy('created_at')
+                ->latest()
                 ->get()
                 ->pluck('periode_unit', 'id')
                 ->toArray();
         } else {
             // Ambil hanya audit periode yang ditugaskan ke user
-            $data = \App\Models\AuditPeriode::orderBy('created_at')
-                ->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+            $data = \App\Models\AuditPeriode::whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                ->latest()
                 ->get()
                 ->pluck('periode_unit', 'id')
                 ->toArray();

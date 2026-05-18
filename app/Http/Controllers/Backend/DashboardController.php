@@ -34,7 +34,7 @@ class DashboardController extends Controller
 
     private function auditor()
     {
-        $query = AuditPeriode::where(function ($q) {
+        $query = AuditPeriode::where('status', true)->where(function ($q) {
             // Hanya tampilkan periode audit yang memiliki penugasan auditor
             $q->whereHas('penugasanAuditors', function ($subQ) {
                 $subQ->where('user_id', auth()->id());
@@ -174,6 +174,7 @@ class DashboardController extends Controller
             'instrumenTemplate.templateIndikators',
             'hasilAudits',
         ])
+            ->where('status', true)
             ->where('unit_id', $userUnitId) // Hanya yang relevan dengan unit auditee
             ->get();
 

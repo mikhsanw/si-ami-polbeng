@@ -127,6 +127,7 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
         Route::get('/{id}/edit', 'HasilAuditsController@edit')->name('edit');
         Route::get('/{id}/show', 'HasilAuditsController@show')->name('show');
         Route::delete('/delete-file', 'HasilAuditsController@deleteFile')->name('deleteFile');
+        Route::post('/get-previous-period-data', 'HasilAuditsController@getPreviousPeriodData')->name('getPreviousPeriodData');
     });
     Route::resource('hasilaudits', 'HasilAuditsController')->except(['edit', 'show']);
 

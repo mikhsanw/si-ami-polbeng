@@ -34,6 +34,7 @@ class HasilAuditsController extends Controller
                     $query->where('unit_id', $userUnitId);
                 }
             })
+            ->latest()
             ->get();
         foreach ($auditperiodes as $periode) {
             $template = $periode->instrumenTemplate;
@@ -119,10 +120,14 @@ class HasilAuditsController extends Controller
             } elseif ($periode->status_counts['diajukan'] == $totalIndikatorDalamTemplate) { // Semua diajukan
                 $periode->statusText = 'Menunggu Verifikasi (100% Diajukan)';
                 $periode->statusClass = 'text-white bg-info';
-            } elseif ($periode->status_counts['total_terisi'] > 0) { // Ada yang sudah terisi tapi belum 100% selesai/diajukan
+            } elseif ($periode->status_counts['total_terisi'] > 0 && $periode->status) { // Ada yang sudah terisi tapi belum 100% selesai/diajukan
                 $periode->statusText = 'Sedang Berlangsung';
                 $periode->statusClass = 'text-white bg-warning';
-            } else {
+            } elseif (!$periode->status) {
+                $periode->statusText = 'Tidak Aktif';
+                $periode->statusClass = 'text-white bg-warning';
+            }
+            else {
                 $periode->statusText = 'Tidak Diketahui';
                 $periode->statusClass = 'text-bg-secondary';
             }
@@ -147,6 +152,23 @@ class HasilAuditsController extends Controller
         // Beserta bobotnya, dan kuncikan berdasarkan id_indikator untuk akses mudah di view
         $templateIndikators = $template->templateIndikators;
         $indikatorIdsInTemplate = $templateIndikators->pluck('indikator_id')->toArray();
+
+        // Ambil indikator dan kriteria yang memiliki hasil audit untuk periode ini
+        // Ini penting untuk menampilkan data lama yang mungkin sudah tidak ada di template saat ini
+        $hasilAuditIndikatorIds = HasilAudit::where('audit_periode_id', $auditPeriode->id)
+            ->pluck('indikator_id')
+            ->toArray();
+
+        // Gabungkan indikator dari template dan yang memiliki hasil audit
+        $indikatorIdsInTemplate = array_unique(array_merge($indikatorIdsInTemplate, $hasilAuditIndikatorIds));
+
+        // Ambil kriteria dari indikator yang memiliki hasil audit
+        $kriteriaIdsFromHasilAudit = \App\Models\Indikator::whereIn('id', $hasilAuditIndikatorIds)
+            ->pluck('kriteria_id')
+            ->toArray();
+
+        // Gabungkan kriteria dari template dan yang memiliki hasil audit
+        $kriteriaIdsInTemplate = array_unique(array_merge($kriteriaIdsInTemplate, $kriteriaIdsFromHasilAudit));
 
         // --- DEFINISIKAN CLOSURE REKURSIF UNTUK EAGER LOADING KRITERIA & INDIKATOR ---
         $withRecursiveChildrenAndIndikators = function ($query) use (&$withRecursiveChildrenAndIndikators, $kriteriaIdsInTemplate, $indikatorIdsInTemplate, $auditPeriode) {
@@ -220,11 +242,74 @@ class HasilAuditsController extends Controller
             ->first();
         $data = [
             'data' => \App\Models\Indikator::findOrFail($id),
-            'auditPeriode' => \App\Models\AuditPeriode::findOrFail($auditPeriodeId),
+            'auditPeriode' => $auditPeriode,
             'hasilAudit' => $hasilAudit,
+            'isReadOnly' => !$auditPeriode->status,
         ];
 
         return view($this->view.'.form', $data);
+    }
+
+    public function getPreviousPeriodData(Request $request)
+    {
+        $request->validate([
+            'indikator_id' => 'required|exists:indikators,id',
+            'current_audit_periode_id' => 'required|exists:audit_periodes,id',
+        ]);
+
+        $indikatorId = $request->indikator_id;
+        $currentAuditPeriodeId = $request->current_audit_periode_id;
+
+        // Ambil unit dari periode audit saat ini
+        $currentAuditPeriode = AuditPeriode::findOrFail($currentAuditPeriodeId);
+        $unitId = $currentAuditPeriode->unit_id;
+
+        // Cari hasil audit sebelumnya untuk indikator yang sama di unit yang sama
+        // dengan status "Selesai" dan periode yang lebih lama
+        $previousHasilAudit = HasilAudit::with(['files', 'dataAuditInput.indikatorInput', 'auditPeriode'])
+            ->where('indikator_id', $indikatorId)
+            ->where('status_terkini', 'Selesai')
+            ->whereHas('auditPeriode', function ($query) use ($unitId, $currentAuditPeriodeId) {
+                $query->where('unit_id', $unitId)
+                    ->where('id', '!=', $currentAuditPeriodeId);
+            })
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if (!$previousHasilAudit) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tidak ada data periode sebelumnya yang sudah selesai untuk indikator ini.',
+            ], 404);
+        }
+
+        // Siapkan data untuk dikembalikan
+        $responseData = [
+            'status' => true,
+            'message' => 'Data periode sebelumnya berhasil dimuat.',
+            'data' => [
+                'periode' => $previousHasilAudit->auditPeriode->tahun_akademik,
+                'skor_final' => $previousHasilAudit->skor_final ?? $previousHasilAudit->skor_auditee,
+                'skor_auditee' => $previousHasilAudit->skor_auditee,
+                'files' => $previousHasilAudit->files->map(function ($file) {
+                    return [
+                        'id' => $file->id,
+                        'name' => basename($file->alias) . '.' . $file->extension,
+                        'url' => asset($file->link_public_stream),
+                    ];
+                }),
+                'lkps_data' => [],
+            ],
+        ];
+
+        // Jika indikator tipe LKPS, sertakan data input
+        if ($previousHasilAudit->indikator->tipe === 'LKPS') {
+            foreach ($previousHasilAudit->dataAuditInput as $dataInput) {
+                $responseData['data']['lkps_data'][$dataInput->indikator_input_id] = $dataInput->nilai_variable;
+            }
+        }
+
+        return response()->json($responseData);
     }
 
     private function calculateScore(\App\Models\Indikator $indikator, array $inputData): ?float
@@ -302,12 +387,18 @@ class HasilAuditsController extends Controller
 
     public function update(Request $request, $id)
     {
+        $auditPeriode = \App\Models\AuditPeriode::findOrFail($request->input('audit_periode_id'));
+        
+        if (!$auditPeriode->status) {
+            return response()->json(['status' => false, 'message' => 'Siklus audit tidak aktif. Anda tidak dapat mengubah data.'], 403);
+        }
+
         $indikator = \App\Models\Indikator::with('indikatorInputs')->findOrFail($id);
         // 2. Aturan Validasi Dinamis
         // Ambil data hasil audit yang sudah ada (jika ada)
         $dataExisting = $this->model::where('indikator_id', $id)
             ->where('audit_periode_id', $request->input('audit_periode_id'))
-            ->with('file')
+            ->with('files')
             ->first();
 
         $request->merge([
@@ -315,7 +406,14 @@ class HasilAuditsController extends Controller
         ]);
 
         // Tentukan apakah file wajib atau tidak
-        $fileRequired = ! ($dataExisting && $dataExisting->file()->exists());
+        $hasExistingFiles = $dataExisting && $dataExisting->files()->exists();
+        $hasReusedFiles = $request->has('reused_files') && is_array($request->input('reused_files')) && count($request->input('reused_files')) > 0;
+        
+        // File upload is required ONLY IF:
+        // - No existing files in DB
+        // - AND No reused files in the request
+        // - AND It's NOT the LED case with score 0
+        $fileRequired = !($hasExistingFiles || $hasReusedFiles);
 
         if ($indikator->tipe === 'LED' && (int) $request->input('skor_auditee', -1) === 0) {
             $fileRequired = false;
@@ -324,13 +422,14 @@ class HasilAuditsController extends Controller
         // Aturan Validasi Dinamis
         $rules = [
             'audit_periode_id' => 'required|exists:audit_periodes,id',
+            'reused_files' => 'nullable|array',
+            'reused_files.*' => 'exists:files,id',
             'upload_file' => ($fileRequired ? 'required|array|min:1' : 'nullable'),
             'upload_file.*' => [
                 'nullable',
                 'file',
                 new \App\Rules\FileAllowed(),
                 'max:51240',
-                // new \App\Rules\SafeFile,
             ],
         ];
 
@@ -400,7 +499,22 @@ class HasilAuditsController extends Controller
                 }
             }
 
-            // simpan file
+            // Handle reused files from previous period
+            if ($request->has('reused_files')) {
+                foreach ($request->input('reused_files') as $fileId) {
+                    $originalFile = \App\Models\File::find($fileId);
+                    if ($originalFile) {
+                        // Copy the file record for the new HasilAudit
+                        // We reuse the same physical file data (disk, target)
+                        $data->files()->create([
+                            'alias' => $originalFile->alias,
+                            'data' => $originalFile->data,
+                        ]);
+                    }
+                }
+            }
+
+            // simpan file baru yang diunggah
             if ($request->hasFile('upload_file')) {
                 foreach ($request->file('upload_file') as $file) {
                     if ($file) {
@@ -416,7 +530,7 @@ class HasilAuditsController extends Controller
                                 $file->hashName().'.'.$ext
                             );
 
-                        $data->file()->create([
+                        $data->files()->create([
                             'alias' => $originalName ?? 'file_'.time(),
                             'data' => [
                                 'name' => basename($path),
@@ -458,8 +572,16 @@ class HasilAuditsController extends Controller
 
         DB::beginTransaction();
         try {
-            if (Storage::disk($file->disk)->exists($file->path)) {
-                Storage::disk($file->disk)->delete($file->path);
+            // Periksa apakah ada record file lain yang menggunakan file fisik yang sama
+            // (Penting untuk fitur "Gunakan Data Periode Sebelumnya" yang menyalin record file)
+            $isShared = \App\Models\File::where('id', '!=', $file->id)
+                ->where('data->target', $file->target)
+                ->exists();
+
+            if (! $isShared) {
+                if (Storage::disk($file->disk)->exists($file->target)) {
+                    Storage::disk($file->disk)->delete($file->target);
+                }
             }
 
             $file->delete();

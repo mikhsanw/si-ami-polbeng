@@ -19,14 +19,14 @@ columns: [
 { data: 'email' , 'defaultContent':''},
 { data: 'role' , 'defaultContent':''},
 { data: 'last_login_at' , 'defaultContent':''},
-{ data: 'created_at',
+{{-- { data: 'created_at',
 "render": function (data, type, row) {
 if (data) {
 return moment(data).format('DD MMMM YYYY HH:mm'); // Pakai moment.js
 }
 return '-';
 }
-},
+}, --}}
 { data: 'action', orderable: false, searchable: false , className: 'text-center'}
 ],
 

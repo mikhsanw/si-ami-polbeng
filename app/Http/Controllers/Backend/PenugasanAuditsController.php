@@ -43,6 +43,8 @@ class PenugasanAuditsController extends Controller
             'instrumenTemplate.templateIndikators',
             'hasilAudits',
         ])
+        ->where('status', true) // Hanya ambil periode audit yang aktif
+        ->latest()
             ->get();
 
         foreach ($auditperiodes as $periode) {

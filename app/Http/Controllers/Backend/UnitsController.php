@@ -15,6 +15,9 @@ class UnitsController extends Controller
             $data = $id != null ? $this->model::with('user')->where('parent_id', $id)->get() : $this->model::with('user')->whereNull('parent_id')->get();
 
             return datatables()->of($data)
+                ->addColumn('user.name', function ($q) {
+                    return $q->user ? $q->user->name : '-';
+                })
                 ->addColumn('sub', function ($q) {
                     if ($q->tipe == 'Jurusan') {
                         $kelola = '<div style="text-align: center;"><a href="'.route($this->code.'.index', ['id' => $q->id]).'" class="text-info"><i class="fa fa-share text-info"></i></a></div>';

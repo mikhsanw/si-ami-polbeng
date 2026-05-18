@@ -58,7 +58,7 @@
                         <th>Email</th>
                         <th>Roles</th>
                         <th>Last Login</th>
-                        <th>Joined Date</th>
+                        {{-- <th>Joined Date</th> --}}
                         <th class="text-center max-w-100px" >Action</th>
                         </tr>
                     </thead>

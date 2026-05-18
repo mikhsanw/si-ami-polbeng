@@ -18,6 +18,7 @@ class BeritaAcarasController extends Controller
                 $data = $this->model::with('auditPeriode')
                     ->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
                     ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id))
+                    ->latest()
                     ->get();
             }
 
