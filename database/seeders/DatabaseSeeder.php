@@ -55,5 +55,6 @@ class DatabaseSeeder extends Seeder
         $user->assignRole($superadminRole);
 
         $this->call(MenuSeeder::class);
+        $this->call(PerformaAuditorSeeder::class);
     }
 }

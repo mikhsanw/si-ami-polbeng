@@ -7,6 +7,7 @@ use App\Models\AuditPeriode;
 use App\Models\HasilAudit;
 use App\Models\InstrumenTemplate;
 use App\Models\Kriteria;
+use App\Models\LogAktivitasAudit;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -143,11 +144,32 @@ class DashboardController extends Controller
         }
 
         // --- Filter auditperiodes untuk tampilan dashboard (opsional) ---
-        // Contoh: Tampilkan periode yang perlu tindakan auditor (diajukan/revisi) atau yang terbaru
         $auditperiodesDashboard = $auditperiodes->filter(function ($periode) {
             return $periode->status_counts['diajukan'] > 0 || $periode->status_counts['revisi'] > 0 || $periode->overall_progress < 100;
-        })->sortByDesc('status_counts.diajukan') // Prioritaskan yang banyak diajukan
-            ->take(6); // Ambil hanya beberapa untuk dashboard
+        })->sortByDesc('status_counts.diajukan')
+            ->take(6);
+
+        // --- Agregat status untuk donut chart ---
+        $agregat = ['belum' => 0, 'draft' => 0, 'diajukan' => 0, 'revisi' => 0, 'selesai' => 0];
+        $totalPeriodeAktif = $auditperiodes->count();
+        foreach ($auditperiodes as $p) {
+            if (! isset($p->status_counts)) {
+                continue;
+            }
+            $agregat['belum']    += $p->status_counts['belum_dikerjakan'];
+            $agregat['draft']    += $p->status_counts['draft_dikerjakan'];
+            $agregat['diajukan'] += $p->status_counts['diajukan'];
+            $agregat['revisi']   += $p->status_counts['revisi'];
+            $agregat['selesai']  += $p->status_counts['selesai'];
+        }
+
+        // --- Aktivitas terbaru di semua periode yang ditugaskan ---
+        $allHasilIds = $auditperiodes->flatMap(fn ($p) => $p->hasilAudits->pluck('id'));
+        $recentActivitas = LogAktivitasAudit::with(['user', 'hasilAudit.auditPeriode.unit'])
+            ->whereIn('hasil_audit_id', $allHasilIds)
+            ->latest()
+            ->take(6)
+            ->get();
 
         // --- Ambil Pengumuman (jika ada) ---
         $pengumuman = \App\Models\Berita::orderBy('created_at', 'desc')
@@ -160,6 +182,9 @@ class DashboardController extends Controller
             'indikatorPerluRevisi',
             'totalIndikatorSelesai',
             'totalIndikatorSedangDikerjakan',
+            'agregat',
+            'totalPeriodeAktif',
+            'recentActivitas',
             'pengumuman'
         ));
     }
@@ -269,14 +294,157 @@ class DashboardController extends Controller
             }
         }
 
-        // --- Filter auditperiodes untuk tampilan dashboard (opsional) ---
-        // Misalnya, hanya tampilkan yang statusnya bukan 'Selesai & Diterima'
+        // --- Filter auditperiodes untuk tampilan dashboard ---
         $auditperiodesDashboard = $auditperiodes->filter(function ($periode) {
             return $periode->statusText !== 'Selesai & Diterima';
-        })->take(6); // Ambil hanya 6 untuk dashboard agar tidak terlalu panjang
+        })->take(6);
+
+        // --- Agregat untuk donut chart + progress ring ---
+        $agregat          = ['belum' => 0, 'draft' => 0, 'diajukan' => 0, 'revisi' => 0, 'selesai' => 0];
+        $totalIndikatorAll = 0;
+        $totalSelesaiAll   = 0;
+        foreach ($auditperiodes as $p) {
+            if (! isset($p->status_counts)) {
+                continue;
+            }
+            $agregat['belum']    += $p->status_counts['belum_dikerjakan'];
+            $agregat['draft']    += $p->status_counts['draft_dikerjakan'];
+            $agregat['diajukan'] += $p->status_counts['diajukan'];
+            $agregat['revisi']   += $p->status_counts['revisi'];
+            $agregat['selesai']  += $p->status_counts['selesai'];
+            $totalIndikatorAll   += $p->total_indikator;
+            $totalSelesaiAll     += $p->status_counts['selesai'];
+        }
+        $overallProgress = $totalIndikatorAll > 0
+            ? round($totalSelesaiAll / $totalIndikatorAll * 100)
+            : 0;
+
+        // --- Indikator yang perlu direvisi (beserta catatan auditor) ---
+        $periodeIds  = $auditperiodes->pluck('id');
+        $revisiItems = HasilAudit::with([
+            'indikator',
+            'auditPeriode.unit',
+            'logAktivitasAudit' => fn ($q) => $q->where('tipe_aksi', 'MINTA_REVISI')->latest(),
+        ])
+            ->whereIn('audit_periode_id', $periodeIds)
+            ->where('status_terkini', 'Revisi')
+            ->get();
+
+        // --- Aktivitas terbaru ---
+        $allHasilIds     = $auditperiodes->flatMap(fn ($p) => $p->hasilAudits->pluck('id'));
+        $recentActivitas = LogAktivitasAudit::with(['user', 'hasilAudit.auditPeriode.unit'])
+            ->whereIn('hasil_audit_id', $allHasilIds)
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // --- Ranking Prodi (semua unit, dibandingkan dalam tahun_akademik yang sama) ---
+        $tahunAktif = $auditperiodes->pluck('tahun_akademik')->unique()->first()
+            ?? AuditPeriode::where('status', true)->orderByDesc('created_at')->value('tahun_akademik');
+
+        $rankingPeriodes = AuditPeriode::with([
+                'unit:id,nama',
+                'instrumenTemplate.templateIndikators:id,instrumen_template_id',
+                'hasilAudits:id,audit_periode_id,status_terkini',
+            ])
+            ->where('status', true)
+            ->when($tahunAktif, fn ($q) => $q->where('tahun_akademik', $tahunAktif))
+            ->get();
+
+        $unitStats = $rankingPeriodes->groupBy('unit_id')->map(function ($periodes) {
+            $totalIndikator = 0;
+            $totalSelesai   = 0;
+            $selesaiIds     = collect();
+            foreach ($periodes as $periode) {
+                $tpl = $periode->instrumenTemplate;
+                if (! $tpl) {
+                    continue;
+                }
+                $totalIndikator += $tpl->templateIndikators->count();
+                foreach ($periode->hasilAudits as $ha) {
+                    if ($ha->status_terkini === 'Selesai') {
+                        $totalSelesai++;
+                        $selesaiIds->push($ha->id);
+                    }
+                }
+            }
+
+            return (object) [
+                'unit_id'         => $periodes->first()->unit_id,
+                'unit_nama'       => $periodes->first()->unit?->nama ?? '-',
+                'total_indikator' => $totalIndikator,
+                'total_selesai'   => $totalSelesai,
+                'completion_pct'  => $totalIndikator > 0 ? round($totalSelesai / $totalIndikator * 100, 1) : 0.0,
+                'selesai_ids'     => $selesaiIds,
+            ];
+        })->filter(fn ($u) => $u->total_indikator > 0)->values();
+
+        $allSelesaiIds = $unitStats->flatMap(fn ($u) => $u->selesai_ids);
+
+        if ($allSelesaiIds->isNotEmpty()) {
+            $withRevisionSet = LogAktivitasAudit::whereIn('hasil_audit_id', $allSelesaiIds)
+                ->where('tipe_aksi', 'MINTA_REVISI')
+                ->distinct('hasil_audit_id')
+                ->pluck('hasil_audit_id')
+                ->flip();
+
+            $hasilToUnit = [];
+            foreach ($rankingPeriodes as $rp) {
+                foreach ($rp->hasilAudits->where('status_terkini', 'Selesai') as $ha) {
+                    $hasilToUnit[$ha->id] = $rp->unit_id;
+                }
+            }
+
+            $submitLogs = \Illuminate\Support\Facades\DB::table('log_aktivitas_audits')
+                ->whereIn('hasil_audit_id', $allSelesaiIds->toArray())
+                ->where('tipe_aksi', 'SUBMIT_AWAL')
+                ->whereNull('deleted_at')
+                ->selectRaw('hasil_audit_id, MIN(created_at) as t')
+                ->groupBy('hasil_audit_id')
+                ->pluck('t', 'hasil_audit_id');
+
+            $validateLogs = \Illuminate\Support\Facades\DB::table('log_aktivitas_audits')
+                ->whereIn('hasil_audit_id', $allSelesaiIds->toArray())
+                ->whereIn('tipe_aksi', ['VALIDASI', 'FINALISASI_SKOR'])
+                ->whereNull('deleted_at')
+                ->selectRaw('hasil_audit_id, MIN(created_at) as t')
+                ->groupBy('hasil_audit_id')
+                ->pluck('t', 'hasil_audit_id');
+
+            $unitDaysMap = [];
+            foreach ($allSelesaiIds as $hId) {
+                if (! isset($submitLogs[$hId]) || ! isset($validateLogs[$hId])) {
+                    continue;
+                }
+                $uId  = $hasilToUnit[$hId] ?? null;
+                if (! $uId) {
+                    continue;
+                }
+                $days = \Carbon\Carbon::parse($submitLogs[$hId])
+                    ->diffInHours(\Carbon\Carbon::parse($validateLogs[$hId])) / 24;
+                if ($days >= 0) {
+                    $unitDaysMap[$uId][] = $days;
+                }
+            }
+        } else {
+            $withRevisionSet = collect()->flip();
+            $unitDaysMap     = [];
+        }
+
+        $unitStats = $unitStats->map(function ($u) use ($withRevisionSet, $unitDaysMap) {
+            $noRevisi        = $u->selesai_ids->filter(fn ($id) => ! isset($withRevisionSet[$id]))->count();
+            $u->accuracy_pct = $u->total_selesai > 0 ? round($noRevisi / $u->total_selesai * 100, 1) : 0.0;
+            $days            = $unitDaysMap[$u->unit_id] ?? [];
+            $u->avg_hari     = count($days) > 0 ? round(array_sum($days) / count($days), 1) : null;
+
+            return $u;
+        });
+
+        $topLengkap = $unitStats->sortByDesc('completion_pct')->take(5)->values();
+        $topTepat   = $unitStats->filter(fn ($u) => $u->total_selesai > 0)->sortByDesc('accuracy_pct')->take(5)->values();
+        $topCepat   = $unitStats->filter(fn ($u) => $u->avg_hari !== null)->sortBy('avg_hari')->take(5)->values();
 
         // --- Ambil Pengumuman ---
-        // Asumsi model Pengumuman memiliki kolom 'type', 'title', 'content', 'created_at'
         $pengumuman = \App\Models\Berita::orderBy('created_at', 'desc')
             ->take(5)
             ->get();
@@ -286,6 +454,17 @@ class DashboardController extends Controller
             'totalAuditAktif',
             'indikatorPerluAksi',
             'indikatorTelahSelesai',
+            'agregat',
+            'overallProgress',
+            'totalIndikatorAll',
+            'totalSelesaiAll',
+            'revisiItems',
+            'recentActivitas',
+            'topLengkap',
+            'topTepat',
+            'topCepat',
+            'tahunAktif',
+            'userUnitId',
             'pengumuman'
         ));
     }

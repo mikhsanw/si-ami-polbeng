@@ -185,6 +185,19 @@ Route::group(['middleware' => ['auth', 'check.permission']], function () {
         )->name('dashboard.superadmin.detail-indikator');
     });
 
+    //performaauditors
+    Route::prefix('performaauditors')->as('performaauditors.')->group(function () {
+        Route::get('/', 'Laporan\PerformaAuditorController@index')->name('index');
+        Route::get('/{id}/show', 'Laporan\PerformaAuditorController@show')->name('show');
+        Route::get('/penilaian/create', 'Laporan\PerformaAuditorController@create')->name('create');
+        Route::post('/penilaian', 'Laporan\PerformaAuditorController@store')->name('store');
+        Route::get('/penilaian/{id}/edit', 'Laporan\PerformaAuditorController@edit')->name('edit');
+        Route::put('/penilaian/{id}', 'Laporan\PerformaAuditorController@update')->name('update');
+        Route::get('/penilaian/delete/{id}', 'Laporan\PerformaAuditorController@delete')->name('delete');
+        Route::delete('/penilaian/{id}', 'Laporan\PerformaAuditorController@destroy')->name('destroy');
+        Route::post('/penilaian/preview', 'Laporan\PerformaAuditorController@preview')->name('preview');
+    });
+
     //settings
     Route::prefix('settings')->as('settings.')->group(function () {
         Route::get('/', 'SettingController@index')->name('index');
