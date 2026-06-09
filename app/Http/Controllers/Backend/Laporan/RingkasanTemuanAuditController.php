@@ -122,7 +122,6 @@ class RingkasanTemuanAuditController extends Controller
             $q['kategori'] = 'KTS'; // atau 'KTS'
             $temuan[] = $q;
         }
-        dd($dasar, $temuan);
 
         // Load template
         $template = new TemplateProcessor(storage_path('app/templates/Form4-template.docx'));
