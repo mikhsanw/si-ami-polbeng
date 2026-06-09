@@ -558,7 +558,6 @@ class HasilAuditsController extends Controller
 
     public function deleteFile(Request $request)
     {
-        dd($request->all());
         // Pastikan request adalah AJAX dan user memiliki izin
         if (! $request->ajax() || ! auth()->user()->hasRole('Auditee')) { // Sesuaikan role atau permission
             return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
