@@ -98,9 +98,9 @@ class RingkasanTemuanAuditController extends Controller
             ->get();
 
         $dasar = [
-            'auditi' => $auditPeriode->unit->nama,
+            'auditi' => $auditPeriode->unit->nama?? 'N/A',
             'kriteria' => 'Standar -',
-            'prodi' => $auditPeriode->unit->nama,
+            'prodi' => $auditPeriode->unit->nama?? 'N/A',
             'lokasi' => 'Politeknik Negeri Bengkalis',
             'ruang_lingkup' => $auditPeriode->periode_unit,
             'tanggal_audit' => date('d F Y'),
@@ -122,7 +122,7 @@ class RingkasanTemuanAuditController extends Controller
             $q['kategori'] = 'KTS'; // atau 'KTS'
             $temuan[] = $q;
         }
-dd($temuan);
+
         // Load template
         $template = new TemplateProcessor(storage_path('app/templates/Form4-template.docx'));
 
@@ -136,9 +136,9 @@ dd($temuan);
         foreach ($temuan as $index => $item) {
             $i = $index + 1;
             $template->setValue("no#{$i}", $item['no']);
-            $template->setValue("urutan#{$i}", $item['urutan']);
-            $template->setValue("temuan#{$i}", htmlspecialchars($item['temuan']));
-            $template->setValue("kategori#{$i}", $item['kategori']);
+            $template->setValue("urutan#{$i}", $item['urutan']?? '');
+            $template->setValue("temuan#{$i}", $item['temuan']? htmlspecialchars($item['temuan']) : '');
+            $template->setValue("kategori#{$i}", $item['kategori']?? '');
         }
         // Simpan hasil
         $outputPath = storage_path('app/public/form4_'.time().'.docx');
