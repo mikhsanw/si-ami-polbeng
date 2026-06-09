@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend\Laporan;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\TemplateProcessor;
 
 class RingkasanTemuanAuditController extends Controller
@@ -124,6 +125,7 @@ class RingkasanTemuanAuditController extends Controller
         }
 
         // Load template
+        Settings::setOutputEscapingEnabled(true);
         $template = new TemplateProcessor(storage_path('app/templates/Form4-template.docx'));
 
         // Set field tunggal
@@ -137,7 +139,7 @@ class RingkasanTemuanAuditController extends Controller
             $i = $index + 1;
             $template->setValue("no#{$i}", $item['no']);
             $template->setValue("urutan#{$i}", $item['urutan']);
-            $template->setValue("temuan#{$i}", htmlspecialchars($item['temuan']));
+            $template->setValue("temuan#{$i}", $item['temuan']);
             $template->setValue("kategori#{$i}", $item['kategori']);
         }
         // Simpan hasil
