@@ -190,12 +190,12 @@
                 if (result.isConfirmed) {
                     // Kirim AJAX request untuk menghapus file
                     $.ajax({
-                        url: "{{ route('hasilaudits.deleteFile') }}", // Sesuaikan dengan route Anda
-                        type: 'DELETE',
+                        url: "{{ route('hasilaudits.deleteFile') }}",
+                        type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
+                            _method: 'DELETE',
                             file_id: fileId,
-                            // Jika diperlukan, bisa tambahkan hasil_audit_id atau audit_periode_id
                         },
                         success: function(response) {
                             if (response.success) {
