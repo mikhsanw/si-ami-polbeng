@@ -117,12 +117,11 @@ class RingkasanTemuanAuditController extends Controller
         // Tabel temuan dinamis (bisa ambil dari tabel audit_temuan)
         foreach ($data as $key => $value) {
             $q['no'] = $key + 1;
-            $q['urutan'] = $value->indikator->kriteria->kode;
-            $q['temuan'] = $value->catatan_final;
+            $q['urutan'] = $value->indikator->kriteria->kode?? 'N/A';
+            $q['temuan'] = $value->catatan_final?? 'N/A';
             $q['kategori'] = 'KTS'; // atau 'KTS'
             $temuan[] = $q;
         }
-        dd($temuan);
 
         // Load template
         $template = new TemplateProcessor(storage_path('app/templates/Form4-template.docx'));
@@ -137,9 +136,9 @@ class RingkasanTemuanAuditController extends Controller
         foreach ($temuan as $index => $item) {
             $i = $index + 1;
             $template->setValue("no#{$i}", $item['no']);
-            $template->setValue("urutan#{$i}", $item['urutan']?? '');
-            $template->setValue("temuan#{$i}", $item['temuan']? htmlspecialchars($item['temuan']) : '');
-            $template->setValue("kategori#{$i}", $item['kategori']?? '');
+            $template->setValue("urutan#{$i}", $item['urutan']);
+            $template->setValue("temuan#{$i}", htmlspecialchars($item['temuan']));
+            $template->setValue("kategori#{$i}", $item['kategori']);
         }
         // Simpan hasil
         $outputPath = storage_path('app/public/form4_'.time().'.docx');
