@@ -25,6 +25,17 @@
                     isset($data) ? config('master.content.kriteria.tipe.' . $data->tipe) : null,
                 )->placeholder('Pilih Tipe Penilaian')->class('form-select')->id('tipe') !!}
         </div>
+
+        <div class="form-group mt-3">
+            {!! html()->label()->class('control-label')->for('keterangan_file')->text('Keterangan File yang Dibutuhkan') !!}
+            {!! html()->textarea('keterangan_file', isset($data) ? $data->keterangan_file : null)
+                ->placeholder('Contoh: Upload file PDF laporan, sertifikat, atau screenshot pendukung')
+                ->class('form-control')
+                ->id('keterangan_file')
+                ->attributes(['rows' => 3]) !!}
+            <small class="text-muted">Keterangan ini akan tampil saat cursor berada di teks indikator.</small>
+        </div>
+
         {{-- Manual input: Rubrik Penilaian --}}
         <div class="form-group mt-3" id="manual_rubrik" style="display: none;">
             <hr>

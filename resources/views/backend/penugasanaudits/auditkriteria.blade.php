@@ -45,6 +45,14 @@
         <script src="{{ asset('assets/plugins/custom/tinymce/tinymce.bundle.js') }}"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                    if (typeof bootstrap !== 'undefined') {
+                        bootstrap.Tooltip.getOrCreateInstance(el);
+                    }
+                });
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
                 const toggleSwitch = document.getElementById('toggle-all-kriteria');
                 if (!toggleSwitch) return;
                 if (typeof bootstrap === 'undefined') {

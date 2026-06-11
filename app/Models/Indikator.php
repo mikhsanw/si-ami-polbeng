@@ -14,7 +14,7 @@ class Indikator extends Model
     protected $casts = [];
 
     protected $fillable = [
-        'id', 'nama', 'tipe', 'kriteria_id', 'formula_penilaian',
+        'id', 'nama', 'tipe', 'kriteria_id', 'formula_penilaian', 'keterangan_file',
     ];
 
     public function kriteria()

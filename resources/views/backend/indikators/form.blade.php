@@ -13,6 +13,10 @@
 			{!! html()->label()->class("control-label")->for("kriteria_id")->text("Kriteria") !!}
 			{!! html()->select("kriteria_id", $kriteria_id, isset($data) ? $data->kriteria_id : null)->placeholder("Pilih")->class("form-control select2")->id("kriteria_id") !!}
 		</div>
+        <div class="form-group">
+            {!! html()->label()->class("control-label")->for("keterangan_file")->text("Keterangan File yang Dibutuhkan") !!}
+            {!! html()->textarea("keterangan_file", isset($data) ? $data->keterangan_file : null)->placeholder("Contoh: Upload file PDF laporan, sertifikat, atau screenshot pendukung")->class("form-control")->rows(4)->id("keterangan_file") !!}
+        </div>
 
     </div>
 </div>

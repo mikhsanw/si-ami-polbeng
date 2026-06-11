@@ -57,7 +57,14 @@
 
                         <div class="text-gray-600 fs-6">
                             <span class="bullet me-3"></span>
-                            {{ $indikator->nama }}
+                            <span
+                                style="cursor: help;"
+                                title="{{ $indikator->keterangan_file ?: 'Tidak ada keterangan file untuk indikator ini.' }}"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-bs-title="{{ $indikator->keterangan_file ?: 'Tidak ada keterangan file untuk indikator ini.' }}">
+                                {{ $indikator->nama }}
+                            </span>
                             <span class="badge bg-success rounded-pill text-white">{{ $indikator->tipe }}</span>
                         </div>
                         <div class="d-flex align-items-center">
@@ -130,6 +137,12 @@
 @prepend('js')
     <script>
         $(document).ready(function() {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                if (typeof bootstrap !== 'undefined') {
+                    bootstrap.Tooltip.getOrCreateInstance(el);
+                }
+            });
+
             $(document).on('click', '.btn-submit-indikator', function() {
                 const indikatorId = $(this).data('id');
                 const auditPeriodeId = $(this).data('audit-periode-id');

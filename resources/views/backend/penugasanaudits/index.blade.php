@@ -35,6 +35,19 @@
                                 <p class="text-muted fs-6 mb-3">Unit:
                                     <strong>{{ $periode->unit->nama ?? 'N/A' }}</strong>
                                 </p>
+                                
+                                {{-- START: Tambahan Kode untuk Nama Auditor --}}
+                                @if ($periode->penugasanAuditors && $periode->penugasanAuditors->count() > 0)
+                                    {{-- Jika ada lebih dari satu auditor, tampilkan semuanya --}}
+                                    <p class="text-muted text-sm fs-6 mb-3">Auditor:
+                                        <strong>{{ $periode->penugasanAuditors->pluck('user.name')->implode(', ') }}</strong>
+                                    </p>
+                                @else
+                                    <p class="text-muted text-sm fs-6 mb-3 text-danger">Auditor:
+                                        <strong>Belum Ditunjuk</strong>
+                                    </p>
+                                @endif
+                                {{-- END: Tambahan Kode --}}
 
                                 {{-- Status Badge Dinamis --}}
                                 <span

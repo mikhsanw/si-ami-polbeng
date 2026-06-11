@@ -45,7 +45,14 @@
                                         <a href="#" class="btn-action text-justify" data-title="Edit Indikator"
                                             data-action="edit-child" data-id="{{ $item->id }}"
                                             data-url="{{ route($page->code . '.edit-indikator', $indikator->id) }}">
-                                            {{ $indikator->nama }}
+                                            <span
+                                                style="cursor: help;"
+                                                title="{{ $indikator->keterangan_file ?: 'Tidak ada keterangan file untuk indikator ini.' }}"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                data-bs-title="{{ $indikator->keterangan_file ?: 'Tidak ada keterangan file untuk indikator ini.' }}">
+                                                {{ $indikator->nama }}
+                                            </span>
                                             <i class="ki-outline ki-pencil rounded-pill"></i>
                                         </a>
                                     </div>

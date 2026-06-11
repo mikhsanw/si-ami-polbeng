@@ -19,6 +19,12 @@
 				{!! html()->p("kriteria_id") !!}
 			</div>
 		</div>
+		<div class="col-md-12">
+			<div class="form-group">
+				{!! html()->span()->text("Keterangan File yang Dibutuhkan")->class("control-label fw-bold") !!}
+				{!! html()->p("keterangan_file") !!}
+			</div>
+		</div>
 
 		</div>
     </div>

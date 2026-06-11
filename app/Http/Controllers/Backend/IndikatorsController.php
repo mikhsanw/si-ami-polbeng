@@ -54,6 +54,7 @@ class IndikatorsController extends Controller
 					'nama' => 'required|'.config('master.regex.json'),
 					'tipe' => 'required|'.config('master.regex.json'),
 					'kriteria_id' => 'required|'.config('master.regex.json'),
+                    'keterangan_file' => 'nullable|'.config('master.regex.string').'|max:2000',
         ]);
         if ($data = $this->model::create($request->all())) {
             $response=[ 'status'=>TRUE, 'message'=>'Data berhasil disimpan'];
@@ -83,6 +84,7 @@ class IndikatorsController extends Controller
 					'nama' => 'required|'.config('master.regex.json'),
 					'tipe' => 'required|'.config('master.regex.json'),
 					'kriteria_id' => 'required|'.config('master.regex.json'),
+                    'keterangan_file' => 'nullable|'.config('master.regex.string').'|max:2000',
         ]);
 
         $data=$this->model::find($id);

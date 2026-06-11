@@ -49,13 +49,21 @@
 
                         // Tentukan status berdasarkan data $hasil
                         $status = $hasil ? $hasil->status_terkini : 'BELUM_DIKERJAKAN';
+                        $tooltipContent = $indikator->keterangan_file ?: 'Tidak ada keterangan file untuk indikator ini.';
                     @endphp
                     <div class="d-flex justify-content-between align-items-center mb-2"
                         style="padding-left: {{ $padding + 45 }}px">
 
                         <div class="text-gray-600 fs-6">
                             <span class="bullet me-3"></span>
-                            {{ $indikator->nama }}
+                            <span
+                                style="cursor: help;"
+                                title="{{ $tooltipContent ?? '' }}"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-bs-title="{{ $tooltipContent ?? 'Tidak ada keterangan file untuk indikator ini.' }}">
+                                {{ $indikator->nama }}
+                            </span>
                             <span class="badge bg-success rounded-pill text-white">{{ $indikator->tipe }}</span>
                         </div>
                         <div class="d-flex align-items-center">

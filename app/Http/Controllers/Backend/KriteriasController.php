@@ -102,6 +102,7 @@ class KriteriasController extends Controller
             'nama' => 'required|string',
             'tipe' => ['required', Rule::in(config('master.content.kriteria.tipe'))],
             'parent_id' => 'nullable|exists:kriterias,id',
+            'keterangan_file' => 'nullable|string|max:2000',
             'rubrik_manual_deskripsi' => 'required_if:tipe,LED|array',
             'rubrik_manual_deskripsi.*' => 'nullable|string',
             'formula_penilaian' => 'required_if:tipe,LKPS|string',
@@ -162,6 +163,7 @@ class KriteriasController extends Controller
                 'nama' => $request->input('nama'),
                 'tipe' => $request->input('tipe'),
                 'formula_penilaian' => $request->input('formula_penilaian', null),
+                'keterangan_file' => $request->input('keterangan_file', null),
             ]);
 
             // Manual
@@ -244,6 +246,7 @@ class KriteriasController extends Controller
             'nama' => 'required|string',
             'tipe' => ['required', Rule::in(config('master.content.kriteria.tipe'))],
             'parent_id' => 'nullable|exists:kriterias,id',
+            'keterangan_file' => 'nullable|string|max:2000',
             'rubrik_manual_deskripsi' => 'required_if:tipe,LED|array',
             'rubrik_manual_deskripsi.*' => 'nullable|string',
             'formula_penilaian' => 'required_if:tipe,LKPS|string',
@@ -306,6 +309,7 @@ class KriteriasController extends Controller
                 'nama' => $request->input('nama'),
                 'tipe' => $request->input('tipe'),
                 'formula_penilaian' => $request->input('formula_penilaian'),
+                'keterangan_file' => $request->input('keterangan_file'),
             ]);
 
             if ($indikator->isDirty()) {

@@ -56,6 +56,12 @@
         <script src="{{ asset('assets/plugins/custom/tinymce/tinymce.bundle.js') }}"></script>
         <script>
             $(document).ready(function() {
+                document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                    if (typeof bootstrap !== 'undefined') {
+                        bootstrap.Tooltip.getOrCreateInstance(el);
+                    }
+                });
+
                 $('#filter_kriteria').on('change', function() {
                     let filterValue = $(this).val();
                     console.log('{{ url($page->url) }}' + '/' + filterValue);
