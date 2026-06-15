@@ -35,8 +35,8 @@ class LogAktivitasAudit extends Model
         return config('master.content.log_aktivitas_audit.tipe_aksi')[$value] ?? $value;
     }
 
-    public function getCreatedAtAttribute($value)
+    public function getCreatedAtFormattedAttribute(): ?string
     {
-        return \Carbon\Carbon::parse($value)->format('d-m-Y H:i:s');
+        return $this->created_at?->format('d-m-Y H:i:s');
     }
 }
