@@ -24,7 +24,7 @@ class RingkasanTemuanAuditController extends Controller
                     })->where('skor_final', '<', 4)
                         ->orWhereHas('auditPeriode.instrumenTemplate.lembagaAkreditasi', function ($sub) {
                             $sub->where('singkatan', 'LAMEMBA');
-                        })->where('skor_final', 0);
+                        })->where('skor_final','<', 2);
                 })
                 ->get();
 
@@ -94,7 +94,7 @@ class RingkasanTemuanAuditController extends Controller
                 })->where('skor_final', '<', 4)
                     ->orWhereHas('auditPeriode.instrumenTemplate.lembagaAkreditasi', function ($sub) {
                         $sub->where('singkatan', 'LAMEMBA');
-                    })->where('skor_final', 0);
+                    })->where('skor_final', '<', 2);
             })
             ->get();
 

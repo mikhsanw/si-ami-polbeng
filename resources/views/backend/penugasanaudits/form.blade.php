@@ -219,7 +219,8 @@
             if (isNaN(nilai)) return catatanKurang.slideUp();
 
             if (isLamemba) {
-                if (nilai === 0) {
+                // Default: tampilkan jika skor < 2
+                if (nilai < 2) {
                     catatanKurang.slideDown();
                 } else {
                     catatanKurang.slideUp();
