@@ -304,7 +304,7 @@ class PenugasanAuditsController extends Controller
             $skorFinal = $request->input('skor_final');
             $isLamemba = $hasilAudit->auditPeriode->isLamemba();
 
-            $butuhCatatan = (! $isLamemba && $skorFinal < 4) || ($isLamemba && $skorFinal == 0);
+            $butuhCatatan = (! $isLamemba && $skorFinal < 4) || ($isLamemba && $skorFinal < 2);
 
             if ($butuhCatatan) {
                 $rules['catatan_auditor_final'] = 'required|string|max:5000';
