@@ -85,54 +85,7 @@
                     </div>
                 </div>
 
-                {{-- ── Tindakan Diperlukan (hanya muncul jika ada revisi) ── --}}
-                @if($revisiItems->isNotEmpty())
-                    <div class="card mb-5" style="border-left: 4px solid #F1416C">
-                        <div class="card-header border-0 pt-5 pb-0">
-                            <div class="card-title">
-                                <i class="ki-duotone ki-cross-circle fs-2 text-danger me-2">
-                                    <span class="path1"></span><span class="path2"></span>
-                                </i>
-                                <h3 class="fw-bold m-0 text-danger">
-                                    {{ $revisiItems->count() }} Indikator Perlu Direvisi — Segera Perbaiki!
-                                </h3>
-                            </div>
-                        </div>
-                        <div class="card-body pt-4">
-                            @foreach($revisiItems as $item)
-                                @php $catatanRevisi = $item->logAktivitasAudit->first()?->catatan_aksi; @endphp
-                                <div class="d-flex align-items-start gap-4 mb-4 pb-4 {{ !$loop->last ? 'border-bottom' : '' }}">
-                                    <div class="symbol symbol-40px flex-shrink-0">
-                                        <span class="symbol-label bg-light-danger">
-                                            <i class="ki-duotone ki-arrows-circle fs-3 text-danger">
-                                                <span class="path1"></span><span class="path2"></span>
-                                            </i>
-                                        </span>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-bold text-gray-800">{{ $item->indikator->nama ?? 'Indikator' }}</div>
-                                        <div class="text-muted fs-7">
-                                            {{ optional($item->auditPeriode->unit)->nama ?? '-' }} — {{ $item->auditPeriode->tahun_akademik ?? '-' }}
-                                        </div>
-                                        @if($catatanRevisi)
-                                            <div class="bg-light-danger rounded p-3 mt-2 fs-7">
-                                                <span class="fw-semibold text-danger">Catatan auditor:</span>
-                                                <span class="text-gray-700">{{ $catatanRevisi }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <a href="{{ route('hasilaudits.edit', $item->id) }}"
-                                       class="btn btn-sm btn-light-danger flex-shrink-0">
-                                        <i class="ki-duotone ki-pencil fs-5 me-1">
-                                            <span class="path1"></span><span class="path2"></span>
-                                        </i>
-                                        Perbaiki
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+
 
                 {{-- ── Donut Chart + Distribusi ─────────────────────────── --}}
                 <div class="row g-5 mb-5">
