@@ -191,7 +191,8 @@ class DashboardController extends Controller
 
     private function auditee()
     {
-        $userUnitId = optional(auth()->user()->unit)->id;
+        $user = auth()->user();
+        $userUnitId = optional($user->unit)->id;
 
         // --- Ambil data Siklus Audit untuk Auditee ---
         $auditperiodes = AuditPeriode::with([
