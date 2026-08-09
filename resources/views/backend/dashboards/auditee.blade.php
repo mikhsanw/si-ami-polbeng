@@ -199,6 +199,8 @@
                             @endforeach
                         </div>
                     </div>
+                @endif
+
                 {{-- ── Dokumen Berita Acara Audit Selesai ────────────────────── --}}
                 @if(isset($beritaAcaraSelesai) && $beritaAcaraSelesai->isNotEmpty())
                     <div class="card mb-5 border-0 shadow-sm" style="border-left: 4px solid #50CD89 !important;">
