@@ -63,9 +63,11 @@
                 <thead>
                     <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
                         <th class="w-0">No</th>
-                        <th class="text-center">Audit Periode</th>
-                        <th class="text-center">Catatan</th>
-
+                        <th class="text-start">Tahun Akademik</th>
+                        <th class="text-start">Unit</th>
+                        <th class="text-start">Catatan</th>
+                        <th class="text-center">Dokumen</th>
+                        <th class="text-center">Status</th>
                         <th class="text-center max-w-100px">Action</th>
                     </tr>
                 </thead>

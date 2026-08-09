@@ -13,12 +13,13 @@ language: {
 {{-- url: "{{ asset(config('master.app.web.assets').'/assets/vendor_components/datatable/indonesian.json') }}" --}}
 },
 columns: [
-{ data: 'DT_RowIndex', name: 'DT_RowIndex',orderable: false, searchable: false, orderable: false, className:
-'text-center' },
-{ data: 'audit_periode.periode_unit' },
-{ data: 'catatan' },
-
-{ data: 'action', orderable: false, searchable: false , className: 'text-center'}
+{ data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+{ data: 'tahun_akademik', name: 'auditPeriode.tahun_akademik' },
+{ data: 'unit_nama', name: 'auditPeriode.unit.nama' },
+{ data: 'catatan_clean', name: 'catatan' },
+{ data: 'file_status', orderable: false, searchable: false, className: 'text-center' },
+{ data: 'status_badge', orderable: false, searchable: false, className: 'text-center' },
+{ data: 'action', orderable: false, searchable: false, className: 'text-center' }
 ],
 
 });

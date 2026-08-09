@@ -156,11 +156,11 @@ class DashboardController extends Controller
             if (! isset($p->status_counts)) {
                 continue;
             }
-            $agregat['belum']    += $p->status_counts['belum_dikerjakan'];
-            $agregat['draft']    += $p->status_counts['draft_dikerjakan'];
+            $agregat['belum'] += $p->status_counts['belum_dikerjakan'];
+            $agregat['draft'] += $p->status_counts['draft_dikerjakan'];
             $agregat['diajukan'] += $p->status_counts['diajukan'];
-            $agregat['revisi']   += $p->status_counts['revisi'];
-            $agregat['selesai']  += $p->status_counts['selesai'];
+            $agregat['revisi'] += $p->status_counts['revisi'];
+            $agregat['selesai'] += $p->status_counts['selesai'];
         }
 
         // --- Aktivitas terbaru di semua periode yang ditugaskan ---
@@ -300,27 +300,27 @@ class DashboardController extends Controller
         })->take(6);
 
         // --- Agregat untuk donut chart + progress ring ---
-        $agregat          = ['belum' => 0, 'draft' => 0, 'diajukan' => 0, 'revisi' => 0, 'selesai' => 0];
+        $agregat = ['belum' => 0, 'draft' => 0, 'diajukan' => 0, 'revisi' => 0, 'selesai' => 0];
         $totalIndikatorAll = 0;
-        $totalSelesaiAll   = 0;
+        $totalSelesaiAll = 0;
         foreach ($auditperiodes as $p) {
             if (! isset($p->status_counts)) {
                 continue;
             }
-            $agregat['belum']    += $p->status_counts['belum_dikerjakan'];
-            $agregat['draft']    += $p->status_counts['draft_dikerjakan'];
+            $agregat['belum'] += $p->status_counts['belum_dikerjakan'];
+            $agregat['draft'] += $p->status_counts['draft_dikerjakan'];
             $agregat['diajukan'] += $p->status_counts['diajukan'];
-            $agregat['revisi']   += $p->status_counts['revisi'];
-            $agregat['selesai']  += $p->status_counts['selesai'];
-            $totalIndikatorAll   += $p->total_indikator;
-            $totalSelesaiAll     += $p->status_counts['selesai'];
+            $agregat['revisi'] += $p->status_counts['revisi'];
+            $agregat['selesai'] += $p->status_counts['selesai'];
+            $totalIndikatorAll += $p->total_indikator;
+            $totalSelesaiAll += $p->status_counts['selesai'];
         }
         $overallProgress = $totalIndikatorAll > 0
             ? round($totalSelesaiAll / $totalIndikatorAll * 100)
             : 0;
 
         // --- Indikator yang perlu direvisi (beserta catatan auditor) ---
-        $periodeIds  = $auditperiodes->pluck('id');
+        $periodeIds = $auditperiodes->pluck('id');
         $revisiItems = HasilAudit::with([
             'indikator',
             'auditPeriode.unit',
@@ -331,7 +331,7 @@ class DashboardController extends Controller
             ->get();
 
         // --- Aktivitas terbaru ---
-        $allHasilIds     = $auditperiodes->flatMap(fn ($p) => $p->hasilAudits->pluck('id'));
+        $allHasilIds = $auditperiodes->flatMap(fn ($p) => $p->hasilAudits->pluck('id'));
         $recentActivitas = LogAktivitasAudit::with(['user', 'hasilAudit.auditPeriode.unit'])
             ->whereIn('hasil_audit_id', $allHasilIds)
             ->latest()
@@ -343,18 +343,18 @@ class DashboardController extends Controller
             ?? AuditPeriode::where('status', true)->orderByDesc('created_at')->value('tahun_akademik');
 
         $rankingPeriodes = AuditPeriode::with([
-                'unit:id,nama',
-                'instrumenTemplate.templateIndikators:id,instrumen_template_id',
-                'hasilAudits:id,audit_periode_id,status_terkini',
-            ])
+            'unit:id,nama',
+            'instrumenTemplate.templateIndikators:id,instrumen_template_id',
+            'hasilAudits:id,audit_periode_id,status_terkini',
+        ])
             ->where('status', true)
             ->when($tahunAktif, fn ($q) => $q->where('tahun_akademik', $tahunAktif))
             ->get();
 
         $unitStats = $rankingPeriodes->groupBy('unit_id')->map(function ($periodes) {
             $totalIndikator = 0;
-            $totalSelesai   = 0;
-            $selesaiIds     = collect();
+            $totalSelesai = 0;
+            $selesaiIds = collect();
             foreach ($periodes as $periode) {
                 $tpl = $periode->instrumenTemplate;
                 if (! $tpl) {
@@ -370,12 +370,12 @@ class DashboardController extends Controller
             }
 
             return (object) [
-                'unit_id'         => $periodes->first()->unit_id,
-                'unit_nama'       => $periodes->first()->unit?->nama ?? '-',
+                'unit_id' => $periodes->first()->unit_id,
+                'unit_nama' => $periodes->first()->unit?->nama ?? '-',
                 'total_indikator' => $totalIndikator,
-                'total_selesai'   => $totalSelesai,
-                'completion_pct'  => $totalIndikator > 0 ? round($totalSelesai / $totalIndikator * 100, 1) : 0.0,
-                'selesai_ids'     => $selesaiIds,
+                'total_selesai' => $totalSelesai,
+                'completion_pct' => $totalIndikator > 0 ? round($totalSelesai / $totalIndikator * 100, 1) : 0.0,
+                'selesai_ids' => $selesaiIds,
             ];
         })->filter(fn ($u) => $u->total_indikator > 0)->values();
 
@@ -416,7 +416,7 @@ class DashboardController extends Controller
                 if (! isset($submitLogs[$hId]) || ! isset($validateLogs[$hId])) {
                     continue;
                 }
-                $uId  = $hasilToUnit[$hId] ?? null;
+                $uId = $hasilToUnit[$hId] ?? null;
                 if (! $uId) {
                     continue;
                 }
@@ -428,24 +428,36 @@ class DashboardController extends Controller
             }
         } else {
             $withRevisionSet = collect()->flip();
-            $unitDaysMap     = [];
+            $unitDaysMap = [];
         }
 
         $unitStats = $unitStats->map(function ($u) use ($withRevisionSet, $unitDaysMap) {
-            $noRevisi        = $u->selesai_ids->filter(fn ($id) => ! isset($withRevisionSet[$id]))->count();
+            $noRevisi = $u->selesai_ids->filter(fn ($id) => ! isset($withRevisionSet[$id]))->count();
             $u->accuracy_pct = $u->total_selesai > 0 ? round($noRevisi / $u->total_selesai * 100, 1) : 0.0;
-            $days            = $unitDaysMap[$u->unit_id] ?? [];
-            $u->avg_hari     = count($days) > 0 ? round(array_sum($days) / count($days), 1) : null;
+            $days = $unitDaysMap[$u->unit_id] ?? [];
+            $u->avg_hari = count($days) > 0 ? round(array_sum($days) / count($days), 1) : null;
 
             return $u;
         });
 
         $topLengkap = $unitStats->sortByDesc('completion_pct')->take(5)->values();
-        $topTepat   = $unitStats->filter(fn ($u) => $u->total_selesai > 0)->sortByDesc('accuracy_pct')->take(5)->values();
-        $topCepat   = $unitStats->filter(fn ($u) => $u->avg_hari !== null)->sortBy('avg_hari')->take(5)->values();
+        $topTepat = $unitStats->filter(fn ($u) => $u->total_selesai > 0)->sortByDesc('accuracy_pct')->take(5)->values();
+        $topCepat = $unitStats->filter(fn ($u) => $u->avg_hari !== null)->sortBy('avg_hari')->take(5)->values();
 
         // --- Ambil Pengumuman ---
         $pengumuman = \App\Models\Berita::orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // --- Ambil Berita Acara Selesai untuk Unit Auditee ---
+        $beritaAcaraSelesai = \App\Models\BeritaAcara::with(['auditPeriode.unit', 'file'])
+            ->where(function ($query) use ($user, $userUnitId) {
+                $query->whereHas('auditPeriode.unit', fn ($q) => $q->where('user_id', $user->id));
+                if ($userUnitId) {
+                    $query->orWhereHas('auditPeriode', fn ($q) => $q->where('unit_id', $userUnitId));
+                }
+            })
+            ->latest()
             ->take(5)
             ->get();
 
@@ -465,7 +477,8 @@ class DashboardController extends Controller
             'topCepat',
             'tahunAktif',
             'userUnitId',
-            'pengumuman'
+            'pengumuman',
+            'beritaAcaraSelesai'
         ));
     }
 

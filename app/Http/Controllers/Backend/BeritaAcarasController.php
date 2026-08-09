@@ -13,27 +13,53 @@ class BeritaAcarasController extends Controller
         if ($request->ajax()) {
             $user = $request->user();
             if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
-                $data = $this->model::with('auditPeriode')->get();
+                $data = $this->model::with(['auditPeriode.unit', 'file'])->latest();
             } else {
-                $data = $this->model::with('auditPeriode')
-                    ->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
-                    ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id))
-                    ->latest()
-                    ->get();
+                $userUnitId = optional($user->unit)->id;
+                $data = $this->model::with(['auditPeriode.unit', 'file'])
+                    ->where(function ($query) use ($user, $userUnitId) {
+                        $query->whereHas('auditPeriode.penugasanAuditors', fn ($q) => $q->where('user_id', $user->id))
+                            ->orWhereHas('auditPeriode.unit', fn ($q) => $q->where('user_id', $user->id));
+                        if ($userUnitId) {
+                            $query->orWhereHas('auditPeriode', fn ($q) => $q->where('unit_id', $userUnitId));
+                        }
+                    })
+                    ->latest();
             }
 
             return datatables()->of($data)
+                ->addColumn('tahun_akademik', function ($row) {
+                    return $row->auditPeriode->tahun_akademik ?? '-';
+                })
+                ->addColumn('unit_nama', function ($row) {
+                    return $row->auditPeriode->unit->nama ?? '-';
+                })
+                ->addColumn('catatan_clean', function ($row) {
+                    $catatan = strip_tags($row->catatan ?? '');
+
+                    return \App\Helpers\Helper::shortDescription($catatan ?: '-', 12);
+                })
+                ->addColumn('file_status', function ($row) {
+                    if ($row->file) {
+                        return '<a href="'.asset($row->file->link_download).'" target="_blank" class="btn btn-sm btn-light-primary"><i class="fa fa-download me-1"></i> Unduh File</a>';
+                    }
+
+                    return '<span class="badge badge-light-warning">Belum Ada File</span>';
+                })
+                ->addColumn('status_badge', function ($row) {
+                    return '<span class="badge badge-light-success fw-bold"><i class="fa fa-check-circle text-success me-1"></i>Selesai</span>';
+                })
                 ->addColumn('action', function ($data) use ($user) {
                     $button = '';
-                    $button .= '<button type="button" class="btn-action btn btn-sm btn-light-primary" data-title="Detail" data-action="show" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Tampilkan"><i class="fa fa-eye text-info"></i></button>';
+                    $button .= '<button type="button" class="btn-action btn btn-sm btn-light-info me-1" data-title="Detail Berita Acara" data-action="show" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Lihat Detail"><i class="fa fa-eye text-info"></i> Detail</button>';
                     if (in_array('Super Admin', $user->getRoleNames()->toArray() ?? [])) {
                         if (auth()->user()->hasRole('Super Admin')) {
-                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
+                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action me-1" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
                             $button .= '<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
                         }
                     } else {
                         if ($user->hasPermissionTo($this->code.' edit')) {
-                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
+                            $button .= '<a type="button" class="btn btn-sm btn-light-warning btn-action me-1" data-title="Edit" data-action="edit" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Edit"> <i class="fa fa-edit text-warning"></i> </a> ';
                         }
                         if ($user->hasPermissionTo($this->code.' delete')) {
                             $button .= '<button type="button" class="btn-action btn btn-sm btn-light-danger" data-title="Delete" data-action="delete" data-url="'.$this->url.'" data-id="'.$data->id.'" title="Delete"> <i class="fa fa-trash text-danger"></i> </button>';
@@ -43,7 +69,7 @@ class BeritaAcarasController extends Controller
                     return "<div class='btn-group'>".$button.'</div>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])
+                ->rawColumns(['file_status', 'status_badge', 'action', 'catatan_clean'])
                 ->make();
         }
 
@@ -103,7 +129,12 @@ class BeritaAcarasController extends Controller
 
     public function show($id)
     {
-        $data = $this->model::find($id);
+        $data = $this->model::with([
+            'auditPeriode.unit',
+            'auditPeriode.penugasanAuditors.user',
+            'auditPeriode.hasilAudits',
+            'file',
+        ])->find($id);
 
         return view($this->view.'.show', compact('data'));
     }

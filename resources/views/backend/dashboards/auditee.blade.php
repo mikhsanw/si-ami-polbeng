@@ -199,6 +199,77 @@
                             @endforeach
                         </div>
                     </div>
+                {{-- ── Dokumen Berita Acara Audit Selesai ────────────────────── --}}
+                @if(isset($beritaAcaraSelesai) && $beritaAcaraSelesai->isNotEmpty())
+                    <div class="card mb-5 border-0 shadow-sm" style="border-left: 4px solid #50CD89 !important;">
+                        <div class="card-header border-0 pt-6">
+                            <div class="card-title d-flex align-items-center gap-3">
+                                <i class="ki-duotone ki-document fs-2 text-success">
+                                    <span class="path1"></span><span class="path2"></span>
+                                </i>
+                                <h3 class="fw-bold m-0 text-gray-800">Dokumen Berita Acara Audit Selesai</h3>
+                            </div>
+                            <div class="card-toolbar">
+                                <a href="{{ route('beritaacaras.index') }}" class="btn btn-sm btn-light-success fw-semibold">
+                                    <i class="fa fa-list me-1"></i>Lihat Semua Berita Acara
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body py-4">
+                            <div class="table-responsive">
+                                <table class="table align-middle table-row-dashed fs-6 gy-4">
+                                    <thead>
+                                        <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                                            <th>Tahun Akademik</th>
+                                            <th>Unit Organisasi</th>
+                                            <th>Catatan Ringkas</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center">File Dokumen</th>
+                                            <th class="text-end">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-gray-700 fw-semibold">
+                                        @foreach($beritaAcaraSelesai as $ba)
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-bold text-gray-800">{{ $ba->auditPeriode->tahun_akademik ?? '-' }}</span>
+                                                </td>
+                                                <td>
+                                                    <span>{{ $ba->auditPeriode->unit->nama ?? '-' }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted fs-7">{{ \App\Helpers\Helper::shortDescription(strip_tags($ba->catatan ?? ''), 12) }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge badge-light-success fw-bold">
+                                                        <i class="fa fa-check-circle text-success me-1"></i>Selesai
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    @if($ba->file)
+                                                        <a href="{{ asset($ba->file->link_download) }}" target="_blank" class="btn btn-sm btn-light-primary">
+                                                            <i class="fa fa-download me-1"></i>Unduh File
+                                                        </a>
+                                                    @else
+                                                        <span class="badge badge-light-warning">Belum Ada File</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-light-info btn-action"
+                                                            data-title="Detail Berita Acara"
+                                                            data-action="show"
+                                                            data-url="{{ config('master.app.url.backend') }}/beritaacaras"
+                                                            data-id="{{ $ba->id }}">
+                                                        <i class="fa fa-eye me-1"></i>Detail
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 @endif
 
                 {{-- ── Progres Siklus Audit ─────────────────────────────── --}}
