@@ -18,9 +18,16 @@ $(window.document).on('click', '.btn-action', function (e) {
         'detail': `detail/${id}`,
     };
     const urlExtension = actionUrls[action] || '';
-    console.log(urlExtension ? `/${url}/${urlExtension}` : url)
+    let targetUrl = url;
+    if (urlExtension) {
+        targetUrl = url.endsWith('/') ? `${url}${urlExtension}` : `${url}/${urlExtension}`;
+    }
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://') && !targetUrl.startsWith('/')) {
+        targetUrl = '/' + targetUrl;
+    }
+    console.log('Target Modal URL:', targetUrl);
     const modalOptions = {
-        url: urlExtension ? `/${url}/${urlExtension}` : url,
+        url: targetUrl,
         id: modalId,
         dlgClass: 'fade',
         bgClass: bgClass,

@@ -193,7 +193,12 @@
                                                     <span>{{ $ba->auditPeriode->unit->nama ?? '-' }}</span>
                                                 </td>
                                                 <td>
-                                                    <span class="text-muted fs-7">{{ \App\Helpers\Helper::shortDescription(strip_tags($ba->catatan ?? ''), 12) }}</span>
+                                                    @php $catatanClean = trim(strip_tags($ba->catatan ?? '')); @endphp
+                                                    @if($catatanClean)
+                                                        <span class="text-gray-700 fs-7">{{ \App\Helpers\Helper::shortDescription($catatanClean, 12) }}</span>
+                                                    @else
+                                                        <span class="text-muted fs-7 italic">- Tidak Ada Catatan -</span>
+                                                    @endif
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="badge badge-light-success fw-bold">
@@ -213,7 +218,7 @@
                                                     <button type="button" class="btn btn-sm btn-light-info btn-action"
                                                             data-title="Detail Berita Acara"
                                                             data-action="show"
-                                                            data-url="{{ config('master.app.url.backend') }}/beritaacaras"
+                                                            data-url="{{ config('master.app.url.backend').'/beritaacaras' }}"
                                                             data-id="{{ $ba->id }}">
                                                         <i class="fa fa-eye me-1"></i>Detail
                                                     </button>
