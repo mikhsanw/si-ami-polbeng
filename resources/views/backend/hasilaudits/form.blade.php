@@ -154,7 +154,11 @@
 
 <script>
     $('.form-select').select2();
-    $('.submit-data').html('<i class="fa fa-save"></i> Simpan Data');
+    @if ($isReadOnly)
+        $('.submit-data').hide();
+    @else
+        $('.submit-data').html('<i class="fa fa-save"></i> Simpan Data').show();
+    @endif
 
     //tinymce
     $(document).ready(function() {

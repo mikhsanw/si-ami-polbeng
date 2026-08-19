@@ -51,6 +51,7 @@
                         $status = $hasil ? $hasil->status_terkini : 'BELUM_DIKERJAKAN';
 
                         $isAuditPeriodeActive = $auditPeriode->status;
+                        $canEdit = $isAuditPeriodeActive && !auth()->user()->hasRole('GKM') && auth()->user()->can($page->code . ' edit');
                     @endphp
                     <div class="d-flex justify-content-between align-items-center mb-2"
                         style="padding-left: {{ $padding + 45 }}px">
@@ -77,24 +78,30 @@
                                     data-title="Lihat Hasil Final">Lihat Hasil</a>
                             @elseif ($status === 'Revisi')
                                 <span class="badge badge-light-danger me-3">Revisi Diperlukan</span>
-                                <a href="#" class="btn btn-sm btn-danger btn-action me-2" data-action="edit-audit"
-                                    data-id="{{ $indikator->id }}"
-                                    data-url="{{ route($page->code . '.edit', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
-                                    data-title="Perbaiki Evaluasi">Perbaiki</a>
+                                @if ($canEdit)
+                                    <a href="#" class="btn btn-sm btn-danger btn-action me-2" data-action="edit-audit"
+                                        data-id="{{ $indikator->id }}"
+                                        data-url="{{ route($page->code . '.edit', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
+                                        data-title="Perbaiki Evaluasi">Perbaiki</a>
+                                @else
+                                    <a href="#" class="btn btn-sm btn-light-info btn-action"
+                                        data-id="{{ $indikator->id }}" data-action="show-audit"
+                                        data-url="{{ route($page->code . '.show', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
+                                        data-title="Lihat Evaluasi">Lihat</a>
+                                @endif
                             @elseif ($status === 'Diajukan')
-                                <span class="badge badge-light-info me-3">Diajukan</span> {{-- Mengubah warna ke info untuk diajukan --}}
+                                <span class="badge badge-light-info me-3">Diajukan</span>
                                 <a href="#" class="btn btn-sm btn-light-info btn-action"
                                     data-id="{{ $indikator->id }}" data-action="show-audit"
                                     data-url="{{ route($page->code . '.show', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
-                                    data-title="Lihat Isian Anda">Lihat</a>
-                                {{-- Mungkin tambahkan tombol "Batalkan Pengajuan" jika diperlukan --}}
+                                    data-title="Lihat Isian">Lihat</a>
                             @elseif ($status === 'Draft')
-                                @if (!$isAuditPeriodeActive)
-                                    <span class="badge badge-light-danger me-3">Batas pengisian Ditutup</span>
+                                @if (!$canEdit)
+                                    <span class="badge badge-light-warning me-3">Draft</span>
                                     <a href="#" class="btn btn-sm btn-light-warning btn-action"
                                         data-id="{{ $indikator->id }}" data-action="show-audit"
                                         data-url="{{ route($page->code . '.show', [$indikator->id, 'audit_periode_id' => $auditPeriode->id]) }}"
-                                        data-title="Lihat Draft Anda">Lihat Draft</a>
+                                        data-title="Lihat Draft">Lihat Draft</a>
                                 @else
                                     <span class="badge badge-light-warning me-3">Draft</span>
                                     <a href="#" class="btn btn-sm btn-warning btn-action me-2"
@@ -104,16 +111,14 @@
                                     <button type="button" class="btn btn-sm btn-primary btn-submit-indikator"
                                         data-id="{{ $indikator->id }}" data-audit-periode-id="{{ $auditPeriode->id }}"
                                         data-status="Diajukan"
-                                        data-message="Apakah Anda yakin ingin mengajukan indikator ini? Setelah diajukan, Anda tidak dapat mengeditnya sampai diverifikasi.">
+                                        data-message="Apakah Anda yakin ingin mengajukan indikator me-edit-nya sampai diverifikasi.">
                                         Ajukan
                                     </button>
                                 @endif
                             @else
-                                @if (!$isAuditPeriodeActive)
-                                    <span class="badge badge-light-danger me-3">Batas pengisian Ditutup</span>
-                                    <span class="badge badge-light me-3">{{ __('Belum Dikerjakan') }}</span>
+                                @if (!$canEdit)
+                                    <span class="badge badge-light me-3">Belum Dikerjakan</span>
                                 @else
-                                    {{-- Status 'BELUM_DIKERJAKAN' (atau NULL) --}}
                                     <span class="badge badge-light me-3">Belum Dikerjakan</span>
                                     <a href="#" class="btn btn-sm btn-primary btn-action"
                                         data-title="Formulir Evaluasi Diri" data-action="edit-audit"

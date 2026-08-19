@@ -247,7 +247,7 @@ class HasilAuditsController extends Controller
             'data' => \App\Models\Indikator::findOrFail($id),
             'auditPeriode' => $auditPeriode,
             'hasilAudit' => $hasilAudit,
-            'isReadOnly' => !$auditPeriode->status,
+            'isReadOnly' => !$auditPeriode->status || auth()->user()->hasRole('GKM') || !auth()->user()->can($this->code.' edit'),
         ];
 
         return view($this->view.'.form', $data);
@@ -390,6 +390,10 @@ class HasilAuditsController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (auth()->user()->hasRole('GKM') || !auth()->user()->can($this->code.' edit')) {
+            return response()->json(['status' => false, 'message' => 'Role GKM hanya memiliki akses baca (Read-Only) dan tidak dapat mengubah evaluasi diri.'], 403);
+        }
+
         $auditPeriode = \App\Models\AuditPeriode::findOrFail($request->input('audit_periode_id'));
         
         if (!$auditPeriode->status) {
@@ -603,6 +607,10 @@ class HasilAuditsController extends Controller
 
     public function updateStatusIndikator(Request $request)
     {
+        if (auth()->user()->hasRole('GKM') || !auth()->user()->can($this->code.' edit')) {
+            return response()->json(['status' => false, 'message' => 'Role GKM hanya memiliki akses baca (Read-Only) dan tidak dapat mengajukan evaluasi.'], 403);
+        }
+
         $request->validate([
             'indikator_id' => 'required|exists:indikators,id',
             'audit_periode_id' => 'required|exists:audit_periodes,id',
