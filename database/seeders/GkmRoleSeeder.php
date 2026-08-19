@@ -20,26 +20,20 @@ class GkmRoleSeeder extends Seeder
         $gkmRole = Role::firstOrCreate(['name' => 'GKM']);
 
         // Module codes that GKM can access (read-only / list)
+        // Restricted ONLY to Evaluasi Diri (hasilaudits) and Template Instrumen (instrumentemplates)
         $readModules = [
             'hasilaudits',
-            'prosesaudits',
-            'kriterias',
-            'indikators',
-            'rubrikpenilaians',
             'instrumentemplates',
-            'beritaacaras',
-            'ringkasantemuanaudit',
-            'ringkasanstandars',
-            'ringkasanunits',
-            'performaauditors',
-            'logaktivitasaudits',
-            'auditperiodes',
         ];
 
+        $permissions = [];
         foreach ($readModules as $module) {
             $permissionName = $module . ' list';
             $permission = Permission::firstOrCreate(['name' => $permissionName]);
-            $gkmRole->givePermissionTo($permission);
+            $permissions[] = $permission;
         }
+
+        // Sync permissions so GKM only has exactly these permissions
+        $gkmRole->syncPermissions($permissions);
     }
 }
