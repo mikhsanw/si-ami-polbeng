@@ -16,12 +16,15 @@ class ProsesAuditsController extends Controller
 
         if ($request->ajax()) {
             $id = $id ?? $request->get('id');
+            $monitoredUnitIds = $user->getMonitoredUnitIds();
             if (empty($id)) {
                 $data = $this->model::with(['indikator', 'logAktivitasAudit', 'auditPeriode'])
                     ->where('status_terkini', '!=', 'Draft')
-                    ->where(function ($q) use ($user) {
-                        $q->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
-                            ->orWhereHas('auditPeriode.unit', fn ($query2) => $query2->where('user_id', $user->id));
+                    ->when($monitoredUnitIds !== null, function ($q) use ($user, $monitoredUnitIds) {
+                        $q->where(function ($subQ) use ($user, $monitoredUnitIds) {
+                            $subQ->whereHas('auditPeriode.penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                                ->orWhereHas('auditPeriode', fn ($query2) => $query2->whereIn('unit_id', $monitoredUnitIds));
+                        });
                     })
                     ->latest('updated_at')
                     ->get();
@@ -62,7 +65,9 @@ class ProsesAuditsController extends Controller
                 ->rawColumns(['action', 'status_terkini'])
                 ->make();
         }
-        if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
+
+        $monitoredUnitIds = $user->getMonitoredUnitIds();
+        if ($monitoredUnitIds === null) {
             // Ambil semua audit periode
             $data = \App\Models\AuditPeriode::orderBy('created_at', 'desc')
                 ->get()
@@ -70,8 +75,10 @@ class ProsesAuditsController extends Controller
                 ->toArray();
         } else {
             $data = \App\Models\AuditPeriode::orderBy('created_at', 'desc')
-                ->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
-                ->orWhereHas('unit', fn ($query2) => $query2->where('user_id', $user->id))
+                ->where(function ($q) use ($user, $monitoredUnitIds) {
+                    $q->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                        ->orWhereIn('unit_id', $monitoredUnitIds);
+                })
                 ->get()
                 ->pluck('periode_unit', 'id')
                 ->toArray();

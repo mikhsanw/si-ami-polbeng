@@ -28,11 +28,8 @@ class HasilAuditsController extends Controller
             'instrumenTemplate.templateIndikators',
             'hasilAudits',
         ])
-            ->when(! $user->hasRole(['Super Admin']), function ($query) use ($user) {
-                $userUnitId = optional($user->unit)->id;
-                if ($userUnitId) {
-                    $query->where('unit_id', $userUnitId);
-                }
+            ->when($user->getMonitoredUnitIds() !== null, function ($query) use ($user) {
+                $query->whereIn('unit_id', $user->getMonitoredUnitIds());
             })
             ->latest()
             ->get();
@@ -139,6 +136,12 @@ class HasilAuditsController extends Controller
     public function auditKriteriaIndex(Request $request, $id)
     {
         $auditPeriode = \App\Models\AuditPeriode::with('unit', 'instrumenTemplate')->findOrFail($id);
+        
+        $monitoredUnitIds = auth()->user()->getMonitoredUnitIds();
+        if ($monitoredUnitIds !== null && !in_array($auditPeriode->unit_id, $monitoredUnitIds)) {
+            abort(403, 'Anda tidak memiliki akses untuk memantau unit ini.');
+        }
+
         $template = $auditPeriode->instrumenTemplate;
 
         if (! $template) {

@@ -59,7 +59,8 @@ class RingkasanTemuanAuditController extends Controller
                 ->make();
         }
 
-        if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
+        $monitoredUnitIds = $user->getMonitoredUnitIds();
+        if ($monitoredUnitIds === null) {
             // Ambil semua audit periode
             $data = \App\Models\AuditPeriode::orderBy('created_at')
                 ->latest()
@@ -67,8 +68,11 @@ class RingkasanTemuanAuditController extends Controller
                 ->pluck('periode_unit', 'id')
                 ->toArray();
         } else {
-            // Ambil hanya audit periode yang ditugaskan ke user
-            $data = \App\Models\AuditPeriode::whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+            // Ambil hanya audit periode yang ditugaskan ke user atau unit terpantau
+            $data = \App\Models\AuditPeriode::where(function ($q) use ($user, $monitoredUnitIds) {
+                    $q->whereHas('penugasanAuditors', fn ($query) => $query->where('user_id', $user->id))
+                        ->orWhereIn('unit_id', $monitoredUnitIds);
+                })
                 ->latest()
                 ->get()
                 ->pluck('periode_unit', 'id')

@@ -26,7 +26,7 @@ class DashboardController extends Controller
             return $this->auditor();
         } elseif ($user->hasRole('Admin')) {
             return $this->superAdmin();
-        } elseif ($user->hasRole(['Super Admin', 'Direktur'])) {
+        } elseif ($user->hasRole(['Super Admin', 'Direktur', 'GKM'])) {
             return $this->superAdmin();
         }
 
@@ -635,12 +635,15 @@ class DashboardController extends Controller
             ->get();
 
         // --- Ambil data Siklus Audit untuk Progres Global ---
-        // Admin melihat semua periode audit aktif dari semua unit
+        $monitoredUnitIds = auth()->user()->getMonitoredUnitIds();
         $auditperiodes = AuditPeriode::with([
             'unit',
             'instrumenTemplate.templateIndikators',
             'hasilAudits',
         ])
+            ->when($monitoredUnitIds !== null, function ($query) use ($monitoredUnitIds) {
+                $query->whereIn('unit_id', $monitoredUnitIds);
+            })
             ->get();
 
         // --- Inisialisasi Statistik Global Indikator (untuk grafik opsional) ---

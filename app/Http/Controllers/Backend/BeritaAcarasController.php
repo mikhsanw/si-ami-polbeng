@@ -12,17 +12,14 @@ class BeritaAcarasController extends Controller
     {
         if ($request->ajax()) {
             $user = $request->user();
-            if ($user->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
+            $monitoredUnitIds = $user->getMonitoredUnitIds();
+            if ($monitoredUnitIds === null) {
                 $data = $this->model::with(['auditPeriode.unit', 'file'])->latest();
             } else {
-                $userUnitId = optional($user->unit)->id;
                 $data = $this->model::with(['auditPeriode.unit', 'file'])
-                    ->where(function ($query) use ($user, $userUnitId) {
+                    ->where(function ($query) use ($user, $monitoredUnitIds) {
                         $query->whereHas('auditPeriode.penugasanAuditors', fn ($q) => $q->where('user_id', $user->id))
-                            ->orWhereHas('auditPeriode.unit', fn ($q) => $q->where('user_id', $user->id));
-                        if ($userUnitId) {
-                            $query->orWhereHas('auditPeriode', fn ($q) => $q->where('unit_id', $userUnitId));
-                        }
+                            ->orWhereHas('auditPeriode', fn ($q) => $q->whereIn('unit_id', $monitoredUnitIds));
                     })
                     ->latest();
             }

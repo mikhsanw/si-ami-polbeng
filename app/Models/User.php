@@ -45,4 +45,33 @@ class User extends Authenticatable
         return $this->hasOne(\App\Models\Unit::class);
     }
 
+    /**
+     * Get list of unit IDs that this user is allowed to monitor.
+     * Returns null if user can monitor all units globally (Super Admin, Admin, Direktur).
+     * Returns array of unit IDs (Jurusan + children prodi) for GKM.
+     * Returns array of single unit ID or empty array for Auditee/Auditor.
+     *
+     * @return array|null
+     */
+    public function getMonitoredUnitIds(): ?array
+    {
+        if ($this->hasRole(['Super Admin', 'Admin', 'Direktur'])) {
+            return null;
+        }
+
+        $userUnit = $this->unit;
+
+        if ($this->hasRole('GKM')) {
+            if (!$userUnit) {
+                return [];
+            }
+
+            return \App\Models\Unit::where('id', $userUnit->id)
+                ->orWhere('parent_id', $userUnit->id)
+                ->pluck('id')
+                ->toArray();
+        }
+
+        return $userUnit ? [$userUnit->id] : [];
+    }
 }
